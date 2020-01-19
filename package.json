@@ -1,0 +1,35 @@
+{
+  "dependencies": {
+    "axios": "^0.18.0",
+    "baidu-search": "^1.3.0",
+    "baidu-translate-api": "^0.3.1",
+    "cheerio": "^1.0.0-rc.3",
+    "cq-websocket": "^2.0.0",
+    "is-url": "^1.2.4",
+    "js-yaml": "^3.13.1",
+    "jsdom": "^15.1.1",
+    "json-beautify": "^1.1.1",
+    "koa": "^2.11.0",
+    "koa-body": "^4.1.1",
+    "koa-router": "^7.4.0",
+    "lodash": "^4.17.15",
+    "wikijs": "^5.5.1"
+  },
+  "name": "hydro.qqbot",
+  "version": "1.0.0",
+  "main": "socket.js",
+  "scripts": {
+    "start": "node robot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masnn/CoolQDev.git"
+  },
+  "author": "masnn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/masnn/CoolQDev/issues"
+  },
+  "homepage": "https://github.com/masnn/CoolQDev#readme",
+  "description": ""
+}

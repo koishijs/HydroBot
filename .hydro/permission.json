@@ -1,0 +1,4 @@
+{
+    "router": "manage",
+    "socket": "connection to CQ server"
+}

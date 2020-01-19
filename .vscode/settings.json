@@ -1,0 +1,12 @@
+{
+  "editor.smoothScrolling": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "editor.formatOnPaste": true,
+  "files.maxMemoryForLargeFilesMB": 512,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.fontSize": 15,
+  "git.ignoreMissingGitWarning": true,
+  "editor.tabSize": 4,
+  "editor.fontFamily": "'Source Code Pro','Source Code Pro for Powerline',Consolas,'微软雅黑'"
+}

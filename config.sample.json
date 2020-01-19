@@ -1,0 +1,40 @@
+{
+    "access_token": "123456",
+    "host": "127.0.0.1",
+    "port": 6700,
+    "logmode": "msg_only",
+    "api_port": 6701,
+    "enabledplugins": [
+        "autoAgree",
+        "github",
+        "anime",
+        "ipWhere",
+        "codeRunner",
+        "yiGeDingLia",
+        "management",
+        "hitokoto",
+        "baike",
+        "bot",
+        "translate"
+    ],
+    "plugin": {
+        "github": {},
+        "bot": {
+            "appid": "123456",
+            "secret": "123456"
+        },
+        "repeater": {
+            "time": 4
+        },
+        "autoAgree": {
+            "friend": true,
+            "group": true
+        },
+        "management": {
+            "admin": [
+                3402182471,
+                4609496
+            ]
+        }
+    }
+}

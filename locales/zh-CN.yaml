@@ -1,0 +1,6 @@
+Connecting ({0}): 尝试第 {0} 次连线
+Connected ({0}): 第 {0} 次连线成功
+Failed to connect ({0}): 第 {0} 次连线失败
+'Server response: {0}': 服务器响应：{0}
+'[{0}] Connection close ({1}: {2})': '[{0}] 连接断开 ({1}:{2})'
+API inited at port {0}: API 已在端口 {0} 初始化
