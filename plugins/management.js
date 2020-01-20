@@ -14,6 +14,7 @@ Array.prototype.remove = function (val) {
 let CQ = null;
 let config = {};
 let disabled = false;
+let log = null;
 let db = [
     {
         reg: /^process\.exit\(\)$/i,
@@ -38,14 +39,14 @@ let db = [
     },
     {
         reg: /^send_group_msg>([0-9]+)>([\s\S]+)$/i,
-        op: (tmp, e, context) => {
+        op: (tmp, e) => {
             CQ('send_group_msg', { group_id: tmp[1], message: tmp[2] });
             e.stopPropagation();
         }
     },
     {
         reg: /^send_private_msg>([0-9]+)>([\s\S]+)$/i,
-        op: (tmp, e, context) => {
+        op: (tmp, e) => {
             CQ('send_private_msg', { user_id: tmp[1], message: tmp[2] });
             e.stopPropagation();
         }
@@ -65,7 +66,7 @@ let db = [
         op: async (tmp, e, context) => {
             if (context.group_id) CQ('set_group_leave', { group_id: context.group_id });
             else CQ('set_discuss_leave', { discuss_id: context.discuss_id });
-            e.stopPropagation()
+            e.stopPropagation();
         }
     },
     {
@@ -79,8 +80,8 @@ let db = [
     },
     {
         reg: /^cmd>([\s\S]+)$/i,
-        op: async (tmp, e, context) => {
-            let res = eval(tmp[1])
+        op: async tmp => {
+            let res = eval(tmp[1]);
             if (res instanceof Promise) res = await res;
             return res;
         }
@@ -88,13 +89,13 @@ let db = [
     {
         reg: /^sh>(.+)$/i,
         op: async (tmp) => {
-            let res = require("child_process").execSync(tmp[1]);
+            let res = require('child_process').execSync(tmp[1]);
             return res.toString();
         }
     },
     {
         reg: /^plugin_disable>([\s\S]+)$/i,
-        op: async (tmp, e, context) => {
+        op: async tmp => {
             let file = await fs.readFile('../config.json');
             file = JSON.parse(file.toString());
             file.enabled_plugins.remove(tmp[1]);
@@ -103,7 +104,7 @@ let db = [
     },
     {
         reg: /^plugin_enable>([\s\S]+)$/i,
-        op: async (tmp, e, context) => {
+        op: async tmp => {
             let file = await fs.readFile('../config.json');
             file = JSON.parse(file.toString());
             file.enabled_plugins.push(tmp[1]);
@@ -121,7 +122,7 @@ exports.init = item => {
         disabled = true;
         return;
     }
-}
+};
 exports.info = {
     id: 'management',
     author: 'masnn',
@@ -135,7 +136,7 @@ exports.info = {
 公众开放如下内容：
 status  获取当前运行状态
 `
-}
+};
 exports.msg_group = exports.msg_private = async (e, context) => {
     if (disabled) return;
     for (let i in db)
@@ -155,4 +156,4 @@ exports.msg_group = exports.msg_private = async (e, context) => {
                 }
                 return res;
             }
-}
+};

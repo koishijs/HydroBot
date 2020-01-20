@@ -1,7 +1,7 @@
 'use strict';
 const
     axios = require('axios'),
-    RE = /^\!([\s\S]+)$/i, // eslint-disable no-useless-escape
+    RE = /^\!([\s\S]+)$/i, // eslint-disable-line no-useless-escape
     { CQAt } = require('cq-websocket');
 
 let log = null;
@@ -23,7 +23,7 @@ exports.init = item => {
     config = item.config;
     if (config.appid) log.log('Using appid: ', config.appid);
     lib = item.lib;
-}
+};
 exports.info = {
     id: 'bot',
     author: 'masnn',
@@ -34,11 +34,11 @@ exports.info = {
     },
     description: '聊天机器人',
     usage: '通过 !(英文感叹号) 和 @我 触发'
-}
+};
 exports.msg_private = async (e, context) => {
     log.log('Reply to: ', context.raw_message);
     return await getReply(context.raw_message, context.user_id);
-}
+};
 exports.msg_group = async (e, context) => {
     if (RE.test(context.raw_message)) {
         let tmp = RE.exec(context.raw_message);
@@ -49,4 +49,4 @@ exports.msg_group = async (e, context) => {
         log.log('(@)Reply to: ', raw);
         return [new CQAt(context.user_id), await getReply(raw, context.user_id)];
     }
-}
+};

@@ -1,60 +1,60 @@
 const getFirstPinyin = (data) => {
     return (data.pinyin.split(/\s+/).shift() || '')
         .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
-        .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v')
-}
+        .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v');
+};
 const getLastPinyin = (data) => {
     return (data.pinyin.split(/\s+/).pop() || '')
         .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
-        .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v')
-}
+        .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v');
+};
 const fix = (data) => {
     if ('味同嚼蜡' === data.word)
-        data.pinyin = data.pinyin.replace('cù', 'là')
+        data.pinyin = data.pinyin.replace('cù', 'là');
     if (data.word.endsWith('俩'))
-        data.pinyin = data.pinyin.replace('liǎng', 'liǎ')
-    data.pinyin = data.pinyin.replace(/yi([ēéěèêe])/g, 'y$1')
-    return data
-}
+        data.pinyin = data.pinyin.replace('liǎng', 'liǎ');
+    data.pinyin = data.pinyin.replace(/yi([ēéěèêe])/g, 'y$1');
+    return data;
+};
 const indexed = (json) => {
-    let result = { firstPinyin: {}, lastPinyin: {}, word: {} }
+    let result = { firstPinyin: {}, lastPinyin: {}, word: {} };
     for (const data of json) {
-        fix(data)
+        fix(data);
         if (data.word.length === 4) {
-            const key1 = getLastPinyin(data)
-            const values1 = result.lastPinyin[key1] || []
-            result.lastPinyin[key1] = values1
-            values1.push(data)
-            const key2 = getFirstPinyin(data)
-            const values2 = result.firstPinyin[key2] || []
-            result.firstPinyin[key2] = values2
-            values2.push(data)
-            result.word[data.word] = data
+            const key1 = getLastPinyin(data);
+            const values1 = result.lastPinyin[key1] || [];
+            result.lastPinyin[key1] = values1;
+            values1.push(data);
+            const key2 = getFirstPinyin(data);
+            const values2 = result.firstPinyin[key2] || [];
+            result.firstPinyin[key2] = values2;
+            values2.push(data);
+            result.word[data.word] = data;
         }
     }
-    let pinyins = new Set(['yi'])
+    let pinyins = new Set(['yi']);
     for (let level = 1; pinyins.size > 0; ++level) {
-        const newpinyins = new Set()
+        const newpinyins = new Set();
         pinyins.forEach(pinyin => {
             for (const data of result.lastPinyin[pinyin] || [])
                 if (!data.level) {
-                    data.level = level
-                    newpinyins.add(getFirstPinyin(data))
+                    data.level = level;
+                    newpinyins.add(getFirstPinyin(data));
                 }
-        })
-        console.log(`Generate ${newpinyins.size} entries for level ${level}`)
-        pinyins = newpinyins
+        });
+        console.log(`Generate ${newpinyins.size} entries for level ${level}`);
+        pinyins = newpinyins;
     }
-    return result
-}
+    return result;
+};
 
 
 const handle = (input) => {
-    let result = []
-    let data = db.word[input]
+    let result = [];
+    let data = db.word[input];
     while (data && data.level) {
-        const level = data.level
-        result.push(data)
+        const level = data.level;
+        result.push(data);
         if (level > 1) {
             const next = db.firstPinyin[getLastPinyin(data)];
             const filtered = next.filter(d => d.level && d.level < level);
@@ -65,7 +65,7 @@ const handle = (input) => {
         }
     }
     return result;
-}
+};
 
 const db = indexed(require('../database/yiGeDingLia.json'));
 const reg = /^(一个顶俩|成语接龙)>(.*)/i;
@@ -79,7 +79,7 @@ exports.info = {
     },
     description: '一个顶俩',
     usage: '一个顶俩>成语'
-}
+};
 exports.message = async (e, context) => {
     if (!reg.test(context.raw_message)) return;
     let tmp = reg.exec(context.raw_message);
@@ -90,4 +90,4 @@ exports.message = async (e, context) => {
             res.push(d[i].word, ' ');
         return res;
     }
-}
+};

@@ -28,7 +28,7 @@ function cutstr(str, len) {
             str_length++;
         str_cut = str_cut.concat(a);
         if (str_length >= len) {
-            str_cut = str_cut.concat('...')
+            str_cut = str_cut.concat('...');
             return str_cut;
         }
     }
@@ -186,7 +186,7 @@ const request = async href => {
 };
 exports.init = item => {
     log = item.log;
-}
+};
 exports.info = {
     id: 'baike',
     author: 'masnn',
@@ -204,7 +204,7 @@ wiki>>>文章名   维基百科，输出详细内容
 moe>文章名      萌娘百科
 moe>>>文章名    萌娘百科，输出详细内容
 `
-}
+};
 exports.message = async (e, context) => {
     if (REG_BAIDUBAIKE.test(context.raw_message)) {
         let tmp = REG_BAIDUBAIKE.exec(context.raw_message);
@@ -251,4 +251,4 @@ exports.message = async (e, context) => {
         }
         return await page.summary();
     }
-}
+};

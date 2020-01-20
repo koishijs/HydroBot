@@ -54,7 +54,6 @@ const
         12: 'Runtime Error (Other)',
         13: 'Internal Error'
     },
-    encode = str => (Buffer.from(str, 'utf8').toString('base64')),
     decode = str => (Buffer.from(str, 'base64').toString());
 
 async function run(code, lang, input) {
@@ -83,29 +82,29 @@ async function run(code, lang, input) {
 
 function langname(name) {
     switch (name) {
-        case 'rb': return 'ruby';
-        case 'py': return 'python';
-        case 'pl': return 'perl';
-        case 'clj': return 'clojure';
-        case 'coffee': return 'coffeescript';
-        case 'sh': return 'bash';
-        case 'asm': return 'assembly';
-        case 'cs': return 'csharp';
-        case 'erl': return 'erlang';
-        case 'idr': return 'idris';
-        case 'rs': return 'rust';
-        case 'ex': return 'elixir';
-        case 'fs': return 'fsharp';
-        case 'hs': return 'haskell';
-        case 'js': return 'javascript';
-        case 'jl': return 'julia';
-        case 'ml': return 'ocaml';
-        case 'cpp': case 'java': case 'scala': case 'd': case 'go': case 'php': case 'c':
-        case 'lua': case 'nim': case 'ruby': case 'perl': case 'clojure':
-        case 'coffeescript': case 'bash': case 'assembly': case 'csharp':
-        case 'ocaml': case 'erlang': case 'idris': case 'rust': case 'elixir':
-        case 'fsharp': case 'haskell': case 'javascript': case 'julia': return name;
-        default: return 'error';
+    case 'rb': return 'ruby';
+    case 'py': return 'python';
+    case 'pl': return 'perl';
+    case 'clj': return 'clojure';
+    case 'coffee': return 'coffeescript';
+    case 'sh': return 'bash';
+    case 'asm': return 'assembly';
+    case 'cs': return 'csharp';
+    case 'erl': return 'erlang';
+    case 'idr': return 'idris';
+    case 'rs': return 'rust';
+    case 'ex': return 'elixir';
+    case 'fs': return 'fsharp';
+    case 'hs': return 'haskell';
+    case 'js': return 'javascript';
+    case 'jl': return 'julia';
+    case 'ml': return 'ocaml';
+    case 'cpp': case 'java': case 'scala': case 'd': case 'go': case 'php': case 'c':
+    case 'lua': case 'nim': case 'ruby': case 'perl': case 'clojure':
+    case 'coffeescript': case 'bash': case 'assembly': case 'csharp':
+    case 'ocaml': case 'erlang': case 'idris': case 'rust': case 'elixir':
+    case 'fsharp': case 'haskell': case 'javascript': case 'julia': return name;
+    default: return 'error';
     }
 }
 
@@ -143,4 +142,4 @@ code>代码名称>代码  运行代码
         else
             return `执行${langname(tmp[1])}出错: ${STATUS[status_id]}\n${decode(stderr || '')}`;
     }
-}
+};

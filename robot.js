@@ -14,4 +14,4 @@ process.stdin.on('data', async input => {
 process.on('SIGINT', () => {
     fs.writeFileSync('./config.json', beautify(global.App.config, null, 4, 80));
     process.exit(0);
-})
+});

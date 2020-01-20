@@ -1,7 +1,7 @@
 'use strict';
 let data = require('../database/knowledgebase');
 let log = null;
-exports.init = item => { log = item.log; }
+exports.init = item => { log = item.log; };
 exports.info = {
     id: 'autoReply',
     author: 'masnn',
@@ -12,7 +12,7 @@ exports.info = {
     },
     description: '根据定义的知识库自动回复',
     usage: ''
-}
+};
 exports.message = (e, context) => {
     data.knowledgebase.forEach(dat => {
         if (dat.reg) {
@@ -27,7 +27,7 @@ exports.message = (e, context) => {
                     return;
                 }
             } else {
-                dat.reg = new RegExp('^[\s\S]*' + dat.msg + '[\s\S]*');
+                dat.reg = new RegExp('^[\s\S]*' + dat.msg + '[\s\S]*'); // eslint-disable-line no-useless-escape
                 if (dat.reg.test(context.raw_message)) {
                     e.setMessage(dat.res);
                     return;
@@ -35,7 +35,7 @@ exports.message = (e, context) => {
             }
         }
     });
-}
+};
 exports.reload = () => {
     try {
         data = require('../database/knowledgebase');
@@ -44,4 +44,4 @@ exports.reload = () => {
         return;
     }
     log.log('[AutoReply] Reloaded.');
-}
+};

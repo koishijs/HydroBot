@@ -32,4 +32,4 @@ String.prototype.translate = function (language) {
 module.exports = function load(file, language) {
     if (!locales[language]) locales[language] = {};
     Object.assign(locales[language], yaml.safeLoad(file));
-}
+};

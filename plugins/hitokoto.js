@@ -6,7 +6,7 @@ const
 let log = null;
 exports.init = item => {
     log = item.log;
-}
+};
 exports.info = {
     id: 'hitokoto',
     author: 'masnn',
@@ -19,11 +19,11 @@ exports.info = {
     usage: `
 Hitokoto    获取一言
 `
-}
+};
 exports.message = async (e, context) => {
     if (context.raw_message != 'Hitokoto') return;
     log.log('[Hitokoto]From:' + context.user_id);
     let t = await axios.get(url);
     log.log(t.data);
     return t.data;
-}
+};

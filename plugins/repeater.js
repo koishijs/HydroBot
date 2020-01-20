@@ -2,7 +2,7 @@
 let data_g = {}, data_d = {}, config = {};
 exports.init = item => {
     config = item.config;
-}
+};
 exports.info = {
     id: 'repeater',
     author: 'masnn',
@@ -13,7 +13,7 @@ exports.info = {
     },
     description: '自动复读',
     usage: ''
-}
+};
 exports.msg_group = (e, context) => {
     if (!data_g[context.group_id]) {
         data_g[context.group_id] = {};
@@ -29,7 +29,7 @@ exports.msg_group = (e, context) => {
         if (data_g[context.group_id].t == config.time)
             return data_g[context.group_id].msg;
     }
-}
+};
 exports.msg_discuss = (e, context) => {
     if (!data_d[context.discuss_id]) {
         data_d[context.discuss_id] = {};
@@ -47,4 +47,4 @@ exports.msg_discuss = (e, context) => {
             return data_d[context.discuss_id].msg;
         }
     }
-}
+};

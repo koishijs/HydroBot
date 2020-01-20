@@ -6,7 +6,7 @@ const
 let log = null;
 exports.init = item => {
     log = item.log;
-}
+};
 exports.info = {
     id: 'ipWhere',
     author: 'masnn',
@@ -17,7 +17,7 @@ exports.info = {
     },
     description: '查询ip',
     usage: 'ip>IP地址   查询IP信息'
-}
+};
 exports.message = async (e, context) => {
     if (!reg.test(context.raw_message)) return;
     let tmp = reg.exec(context.raw_message);
@@ -26,4 +26,4 @@ exports.message = async (e, context) => {
     let d = await axios.get(url);
     console.log(d.data);
     return [d.data.join(' ')];
-}
+};

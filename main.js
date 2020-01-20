@@ -16,7 +16,7 @@ function warp(target) {
             return e;
         }
         return res;
-    }
+    };
 }
 
 module.exports = class {
@@ -132,19 +132,19 @@ module.exports = class {
                 this.set('message.private', plugin.msg_private);
                 this.set('notice.group_upload', plugin.notice_group_upload);
                 this.set('notice.group_admin.set', plugin.notice_group_setadmin);
-                this.set('notice.group_admin.unset', plugin.notice_group_unsetadmin)
+                this.set('notice.group_admin.unset', plugin.notice_group_unsetadmin);
                 this.set('notice.group_decrease', plugin.notice_group_decrease);
                 this.set('notice.group_decrease.leave', plugin.notice_group_leave);
                 this.set('notice.group_decrease.kick', plugin.notice_group_kick);
                 this.set('notice.group_decrease.kick_me', plugin.notice_group_kickme);
                 this.set('notice.group_increase', plugin.notice_group_increase);
-                this.set('notice.group_increase.approve', plugin.notice_group_approve)
+                this.set('notice.group_increase.approve', plugin.notice_group_approve);
                 this.set('notice.group_increase.invite', plugin.notice_group_invite);
                 this.set('notice.friend_add', plugin.notice_friend_add);
-                this.set('request.friend', plugin.request_friend)
-                this.set('request.group', plugin.request_group)
+                this.set('request.friend', plugin.request_friend);
+                this.set('request.group', plugin.request_group);
                 this.set('request.group.add', plugin.request_group_add);
-                this.set('request.group.invite', plugin.request_group_invite)
+                this.set('request.group.invite', plugin.request_group_invite);
                 this.log.log('插件 ' + this.config.enabledplugins[i] + ' 已经启用');
                 this.plugins[this.config.enabledplugins[i]] = plugin;
             }
