@@ -9,7 +9,7 @@ const events = {
             if (commit.added.length) det.push(`${commit.added.length}+`);
             if (commit.removed.length) det.push(`${commit.removed.length}-`);
             if (commit.modified.length) det.push(`${commit.modified.length}M`);
-            resp += `\n${commit.id.substr(0, 6)} ${commit.message.replace(/\n/g, ' ')} (${det.join(' ')})\n`;
+            resp += `\n${commit.id.substr(0, 6)} ${commit.message.replace(/\n/g, ' ')} (${det.join(' ')})`;
         }
         return resp;
     },
@@ -27,8 +27,12 @@ const events = {
             resp = '{0}#{1}: Unassigned {2}'.translate().format(body.repository.full_name, body.issue.id, body.assignee.login);
         } else if (body.action == 'closed') {
             resp = '{0} closed {1}#{2}.'.translate().format(body.sender.login, body.repository.full_name, body.issue.id);
-        }
+        } else resp = 'Unknwon issue action: {0}'.translate().format(body.action);
         return resp;
+    },
+    check_run(body) {
+    },
+    check_suite(body) {
     }
 };
 exports.init = function (item) {
@@ -42,21 +46,23 @@ exports.init = function (item) {
             let reponame = ctx.request.body.repository.full_name;
             let owner = ctx.request.body.repository.owner.login;
             let cnt = 0;
-            for (let i of config.watch) {
-                let hit = false
-                    || i.fliter.type == 'repo' && (new RegExp(i.fliter.value.replace(/\*/i, '.*')).test(reponame))
-                    || i.fliter.type == 'owner' && (new RegExp(i.fliter.value.replace(/\*/i, '.*')).test(owner));
-                if (hit) {
-                    if (typeof i.target == 'string') {
-                        CQ('send_group_msg', { group_id: i.target, message: events[event](ctx.request.body) });
-                        cnt++;
-                    } else
-                        for (let group_id of i.target) {
-                            CQ('send_group_msg', { group_id, message: events[event](ctx.request.body) });
+            let message = events[event](ctx.request.body);
+            if (message)
+                for (let i of config.watch) {
+                    let hit = false
+                        || i.fliter.type == 'repo' && (new RegExp(i.fliter.value.replace(/\*/i, '.*')).test(reponame))
+                        || i.fliter.type == 'owner' && (new RegExp(i.fliter.value.replace(/\*/i, '.*')).test(owner));
+                    if (hit) {
+                        if (typeof i.target == 'string' || typeof i.target == 'number') {
+                            CQ('send_group_msg', { group_id: i.target, message });
                             cnt++;
-                        }
+                        } else
+                            for (let group_id of i.target) {
+                                CQ('send_group_msg', { group_id, message });
+                                cnt++;
+                            }
+                    }
                 }
-            }
             ctx.body = `Pushed to ${cnt} group(s)`;
         } catch (e) {
             console.log(e);
