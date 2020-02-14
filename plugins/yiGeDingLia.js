@@ -1,14 +1,14 @@
-const getFirstPinyin = (data) => {
+const getFirstPinyin = data => {
     return (data.pinyin.split(/\s+/).shift() || '')
         .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
         .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v');
 };
-const getLastPinyin = (data) => {
+const getLastPinyin = data => {
     return (data.pinyin.split(/\s+/).pop() || '')
         .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
         .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v');
 };
-const fix = (data) => {
+const fix = data => {
     if ('味同嚼蜡' === data.word)
         data.pinyin = data.pinyin.replace('cù', 'là');
     if (data.word.endsWith('俩'))
@@ -16,7 +16,7 @@ const fix = (data) => {
     data.pinyin = data.pinyin.replace(/yi([ēéěèêe])/g, 'y$1');
     return data;
 };
-const indexed = (json) => {
+const indexed = json => {
     let result = { firstPinyin: {}, lastPinyin: {}, word: {} };
     for (const data of json) {
         fix(data);
@@ -47,9 +47,7 @@ const indexed = (json) => {
     }
     return result;
 };
-
-
-const handle = (input) => {
+const handle = input => {
     let result = [];
     let data = db.word[input];
     while (data && data.level) {
@@ -66,7 +64,6 @@ const handle = (input) => {
     }
     return result;
 };
-
 const db = indexed(require('../database/yiGeDingLia.json'));
 const reg = /^(一个顶俩|成语接龙)>(.*)/i;
 exports.info = {
@@ -86,8 +83,7 @@ exports.message = async (e, context) => {
     let d = await handle(tmp[2]);
     if (d) {
         let res = [];
-        for (let i in d)
-            res.push(d[i].word, ' ');
+        for (let i in d) res.push(d[i].word, ' ');
         return res;
     }
 };

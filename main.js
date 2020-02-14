@@ -22,7 +22,6 @@ function warp(target) {
 module.exports = class {
     constructor(item) {
         this.config = item.config;
-        this.db = item.db;
         this.plugins = {};
         this.CQ = new CQWebSocket({
             host: this.config.host || 'localhost',
@@ -39,6 +38,7 @@ module.exports = class {
         this.run();
     }
     async run() {
+        await this.preloadLib();
         this.CQ
             .on('socket.error', this.log.error)
             .on('socket.connecting', (wsType, attempts) => this.log.log('Connecting ({0})'.translate().format(attempts)))
@@ -64,7 +64,7 @@ module.exports = class {
     }
     basic() {
         const blacklist = require('./database/blacklist'),
-            RE_HELP = /^帮助>([0-9])+/i,
+            RE_HELP = /^帮助>([0-9]+)/i,
             msg_private = (e, context) => {
                 if (blacklist.private.includes(context.user_id))
                     e.stopPropagation();
@@ -93,7 +93,7 @@ module.exports = class {
                     let res = ['当前开启的功能有：\n'];
                     for (let i in enabled) {
                         try {
-                            let info = this.plugins[this.config.enabledplugins[i]].info();
+                            let info = this.plugins[this.config.enabledplugins[i]].info;
                             res.push(i, ':', info.description, '\n');
                         } catch (e) { /* Ignore */ }
                     }
@@ -102,13 +102,12 @@ module.exports = class {
                 }
                 if (RE_HELP.test(context.raw_message)) {
                     let tmp = RE_HELP.exec(context.raw_message), info;
-                    if (!this.config.enabledplugins[i] || this.config.enabledplugins)
-                        try {
-                            info = this.plugins[this.config.enabledplugins[parseInt(tmp[1])]].info();
-                            if (info.hidden) throw new Error();
-                        } catch (e) {
-                            return '编号不合法！';
-                        }
+                    try {
+                        info = this.plugins[this.config.enabledplugins[parseInt(tmp[1])]].info;
+                        if (info.hidden) throw new Error('This module is hidden!');
+                    } catch (e) {
+                        return '编号不合法！' + e.message;
+                    }
                     return ['插件:', info.id, '\n提供者:', info.author, '\n使用方式:\n', info.usage];
                 }
             };
@@ -117,7 +116,18 @@ module.exports = class {
         this.CQ.on('message.discuss', msg_discuss);
         this.CQ.on('message', msg);
     }
-    loadLib() {
+    async preloadLib() {
+        if (this.config.db) {
+            let url = 'mongodb://';
+            if (this.config.db.user) url += this.config.db.user + ':' + this.config.db.password + '@';
+            url += this.config.db.host + ':' + this.config.db.port + '/' + this.config.db.name;
+            let Database = await (require('mongodb')).MongoClient.connect(
+                url, { useNewUrlParser: true, useUnifiedTopology: true }
+            );
+            this.db = Database.db(this.config.db.name);
+        }
+    }
+    async loadLib() {
         this.lib.utils = new (require('./lib/utils'))({ info: this.info });
         this.log.log('Lib loaded.');
     }

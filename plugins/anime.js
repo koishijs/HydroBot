@@ -15,8 +15,8 @@ exports.info = {
         email: 'masnn0@outlook.com',
         github: 'https://github.com/masnn/'
     },
-    description: '',
-    usage: ''
+    description: '查询动漫图片出处',
+    usage: 'anime>图片'
 };
 exports.message = async (e, context) => {
     if (!reg.test(context.message)) return;

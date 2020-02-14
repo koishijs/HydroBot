@@ -30,9 +30,21 @@ const events = {
         } else resp = 'Unknwon issue action: {0}'.translate().format(body.action);
         return resp;
     },
+    watch(body) {
+    },
+    star(body) {
+        if (body.action == 'created') {
+            return '{0} stared {1} (total {2} stargazers)'.translate().format(body.sender.login, body.repository.full_name, body.repository.stargazers_count);
+        }
+    },
     check_run(body) {
     },
     check_suite(body) {
+    },
+    status(body) {
+        return;
+        let resp = '{0}:{1} {2}'.translate().format(body.context, body.state, body.repository.full_name);
+        return resp + '\n' + body.description;
     }
 };
 exports.init = function (item) {

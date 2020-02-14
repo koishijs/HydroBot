@@ -112,6 +112,7 @@ let db = [
         }
     }
 ];
+
 exports.init = item => {
     config = item.config || {};
     log = item.log;

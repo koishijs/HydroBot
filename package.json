@@ -13,6 +13,7 @@
     "koa-body": "^4.1.1",
     "koa-router": "^7.4.0",
     "lodash": "^4.17.15",
+    "mongodb": "^3.5.3",
     "wikijs": "^5.5.1"
   },
   "name": "hydro.qqbot",
