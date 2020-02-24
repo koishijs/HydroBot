@@ -1,5 +1,4 @@
 const
-    os = require('os'),
     child = require('child_process'),
     fs = require('fs').promises;
 Array.prototype.indexOf = function (val) {
@@ -67,30 +66,6 @@ let db = [
             if (context.group_id) CQ('set_group_leave', { group_id: context.group_id });
             else CQ('set_discuss_leave', { discuss_id: context.discuss_id });
             e.stopPropagation();
-        }
-    },
-    {
-        reg: /^status$/i,
-        public: true,
-        op: () => ('Running on: ' + os.release() + ' ' + os.arch() + '\n'
-            + 'Mem usage: ' + ((os.totalmem() - os.freemem()) / 1073741824).toFixed(1) + 'GiB/'
-            + (os.totalmem() / 1073741824).toFixed(1) + 'GiB\n'
-            + 'Process uptime: ' + (process.uptime() / 60).toFixed(1) + 'min\n'
-            + 'System uptime: ' + (os.uptime() / 60).toFixed(1) + 'min')
-    },
-    {
-        reg: /^cmd>([\s\S]+)$/i,
-        op: async tmp => {
-            let res = eval(tmp[1]);
-            if (res instanceof Promise) res = await res;
-            return res;
-        }
-    },
-    {
-        reg: /^sh>(.+)$/i,
-        op: async (tmp) => {
-            let res = require('child_process').execSync(tmp[1]);
-            return res.toString();
         }
     },
     {

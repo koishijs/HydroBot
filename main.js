@@ -4,19 +4,28 @@ const
     koa = require('koa'),
     body = require('koa-body'),
     router = require('koa-router'),
+    path = require('path'),
+    _ = require('lodash'),
     i18n = require('./modules/i18n');
 
 function warp(target) {
-    return async (e, ctx) => {
+    return async (a, b, c) => {
         let res;
         try {
-            res = target(e, ctx);
+            res = target(a, b, c);
             if (res instanceof Promise) res = await res;
         } catch (e) {
             return e;
         }
         return res;
     };
+}
+
+String.prototype.decode = function () {
+    return this.replace(/&#91;/gm, '[').replace(/&#93;/gm, ']').replace(/&amp;/gm, '&');
+}
+String.prototype.encode = function () {
+    return this.replace(/\[/gm, '&#91;').replace(/\]/gm, '&#93;').replace(/&/gm, '&amp;');
 }
 
 module.exports = class {
@@ -35,6 +44,7 @@ module.exports = class {
         this.info = {};
         this.log = require('./log');
         this.lib = {};
+        this.commands = [];
         this.run();
     }
     async run() {
@@ -65,15 +75,20 @@ module.exports = class {
     basic() {
         const blacklist = require('./database/blacklist'),
             RE_HELP = /^帮助>([0-9]+)/i,
-            msg_private = (e, context) => {
+            msg_private = async (e, context) => {
                 if (blacklist.private.includes(context.user_id))
                     e.stopPropagation();
                 if (this.config.logmode == 'full')
                     this.log.log(context);
                 else if (this.config.logmode == 'msg_only')
                     this.log.log(context.sender.nickname, context.message);
+                for (let command of this.commands) {
+                    if (command.type == 'group') continue;
+                    if (command.command.test(context.message))
+                        return await command.handler(command.command.exec(context.message), e, context);
+                }
             },
-            msg_group = (e, context) => {
+            msg_group = async (e, context) => {
                 if (blacklist.group.includes(context.group_id)) e.stopPropagation();
                 else if (blacklist.private.includes(context.user_id)) e.stopPropagation();
                 if (this.config.logmode == 'full')
@@ -82,38 +97,36 @@ module.exports = class {
                     this.log.log(context.group_id, context.user_id, context.message_id,
                         context.sender.nickname, context.sender.card,
                         context.message);
-            },
-            msg_discuss = (e, context) => {
-                if (blacklist.discuss.includes(context.discuss_id))
-                    e.stopPropagation();
-            },
-            msg = (e, context) => {
-                let enabled = this.config.enabledplugins;
-                if (context.raw_message == '帮助') {
-                    let res = ['当前开启的功能有：\n'];
-                    for (let i in enabled) {
-                        try {
-                            let info = this.plugins[this.config.enabledplugins[i]].info;
-                            res.push(i, ':', info.description, '\n');
-                        } catch (e) { /* Ignore */ }
-                    }
-                    res.push('输入 帮助>序号 可获得详细信息');
-                    return res;
+                for (let command of this.commands) {
+                    if (command.type == 'private') continue;
+                    if (command.command.test(context.message))
+                        return await command.handler(command.command.exec(context.message), e, context);
                 }
-                if (RE_HELP.test(context.raw_message)) {
-                    let tmp = RE_HELP.exec(context.raw_message), info;
+            },
+            msg = async (e, context) => {
+                if (context.raw_message.startsWith(this.config.prompt)) {
+                    let command = context.message.split(' '), app, res;
+                    let cmd = _.drop(command[0].split(''), 1).join('');
                     try {
-                        info = this.plugins[this.config.enabledplugins[parseInt(tmp[1])]].info;
-                        if (info.hidden) throw new Error('This module is hidden!');
+                        app = require(path.resolve(__dirname, 'commands', cmd + '.js'));
                     } catch (e) {
-                        return '编号不合法！' + e.message;
+                        if (e.code == 'MODULE_NOT_FOUND') return 'msh: command not found: ' + cmd;
+                        return `Error loading application\n${e.message}\n${e.stack}`;
                     }
-                    return ['插件:', info.id, '\n提供者:', info.author, '\n使用方式:\n', info.usage];
+                    try {
+                        if (app.sudo && !this.config.admin.includes(context.user_id)) res = 'msh: permission denied: ' + cmd;
+                        else {
+                            res = app.exec(_.drop(command, 1).join(' '), e, context);
+                            if (res instanceof Promise) res = await res;
+                        }
+                    } catch (e) {
+                        return `${e.message}\n${e.stack}`;
+                    }
+                    return res;
                 }
             };
         this.CQ.on('message.private', msg_private);
         this.CQ.on('message.group', msg_group);
-        this.CQ.on('message.discuss', msg_discuss);
         this.CQ.on('message', msg);
     }
     async preloadLib() {
@@ -137,8 +150,6 @@ module.exports = class {
             if (plugin) {
                 this.set('message', plugin.message);
                 this.set('message.group', plugin.msg_group);
-                this.set('message.discuss', plugin.msg_discuss);
-                this.set('message.discuss.@.me', plugin.msg_discuss_atme);
                 this.set('message.private', plugin.msg_private);
                 this.set('notice.group_upload', plugin.notice_group_upload);
                 this.set('notice.group_admin.set', plugin.notice_group_setadmin);
@@ -178,7 +189,10 @@ module.exports = class {
                     db: this.db,
                     config: this.config.plugin[name] || {},
                     info: this.info,
-                    lib: this.lib
+                    lib: this.lib,
+                    command: (type, cmd, handler) => {
+                        this.commands.push({ type, command: cmd, handler: warp(handler) });
+                    }
                 });
                 if (t instanceof Promise) await t;
             }

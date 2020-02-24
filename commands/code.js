@@ -1,7 +1,7 @@
 'use strict';
 const
     axios = require('axios'),
-    reg = /^(code|code_base64|code_from_paste)>([a-zA-z]+?)>([\s\S]*)$/i,
+    _ = require('lodash'),
     LANGS = {
         asm: 45,
         bash: 46,
@@ -109,41 +109,23 @@ async function run(code, lang, input, base64 = false) {
     console.log(result);
     return result;
 }
-
-let log = null;
-exports.init = item => {
-    log = item.log;
-};
-exports.info = {
-    id: 'codeRunner',
-    author: 'masnn',
-    hidden: false,
-    contacts: {
-        email: 'masnn0@outlook.com',
-        github: 'https://github.com/masnn/'
-    },
-    description: '运行代码',
-    usage: `
-公众开放如下内容：
-code>代码名称>代码  运行代码
-code_base64>代码名称>代码 提交base64编码的源程序
-
-注：代码名称通常为文件默认扩展名
-`
-};
-exports.message = async (e, context) => {
-    if (!reg.test(context.message)) return;
-    let tmp = reg.exec(context.message);
-    if (!LANGS[tmp[2]]) return '[错误]不支持的语言:' + tmp[2];
-    log.log('[CodeRunner]Now Running:' + langname(tmp[2]) + ' From:' + context.user_id);
-    if (tmp[1] == 'code_from_paste') {
-        tmp[3] = await axios.get(tmp[3]);
-        tmp[3] = tmp[3].data;
+exports.exec = async (args, e, context) => {
+    args = args.replace(/&#91;/gm, '[');
+    args = args.replace(/&#93;/gm, ']');
+    args = args.replace(/&amp;/gm, '&');
+    args = args.split(' ');
+    if (args[0] == 'help') return 'code [code|base64|url] [Language] [code]  运行代码';
+    if (args.length < 3) return 'Use `code help\' for help';
+    if (!LANGS[args[1]]) return '[错误]不支持的语言:' + args[1];
+    console.log('[CodeRunner]Now Running:' + langname(args[1]) + ' From:' + context.user_id);
+    if (args[0] == 'url') {
+        args[2] = await axios.get(args[2]);
+        args[2] = args[2].data;
     }
-    let { status_id, stdout, stderr } = await run(tmp[3], LANGS[tmp[2]], '', 'code_base64' == tmp[1]);
+    let { status_id, stdout, stderr } = await run(_.drop(args, 2).join(' '), LANGS[args[1]], '', 'base64' == args[0]);
     console.log(status_id, stdout, stderr);
     if (status_id == 3)
-        return `执行${langname(tmp[2])}结果: \n${decode(stdout || '')}`;
+        return `执行${langname(args[1])}结果: \n${decode(stdout || '')}`;
     else
-        return `执行${langname(tmp[2])}出错: ${STATUS[status_id]}\n${decode(stderr || '')}`;
+        return `执行${langname(args[1])}出错: ${STATUS[status_id]}\n${decode(stderr || '')}`;
 }

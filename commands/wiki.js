@@ -9,13 +9,7 @@ const
     wiki = require('wikijs').default,
     wikipedia = wiki({ apiUrl: 'https://wiki.ry4.me/w/api.php' }),
     moegirl = wiki({ apiUrl: 'https://zh.moegirl.org/api.php' }),
-    REG_BAIDUBAIKE = /^(baike|百科)>([\s\S]+)/i,
-    REG_WIKIPEDIA = /^(wiki|wikipedia)>([\s\S]+)/i,
-    REG_WIKIPEDIA_DETAIL = /^(wiki|wikipedia)>>>([\s\S]+)/i,
-    REG_MOE = /^(moegirl)>([\s\S]+)/i,
-    REG_MOE_DETAIL = /^(moegirl)>>>([\s\S]+)/i;
-
-let log = null;
+    _ = require('lodash');
 
 function cutstr(str, len) {
     let str_length = 0;
@@ -184,71 +178,54 @@ const request = async href => {
     let page = await axios.get(URL.resolve(base, href));
     return page.data ? cheerio.load(page.data) : null;
 };
-exports.init = item => {
-    log = item.log;
-};
-exports.info = {
-    id: 'baike',
-    author: 'masnn',
-    hidden: false,
-    contacts: {
-        email: 'masnn0@outlook.com',
-        github: 'https://github.com/masnn/'
-    },
-    description: '提供各大百科的搜索功能',
-    usage: `
-公众开放如下内容：
-baike>文章名    百度百科
-wiki>文章名     维基百科
-wiki>>>文章名   维基百科，输出详细内容
-moe>文章名      萌娘百科
-moe>>>文章名    萌娘百科，输出详细内容
-`
-};
-exports.message = async (e, context) => {
-    if (REG_BAIDUBAIKE.test(context.raw_message)) {
-        let tmp = REG_BAIDUBAIKE.exec(context.raw_message);
-        log.log('[Baike]From:' + context.user_id + ' ' + tmp[2]);
-        return ba(tmp[2]);
-    } else if (REG_WIKIPEDIA_DETAIL.test(context.raw_message)) {
-        let tmp = REG_WIKIPEDIA_DETAIL.exec(context.raw_message);
-        log.log('[Wiki Detail]From: ' + context.user_id + ' ' + tmp[2]);
+
+exports.exec = async (args, e, context) => {
+    args = args.split(' ');
+    console.log('wiki', args, context.user_id);
+    if (args.length == 0) {
+        return "unknown subtype. use 'wiki help' for help."
+    } else if (args[0] == 'help') {
+        return `Provided by masnn
+wiki baike 文章名   百度百科
+wiki wiki 文章名    维基百科
+wiki wiki+ 文章名   维基百科，输出详细内容
+wiki moe 文章名     萌娘百科
+wiki moe+ 文章名    萌娘百科，输出详细内容`
+    }
+    if (args[0] == 'wiki+') {
         let page;
         try {
-            page = await wikipedia.page(tmp[2]);
+            page = await wikipedia.page(args[1]);
         } catch (e) {
             return 'No article found.';
         }
         return cutstr(await page.rawContent(), 1000);
-    } else if (REG_WIKIPEDIA.test(context.raw_message)) {
-        let tmp = REG_WIKIPEDIA.exec(context.raw_message);
-        log.log('[Wiki]From: ' + context.user_id + ' ' + tmp[2]);
+    } else if (args[0] == 'wiki') {
         let page;
         try {
-            page = await wikipedia.page(tmp[2]);
+            page = await wikipedia.page(args[1]);
         } catch (e) {
             return 'No article found.';
         }
         return await page.summary();
-    } else if (REG_MOE_DETAIL.test(context.raw_message)) {
-        let tmp = REG_MOE_DETAIL.exec(context.raw_message);
-        log.log('[MOE Detail]From: ' + context.user_id + ' ' + tmp[2]);
+    } else if (args[0] == 'baidu') {
+        return ba(args[1]);
+    } else if (args[0] == 'moe+') {
         let page;
         try {
-            page = await moegirl.page(tmp[2]);
+            page = await moegirl.page(args[1]);
         } catch (e) {
             return 'No article found.';
         }
         return cutstr(await page.rawContent(), 1000);
-    } else if (REG_MOE.test(context.raw_message)) {
-        let tmp = REG_MOE.exec(context.raw_message);
-        log.log('[MOE]From: ' + context.user_id + ' ' + tmp[2]);
+    } else if (args[0] == 'moe') {
         let page;
         try {
-            page = await moegirl.page(tmp[2]);
+            page = await moegirl.page(args[1]);
         } catch (e) {
             return 'No article found.';
         }
         return await page.summary();
     }
-};
+    return "unknown subtype. use 'wiki help' for help."
+}

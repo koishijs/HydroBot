@@ -65,25 +65,11 @@ const handle = input => {
     return result;
 };
 const db = indexed(require('../database/yiGeDingLia.json'));
-const reg = /^(一个顶俩|成语接龙)>(.*)/i;
-exports.info = {
-    id: 'yiGeDingLia',
-    author: 'masnn',
-    hidden: false,
-    contacts: {
-        email: 'masnn0@outlook.com',
-        github: 'https://github.com/masnn/'
-    },
-    description: '一个顶俩',
-    usage: '一个顶俩>成语'
-};
-exports.message = async (e, context) => {
-    if (!reg.test(context.raw_message)) return;
-    let tmp = reg.exec(context.raw_message);
-    let d = await handle(tmp[2]);
-    if (d) {
+exports.exec = async args => {
+    let d = await handle(args);
+    if (d.length) {
         let res = [];
         for (let i in d) res.push(d[i].word, ' ');
         return res;
     }
-};
+}
