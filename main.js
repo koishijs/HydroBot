@@ -73,10 +73,9 @@ module.exports = class {
         }
     }
     basic() {
-        const blacklist = require('./database/blacklist'),
-            RE_HELP = /^帮助>([0-9]+)/i,
+        const
             msg_private = async (e, context) => {
-                if (blacklist.private.includes(context.user_id))
+                if (this.config.blacklist.private.includes(context.user_id))
                     e.stopPropagation();
                 if (this.config.logmode == 'full')
                     this.log.log(context);
@@ -89,8 +88,8 @@ module.exports = class {
                 }
             },
             msg_group = async (e, context) => {
-                if (blacklist.group.includes(context.group_id)) e.stopPropagation();
-                else if (blacklist.private.includes(context.user_id)) e.stopPropagation();
+                if (this.config.blacklist.group.includes(context.group_id) && !this.config.admin.includes(context.user_id)) e.stopPropagation();
+                else if (this.config.blacklist.private.includes(context.user_id)) e.stopPropagation();
                 if (this.config.logmode == 'full')
                     this.log.log(context);
                 else if (this.config.logmode == 'msg_only')
@@ -106,7 +105,8 @@ module.exports = class {
             msg = async (e, context) => {
                 if (context.raw_message.startsWith(this.config.prompt)) {
                     let command = context.message.split(' '), app, res;
-                    let cmd = _.drop(command[0].split(''), 1).join('');
+                    let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/');
+                    if (cmd[0] == '/') return 'msh: command not found: ' + cmd;
                     try {
                         app = require(path.resolve(__dirname, 'commands', cmd + '.js'));
                     } catch (e) {
