@@ -6,6 +6,8 @@ const
     router = require('koa-router'),
     path = require('path'),
     _ = require('lodash'),
+    os = require('os'),
+    { ErrorMessage } = require('./error'),
     i18n = require('./modules/i18n');
 
 function warp(target) {
@@ -109,9 +111,10 @@ module.exports = class {
                     if (cmd[0] == '/') return 'msh: command not found: ' + cmd;
                     try {
                         app = require(path.resolve(__dirname, 'commands', cmd + '.js'));
+                        if (app.platform && !app.platform.includes(os.platform())) throw new ErrorMessage(`This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`);
                     } catch (e) {
                         if (e.code == 'MODULE_NOT_FOUND') return 'msh: command not found: ' + cmd;
-                        return `Error loading application\n${e.message}\n${e.stack}`;
+                        return `Error loading application:\n${e.message}${e.stack ? '\n' + e.stack : ''}`;
                     }
                     try {
                         if (app.sudo && !this.config.admin.includes(context.user_id)) res = 'msh: permission denied: ' + cmd;

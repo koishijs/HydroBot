@@ -3,7 +3,7 @@ let config = { watch: [] };
 let CQ = null;
 const events = {
     push(body) {
-        let resp = 'Recent commit to {0} by {1}'.translate().format(body.repository.full_name, body.pusher.name);
+        let resp = 'Recent commit to {0}:{1} by {2}'.translate().format(body.repository.full_name, body.ref, body.pusher.name);
         for (let commit of body.commits) {
             let det = [];
             if (commit.added.length) det.push(`${commit.added.length}+`);
@@ -16,26 +16,56 @@ const events = {
     issues(body) {
         let resp;
         if (body.action == 'opened') {
-            resp = '{0} opened an issue for {1}#{2}'.translate().format(body.issue.user.login, body.repository.full_name, body.issue.id);
+            resp = '{0} opened an issue for {1}#{2}'.translate().format(body.issue.user.login, body.repository.full_name, body.issue.number);
             resp = resp + '\n' + body.issue.title;
         } else if (body.action == 'created') {
-            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.id);
+            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
             resp += '\n' + body.comment.body;
         } else if (body.action == 'assigned') {
-            resp = '{0}#{1}: Assigned {2}'.translate().format(body.repository.full_name, body.issue.id, body.assignee.login);
+            resp = '{0}#{1}: Assigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
         } else if (body.action == 'unassigned') {
-            resp = '{0}#{1}: Unassigned {2}'.translate().format(body.repository.full_name, body.issue.id, body.assignee.login);
+            resp = '{0}#{1}: Unassigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
         } else if (body.action == 'closed') {
-            resp = '{0} closed {1}#{2}.'.translate().format(body.sender.login, body.repository.full_name, body.issue.id);
+            resp = '{0} closed {1}#{2}.'.translate().format(body.sender.login, body.repository.full_name, body.issue.number);
+        } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
+            resp = '{0} {1} Issue:{2}#{3}'.translate().format(body.sender.login, body.action, body.repository.full_name, body.issue.number);
         } else resp = 'Unknwon issue action: {0}'.translate().format(body.action);
+        return resp;
+    },
+    issue_comment() {
+        let resp;
+        if (body.action == 'created') {
+            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
+            resp += '\n' + body.comment.body;
+        }
+        return resp;
+    },
+    pull_request(body) {
+        let resp;
+        if (body.action == 'opened') {
+            resp = '{0} opened an pull request for {1}#{2}'.translate().format(body.issue.user.login, body.repository.full_name, body.issue.number);
+            resp = resp + '\n' + body.issue.title;
+        } else if (body.action == 'created') {
+            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
+            resp += '\n' + body.comment.body;
+        } else if (body.action == 'assigned') {
+            resp = '{0}#{1}: Assigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
+        } else if (body.action == 'unassigned') {
+            resp = '{0}#{1}: Unassigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
+        } else if (body.action == 'review_requested') {
+            resp = '{0}#{1}: Request a review'.translate().format(body.repository.full_name, body.issue.number);
+        } else if (body.action == 'closed' && !body.merged) {
+            resp = '{0} closed {1}#{2}.'.translate().format(body.sender.login, body.repository.full_name, body.issue.number);
+        } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
+            resp = '{0} {1} PR:{2}#{3}'.translate().format(body.sender.login, body.action, body.repository.full_name, body.issue.number);
+        } else resp = 'Unknwon pull request action: {0}'.translate().format(body.action);
         return resp;
     },
     watch(body) {
     },
     star(body) {
-        if (body.action == 'created') {
+        if (body.action == 'created')
             return '{0} stared {1} (total {2} stargazers)'.translate().format(body.sender.login, body.repository.full_name, body.repository.stargazers_count);
-        }
     },
     check_run(body) {
     },
@@ -52,13 +82,17 @@ exports.init = function (item) {
     config = item.config;
     item.router.post('/github', async ctx => {
         try {
-            let event = ctx.request.headers['x-github-event'];
-            if (!events[event])
+            let event = ctx.request.headers['x-github-event'], body;
+            if (typeof ctx.request.body.payload == 'string') body = JSON.parse(ctx.request.body.payload);
+            else body = ctx.request.body;
+            if (!events[event]) {
                 events[event] = body => `${body.repository.full_name} triggered an unknown event: ${event}`;
-            let reponame = ctx.request.body.repository.full_name;
-            let owner = ctx.request.body.repository.owner.login;
+                fs.writeFileSync('/root/unknown', body);
+            }
+            let reponame = body.repository.full_name;
+            let owner = body.repository.owner.login;
             let cnt = 0;
-            let message = events[event](ctx.request.body);
+            let message = events[event](body);
             if (message)
                 for (let i of config.watch) {
                     let hit = false
@@ -86,9 +120,7 @@ exports.message = (e, context) => {
     try {
         if (context.raw_message.startsWith('/repo add')) {
             let result = context.raw_message.split(' ');
-            result.shift();
-            result.shift();
-            let [reponame] = result;
+            let reponame = result[2];
             config.watch.push({ fliter: { type: 'repo', value: reponame }, target: context.group_id });
             return `Watching ${reponame}
             (You have to create a webhook to http://2.masnn.io:6701/github for your repo.)`;
