@@ -32,7 +32,7 @@ const events = {
         } else resp = 'Unknwon issue action: {0}'.translate().format(body.action);
         return resp;
     },
-    issue_comment() {
+    issue_comment(body) {
         let resp;
         if (body.action == 'created') {
             resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
