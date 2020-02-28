@@ -8,20 +8,32 @@
         "autoAgree",
         "github",
         "anime",
-        "ipWhere",
         "codeRunner",
-        "yiGeDingLia",
         "management",
-        "hitokoto",
-        "baike",
         "bot",
-        "translate"
+        "repeater",
+        "vijos_battle"
     ],
+    "blacklist": {
+        "group": [],
+        "private": []
+    },
+    "admin": [
+        3402182471
+    ],
+    "prompt": ">",
+    "db": {
+        "host": "localhost",
+        "port": 27017,
+        "name": "bot"
+    },
     "plugin": {
-        "github": {},
+        "github": {
+            "watch": []
+        },
         "bot": {
-            "appid": "123456",
-            "secret": "123456"
+            "appid": "61457b3e11455a74beddb5a808b244c7",
+            "secret": "20d0ba464b0d429088098befa80cc156"
         },
         "repeater": {
             "time": 4
@@ -29,12 +41,6 @@
         "autoAgree": {
             "friend": true,
             "group": true
-        },
-        "management": {
-            "admin": [
-                3402182471,
-                4609496
-            ]
         }
     }
 }
