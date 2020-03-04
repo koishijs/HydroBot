@@ -106,7 +106,7 @@ module.exports = class {
             },
             msg = async (e, context) => {
                 if (context.raw_message.startsWith(this.config.prompt)) {
-                    let command = context.message.split(' '), app, res;
+                    let command = context.message.replace(/\r/gm, '').split(' '), app, res;
                     let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/');
                     if (cmd[0] == '/') return 'msh: command not found: ' + cmd;
                     try {

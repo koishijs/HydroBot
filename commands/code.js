@@ -64,7 +64,7 @@ const
     langname = name => {
         switch (name) {
             case 'rb': return 'ruby';
-            case 'py': return 'python';
+            case 'py': case 'python2': return 'python';
             case 'pl': return 'perl';
             case 'coffee': return 'coffeescript';
             case 'sh': return 'bash';
@@ -80,7 +80,7 @@ const
             case 'lua': case 'ruby': case 'perl': case 'd': case 'fortan':
             case 'coffeescript': case 'bash': case 'assembly': case 'csharp':
             case 'ocaml': case 'erlang': case 'rust': case 'elixir':
-            case 'haskell': case 'javascript': return name;
+            case 'haskell': case 'javascript': case 'python': case 'python3': return name;
             default: return 'error';
         }
     }
@@ -109,11 +109,20 @@ async function run(code, lang, input, base64 = false) {
     console.log(result);
     return result;
 }
+let coll = null;
+(async function init() {
+    coll = global.App.db.collection('cmd_code');
+})();
 exports.exec = async (args, e, context) => {
     args = args.replace(/&#91;/gm, '[');
     args = args.replace(/&#93;/gm, ']');
     args = args.replace(/&amp;/gm, '&');
     args = args.split(' ');
+    if (args[1].includes('\n')) {
+        let i = args[1].split('\n');
+        args[1] = i[0];
+        args[2] = i[1] + ' ' + args[2];
+    }
     if (args[0] == 'help') return 'code [code|base64|url] [Language] [code]  运行代码';
     if (args.length < 3) return 'Use `code help\' for help';
     if (!LANGS[args[1]]) return '[错误]不支持的语言:' + args[1];

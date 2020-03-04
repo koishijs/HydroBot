@@ -108,22 +108,19 @@ exports.info = {
         github: 'https://github.com/masnn/'
     },
     description: '管理系统',
-    usage: `
-公众开放如下内容：
-status  获取当前运行状态
-`
+    usage: ''
 };
 exports.msg_group = exports.msg_private = async (e, context) => {
     if (disabled) return;
-    for (let i in db)
-        if (db[i].reg.test(context.raw_message))
-            if (db[i].public || config.admin.includes(context.user_id)) {
-                let tmp = db[i].reg.exec(context.raw_message);
+    for (let i of db)
+        if (i.reg.test(context.raw_message))
+            if (i.public || config.admin.includes(context.user_id)) {
+                let tmp = i.reg.exec(context.raw_message);
                 let res;
                 try {
-                    if (db[i].op instanceof Function)
-                        res = db[i].op(tmp, e, context);
-                    else res = eval(db[i].op);
+                    if (i.op instanceof Function)
+                        res = i.op(tmp, e, context);
+                    else res = eval(i.op);
                     if (res instanceof Promise)
                         res = await res;
                 } catch (e) {
