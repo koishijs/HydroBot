@@ -1,4 +1,5 @@
 'use strict';
+const Axios = require('axios');
 exports.info = {
     id: 'forward',
     author: 'masnn',
@@ -10,12 +11,26 @@ exports.info = {
     description: 'Group message forwarder',
     usage: ''
 };
-let config, CQ, rocket;
+let config, CQ, rocket, axios;
 exports.init = item => {
     config = item.config || {};
     CQ = item.CQ;
     rocket = item.rocket;
     if (!rocket) throw new Error('No rocket server for forwarding');
+    axios = Axios.create({
+        baseURL: config.image.host,
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        transformRequest: [
+            function (data) {
+                let ret = '';
+                for (let it in data)
+                    ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&';
+                return ret.substr(0, ret.length - 1);
+            }
+        ]
+    });
 };
 
 const FACE_MAP = [
@@ -23,8 +38,9 @@ const FACE_MAP = [
 ]
 
 exports.msg_group = async (e, context) => {
-    for (let i of config) {
+    for (let i of config.maps) {
         if (i[0] == context.group_id) {
+            let images = [], attachments = [];
             let message = context.message
                 .replace(/\[CQ:face,id=([0-9]+)\]/g, substr => {
                     let tmp = /\[CQ:face,id=([0-9]+)\]/i.exec(substr);
@@ -37,14 +53,26 @@ exports.msg_group = async (e, context) => {
                 })
                 .replace(/\[CQ:image,file=(.+?),url=(.+?)\]/g, substr => {
                     let tmp = /\[CQ:image,file=(.+?),url=(.+?)\]/i.exec(substr);
-                    return `![${tmp[1]}](${tmp[2]})`;
+                    images.push([tmp[1], tmp[2]]);
+                    return '';
                 });
-            await rocket.sendToRoomId((context.sender.card || context.sender.nickname) + ': ' + message, i[1]);
+            for (let i of images) {
+                let res = await axios.post('/api/1/upload', {
+                    key: config.image.key,
+                    source: i[1],
+                    format: 'json'
+                });
+                console.log('url=', res.data.image.image.url)
+                attachments.push({ image_url: res.data.image.image.url });
+            }
+            let msgobj = rocket.prepareMessage((context.sender.card || context.sender.nickname) + ': ' + message, i[1]);
+            msgobj.attachments = attachments;
+            await rocket.sendMessage(msgobj);
         }
     }
 };
 exports.rocket_msg_group = async (e, context) => {
-    for (let i of config) {
+    for (let i of config.maps) {
         if (i[1] == context.group_id) {
             let message = context.message
                 .replace(/\[/g, '&#91;').replace(/\]/g, '&#93;')
