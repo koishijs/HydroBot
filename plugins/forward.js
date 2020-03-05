@@ -34,7 +34,16 @@ exports.init = item => {
 };
 
 const FACE_MAP = [
-    ['26', 'jk']
+    ['2', 'se'],
+    ['13', 'cy'],
+    ['26', 'jk'],
+    ['32', 'yiw'],
+    ['76', 'qiang'],
+    ['107', 'kk'],
+    ['111', 'kel'],
+    ['178', 'xyx'],
+    ['182', 'xk'],
+    ['212', 'ts']
 ]
 
 exports.msg_group = async (e, context) => {
