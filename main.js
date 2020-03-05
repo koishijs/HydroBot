@@ -8,6 +8,7 @@ const
     _ = require('lodash'),
     os = require('os'),
     { ErrorMessage } = require('./error'),
+    { driver } = require('@rocket.chat/sdk'),
     i18n = require('./modules/i18n');
 
 function warp(target) {
@@ -39,6 +40,7 @@ module.exports = class {
             port: this.config.port || '6700',
             accessToken: this.config.access_token
         });
+        if (this.config.rocket) this.rocket = driver;
         this.set = (event, func) => func ? this.CQ.on(event, warp(func)) : null;
         this.koa = new koa();
         this.router = new router();
@@ -57,7 +59,7 @@ module.exports = class {
             .on('socket.connect', (wsType, sock, attempts) => this.log.log('Connected ({0})'.translate().format(attempts)))
             .on('socket.failed', (wsType, attempts) => this.log.log('Failed to connect ({0})'.translate().format(attempts)))
             .on('api.response', res => {
-                this.log.log('Server response: {0}'.translate().rawformat(res));
+                this.log.log('Server response: {@}'.translate().rawformat(res));
                 if (res.data && res.data.user_id) {
                     this.info.id = res.data.user_id;
                     this.loadLib();
@@ -67,11 +69,86 @@ module.exports = class {
             .on('ready', () => this.log.log('Initialized.\nProvided by masnn'));
         this.basic();
         this.load();
+        if (this.config.rocket) {
+            let host = this.config.rocket;
+            await driver.connect({ host: host.host, useSsl: host.ssl || true });
+            this._userId = await driver.login({ username: host.username, password: host.password });
+            await driver.joinRooms(host.rooms || ['general']);
+            const processMessages = async (err, message, messageOptions) => {
+                if (!err) {
+                    if (message.u._id === this._userId) return;
+                    const event = { stopPropagation: () => { } };
+                    const context = {
+                        message: message.msg, raw_message: message.msg,
+                        user_id: message.u._id, group_id: message.rid,
+                        message_id: message._id, host: host.name,
+                        sender: { card: message.u.name, nickname: message.u.username }
+                    }
+                    let response;
+                    try {
+                        response = this.RocketMessage(event, context);
+                        if (response instanceof Promise) response = await response;
+                    } catch (e) {
+                        response = e.toString + '\n' + e.stack;
+                    }
+                    if (typeof response == 'string') await driver.sendToRoomId(response, message.rid);
+                    else if (response instanceof Array) await driver.sendToRoomId(response.join(''), message.rid);
+                }
+            }
+            await driver.subscribeToMessages();
+            await driver.reactToMessages(processMessages);
+        }
         this.CQ.connect();
         if (this.config.api_port) {
             this.koa.use(this.router.routes()).use(this.router.allowedMethods());
             this.koa.listen(this.config.api_port);
             this.log.log('API inited at port {0}'.translate().format(this.config.api_port));
+        }
+    }
+    async RocketMessage(event, context) {
+        if (this.config.blacklist.group.includes(context.group_id) && !this.config.admin.includes(context.user_id)) e.stopPropagation();
+        else if (this.config.blacklist.private.includes(context.user_id)) e.stopPropagation();
+        if (this.config.logmode == 'full')
+            this.log.log(context);
+        else if (this.config.logmode == 'msg_only')
+            this.log.log(context.group_id, context.user_id, context.message_id,
+                context.sender.nickname, context.sender.card,
+                context.message);
+        if (context.raw_message.startsWith(this.config.prompt)) {
+            let command = context.message.replace(/\r/gm, '').split(' '), app, res;
+            let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/');
+            if (cmd[0] == '/') return 'msh: command not found: ' + cmd;
+            try {
+                app = require(path.resolve(__dirname, 'commands', cmd + '.js'));
+                if (app.platform && !app.platform.includes(os.platform())) throw new ErrorMessage(`This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`);
+            } catch (e) {
+                if (e.code == 'MODULE_NOT_FOUND') return 'msh: command not found: ' + cmd;
+                return `Error loading application:\n${e.message}${e.stack ? '\n' + e.stack : ''}`;
+            }
+            try {
+                if (app.sudo && !this.config.admin.includes(context.user_id)) res = 'msh: permission denied: ' + cmd;
+                else {
+                    res = app.exec(_.drop(command, 1).join(' '), event, context);
+                    if (res instanceof Promise) res = await res;
+                }
+            } catch (e) {
+                return `${e.message}\n${e.stack}`;
+            }
+            return res;
+        }
+        for (let command of this.commands) {
+            if (command.type == 'private') continue;
+            if (command.command.test(context.message))
+                return await command.handler(command.command.exec(context.message), e, context);
+        };
+        for (let i in this.plugins) {
+            let plugin = this.plugins[i], res;
+            if (plugin.rocket_msg_group) res = await plugin.rocket_msg_group(event, context);
+            else if (plugin.msg_group) res = await plugin.msg_group(event, context);
+            if (res) return res;
+            if (plugin.rocket_message) res = await plugin.rocket_message(event, context);
+            else if (plugin.message) res = await plugin.message(event, context);
+            if (res) return res;
         }
     }
     basic() {
@@ -193,6 +270,7 @@ module.exports = class {
                     config: this.config.plugin[name] || {},
                     info: this.info,
                     lib: this.lib,
+                    rocket: this.rocket,
                     command: (type, cmd, handler) => {
                         this.commands.push({ type, command: cmd, handler: warp(handler) });
                     }
