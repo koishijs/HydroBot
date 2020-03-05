@@ -73,9 +73,11 @@ module.exports = class {
             let host = this.config.rocket;
             await driver.connect({ host: host.host, useSsl: host.ssl || true });
             this._userId = await driver.login({ username: host.username, password: host.password });
-            await driver.joinRooms(host.rooms || ['general']);
+            await driver.joinRooms(host.rooms || ['GENERAL']);
             const processMessages = async (err, message, messageOptions) => {
                 if (!err) {
+                    if (message._id == this.lastRocketMessage) return;
+                    this.lastRocketMessage = message._id;
                     if (message.u._id === this._userId) return;
                     const event = { stopPropagation: () => { } };
                     const context = {
@@ -106,8 +108,8 @@ module.exports = class {
         }
     }
     async RocketMessage(event, context) {
-        if (this.config.blacklist.group.includes(context.group_id) && !this.config.admin.includes(context.user_id)) e.stopPropagation();
-        else if (this.config.blacklist.private.includes(context.user_id)) e.stopPropagation();
+        if (this.config.blacklist.group.includes(context.group_id) && !this.config.admin.includes(context.user_id)) return;
+        else if (this.config.blacklist.private.includes(context.user_id)) return;
         if (this.config.logmode == 'full')
             this.log.log(context);
         else if (this.config.logmode == 'msg_only')
@@ -128,7 +130,7 @@ module.exports = class {
             try {
                 if (app.sudo && !this.config.admin.includes(context.user_id)) res = 'msh: permission denied: ' + cmd;
                 else {
-                    res = app.exec(_.drop(command, 1).join(' '), event, context);
+                    res = app.exec(_.drop(command, 1).join(' '), event, context, this);
                     if (res instanceof Promise) res = await res;
                 }
             } catch (e) {
@@ -196,7 +198,7 @@ module.exports = class {
                     try {
                         if (app.sudo && !this.config.admin.includes(context.user_id)) res = 'msh: permission denied: ' + cmd;
                         else {
-                            res = app.exec(_.drop(command, 1).join(' '), e, context);
+                            res = app.exec(_.drop(command, 1).join(' '), e, context, this);
                             if (res instanceof Promise) res = await res;
                         }
                     } catch (e) {

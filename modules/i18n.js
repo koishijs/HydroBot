@@ -21,8 +21,8 @@ String.prototype.format = function (args) {
     return result;
 };
 String.prototype.rawformat = function (object) {
-    let result = this;
-    return result.replace('${0}', JSON.stringify(object));
+    let res = this.split('{@}');
+    return [res[0], object, res[1]];
 };
 String.prototype.translate = function (language) {
     if (locales[language]) return locales[language][this] || this;
