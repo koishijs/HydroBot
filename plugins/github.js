@@ -69,7 +69,7 @@ const events = {
                 if (await coll_star.findOne({ user: body.sender.login, repo: body.repository.full_name }))
                     return;
             await coll_star.insertOne({ user: body.sender.login, repo: body.repository.full_name });
-            return '{0} stared {1} (total {2} stargazers)'.translate().format(body.sender.login, body.repository.full_name, body.repository.stargazers_count);
+            return '{0} starred {1} (total {2} stargazers)'.translate().format(body.sender.login, body.repository.full_name, body.repository.stargazers_count);
         }
     },
     async check_run(body) {
