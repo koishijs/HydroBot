@@ -1,7 +1,8 @@
 const
     fs = require('fs'),
-    yaml = require('js-yaml'),
-    locales = {};
+    yaml = require('js-yaml');
+
+let locales = {};
 
 String.prototype.format = function (args) {
     var result = this;
@@ -24,12 +25,14 @@ String.prototype.rawformat = function (object) {
     let res = this.split('{@}');
     return [res[0], object, res[1]];
 };
-String.prototype.translate = function (language) {
+String.prototype.translate = function (language = 'zh-CN') {
     if (locales[language]) return locales[language][this] || this;
     else return this;
 };
 
 module.exports = function load(file, language) {
     if (!locales[language]) locales[language] = {};
-    Object.assign(locales[language], yaml.safeLoad(file));
+    let content = fs.readFileSync(file).toString();
+    Object.assign(locales[language], yaml.safeLoad(content));
+    console.log(locales);
 };

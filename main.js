@@ -11,6 +11,8 @@ const
     { driver } = require('@rocket.chat/sdk'),
     i18n = require('./modules/i18n');
 
+i18n(path.resolve(__dirname, 'locales', 'zh-CN.yaml'), 'zh-CN');
+
 function warp(target) {
     return async (a, b, c) => {
         let res;
@@ -118,8 +120,9 @@ module.exports = class {
                 context.message);
         if (context.raw_message.startsWith(this.config.prompt)) {
             let command = context.message.replace(/\r/gm, '').split(' '), app, res;
-            let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/');
+            let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/').toLowerCase();
             if (cmd[0] == '/') return 'msh: command not found: ' + cmd;
+            if (global.STOP && cmd != 'start') return;
             try {
                 app = require(path.resolve(__dirname, 'commands', cmd + '.js'));
                 if (app.platform && !app.platform.includes(os.platform())) throw new ErrorMessage(`This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`);
@@ -138,6 +141,7 @@ module.exports = class {
             }
             return res;
         }
+        if (global.STOP) return;
         for (let command of this.commands) {
             if (command.type == 'private') continue;
             if (command.command.test(context.message))
@@ -162,6 +166,7 @@ module.exports = class {
                     this.log.log(context);
                 else if (this.config.logmode == 'msg_only')
                     this.log.log(context.sender.nickname, context.message);
+                if (global.STOP) return;
                 for (let command of this.commands) {
                     if (command.type == 'group') continue;
                     if (command.command.test(context.message))
@@ -177,6 +182,7 @@ module.exports = class {
                     this.log.log(context.group_id, context.user_id, context.message_id,
                         context.sender.nickname, context.sender.card,
                         context.message);
+                if (global.STOP) return;
                 for (let command of this.commands) {
                     if (command.type == 'private') continue;
                     if (command.command.test(context.message))
@@ -186,8 +192,9 @@ module.exports = class {
             msg = async (e, context) => {
                 if (context.raw_message.startsWith(this.config.prompt)) {
                     let command = context.message.replace(/\r/gm, '').split(' '), app, res;
-                    let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/');
+                    let cmd = _.drop(command[0].split(''), 1).join('').replace(/\./gm, '/').toLowerCase();
                     if (cmd[0] == '/') return 'msh: command not found: ' + cmd;
+                    if (global.STOP && cmd != 'start') return;
                     try {
                         app = require(path.resolve(__dirname, 'commands', cmd + '.js'));
                         if (app.platform && !app.platform.includes(os.platform())) throw new ErrorMessage(`This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`);
@@ -206,6 +213,7 @@ module.exports = class {
                     }
                     return res;
                 }
+                if (global.STOP && cmd != 'start') e.stopPropagation();
             };
         this.CQ.on('message.private', msg_private);
         this.CQ.on('message.group', msg_group);

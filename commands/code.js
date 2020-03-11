@@ -65,6 +65,7 @@ const
         switch (name) {
             case 'rb': return 'ruby';
             case 'py': case 'python2': return 'python';
+            case 'py3': return 'python3';
             case 'pl': return 'perl';
             case 'coffee': return 'coffeescript';
             case 'sh': return 'bash';
@@ -118,7 +119,7 @@ exports.exec = async (args, e, context) => {
     args = args.replace(/&#93;/gm, ']');
     args = args.replace(/&amp;/gm, '&');
     args = args.split(' ');
-    if (args[1].includes('\n')) {
+    if (args[1] && args[1].includes('\n')) {
         let i = args[1].split('\n');
         args[1] = i[0];
         args[2] = i[1] + ' ' + args[2];
