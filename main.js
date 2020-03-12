@@ -135,6 +135,7 @@ module.exports = class {
                 else {
                     res = app.exec(_.drop(command, 1).join(' '), event, context, this);
                     if (res instanceof Promise) res = await res;
+                    if (res instanceof String) res = res.toString();
                 }
             } catch (e) {
                 return `${e.message}\n${e.stack}`;
@@ -207,6 +208,7 @@ module.exports = class {
                         else {
                             res = app.exec(_.drop(command, 1).join(' '), e, context, this);
                             if (res instanceof Promise) res = await res;
+                            if (res instanceof String) res = res.toString();
                         }
                     } catch (e) {
                         return `${e.message}\n${e.stack}`;

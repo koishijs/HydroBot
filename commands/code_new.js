@@ -149,7 +149,7 @@ function _parse(s, env, opts) {
     }
 }
 
-const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'];
+const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
 const axios = Axios.create({ baseURL: 'http://localhost:5050' });
 async function _run(execute, {
     time_limit_ms = 5000,

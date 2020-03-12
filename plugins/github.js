@@ -1,6 +1,7 @@
 'use strict';
 let config = { watch: [] };
 let CQ = null, coll_star;
+const fs = require('fs');
 const events = {
     async push(body) {
         let resp = 'Recent commit to {0}{1} by {2}'.translate().format(body.repository.full_name, body.ref == 'refs/heads/master' ? '' : ':' + body.ref, body.pusher.name);
@@ -95,7 +96,7 @@ exports.init = function (item) {
             console.log(body);
             if (!events[event]) {
                 events[event] = body => `${body.repository.full_name} triggered an unknown event: ${event}`;
-                fs.writeFileSync('/root/unknown', body);
+                fs.writeFileSync('/root/unknown', JSON.stringify(body));
             }
             let reponame = body.repository.full_name;
             let owner = body.repository.owner.login;
