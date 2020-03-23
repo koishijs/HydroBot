@@ -29,7 +29,7 @@
     },
     "plugin": {
         "github": {
-            "watch": []
+            "watch": {}
         },
         "bot": {
             "appid": "61457b3e11455a74beddb5a808b244c7",

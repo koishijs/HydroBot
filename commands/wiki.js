@@ -179,18 +179,17 @@ const request = async href => {
     return page.data ? cheerio.load(page.data) : null;
 };
 
-exports.exec = async (args, e, context) => {
+exports.exec = async args => {
     args = args.split(' ');
-    console.log('wiki', args, context.user_id);
     if (args.length == 0) {
-        return "unknown subtype. use 'wiki help' for help."
+        return 'unknown subtype. use \'wiki help\' for help.';
     } else if (args[0] == 'help') {
         return `Provided by masnn
 wiki baike 文章名   百度百科
 wiki wiki 文章名    维基百科
 wiki wiki+ 文章名   维基百科，输出详细内容
 wiki moe 文章名     萌娘百科
-wiki moe+ 文章名    萌娘百科，输出详细内容`
+wiki moe+ 文章名    萌娘百科，输出详细内容`;
     }
     if (args[0] == 'wiki+') {
         let page;
@@ -223,9 +222,11 @@ wiki moe+ 文章名    萌娘百科，输出详细内容`
         try {
             page = await moegirl.page(args[1]);
         } catch (e) {
+            return e.toString() + e.stack;
             return 'No article found.';
         }
         return await page.summary();
     }
-    return "unknown subtype. use 'wiki help' for help."
-}
+    return 'unknown subtype. use \'wiki help\' for help.';
+};
+exports.sudo = true;

@@ -34,7 +34,7 @@ exports.info = {
 }
 
 async function bind(uid, e, context) {
-    let qq = context.user_id.toString();
+    let qq = context.userId.toString();
     if (parseInt(uid) == NaN) return '请输入正确的UID！';
     let tgt = await coll.findOne({ uid, bind: true });
     if (tgt) return `错误：这个账户已被QQ：${tgt.qq} 绑定。`;
@@ -63,14 +63,14 @@ async function bind(uid, e, context) {
     }
 }
 async function unbind(e, context) {
-    let qq = context.user_id.toString();
+    let qq = context.userId.toString();
     let res = await coll.findOne({ qq, bind: true });
     if (!res) return '您没有绑定任何账号';
-    await coll.deleteMany({ qq: context.user_id.toString() });
+    await coll.deleteMany({ qq: context.userId.toString() });
     return '解绑成功';
 }
 async function challenge_create(e, context) {
-    let qq = context.user_id.toString();
+    let qq = context.userId.toString();
     let from = await coll.findOne({ qq, bind: true });
     if (!from) return '请先绑定账号！';
     if (from.in_battle) return '请先完成之前的对战！';
@@ -79,7 +79,7 @@ async function challenge_create(e, context) {
     return `已创建对战。等待其他玩家加入。使用\\vj join ${id}可加入对战。`
 }
 async function challenge_join(id, e, context) {
-    let qq = context.user_id.toString();
+    let qq = context.userId.toString();
     let to = await coll.findOne({ qq, bind: true });
     if (!to) return '请先绑定账号！';
     if (to.in_battle) return '请先完成之前的对战！';
@@ -91,13 +91,13 @@ async function challenge_join(id, e, context) {
     pid = pid.data.pid.toString();
     await coll_battle.findOneAndUpdate({ status: 'Waiting', id }, { $set: { status: 'Running', to: qq, pid } });
     return [
-        new CQAt(parseInt(res.from)), new CQAt(context.user_id),
+        new CQAt(parseInt(res.from)), new CQAt(context.userId),
         '对战开始，请完成 ', `${baseURL}/p/${pid}`,
         `完成后请使用\\vj submit ${id}提交结果。`
     ];
 }
 async function submit(id, e, context) {
-    let qq = context.user_id.toString();
+    let qq = context.userId.toString();
     let from = await coll.findOne({ qq, bind: true });
     if (!from) return '请先绑定账号！';
     id = parseInt(id);
@@ -117,7 +117,7 @@ async function submit(id, e, context) {
     return '你并没有AC这道题！';
 }
 async function challenge_leave(e, context) {
-    let qq = context.user_id.toString();
+    let qq = context.userId.toString();
     await coll_battle.deleteMany({ from: qq });
     await coll_battle.deleteMany({ to: qq });
     await coll.findOneAndUpdate({ qq }, { $set: { in_battle: false } });

@@ -70,6 +70,6 @@ exports.exec = async args => {
     if (d.length) {
         let res = [];
         for (let i in d) res.push(d[i].word, ' ');
-        return res;
+        return res.join('');
     }
-}
+};

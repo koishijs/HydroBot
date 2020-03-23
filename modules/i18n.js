@@ -26,7 +26,7 @@ String.prototype.rawformat = function (object) {
     return [res[0], object, res[1]];
 };
 String.prototype.translate = function (language = 'zh-CN') {
-    if (locales[language]) return locales[language][this] || this;
+    if (locales[language]) return this;
     else return this;
 };
 
@@ -34,5 +34,4 @@ module.exports = function load(file, language) {
     if (!locales[language]) locales[language] = {};
     let content = fs.readFileSync(file).toString();
     Object.assign(locales[language], yaml.safeLoad(content));
-    console.log(locales);
 };

@@ -1,9 +1,13 @@
 'use strict';
 const axios = require('axios');
-exports.exec = async (args, e, context) => {
-    console.log('[IPWhere]Now Looking up :' + args + ' From:' + context.user_id);
+function _ip({ meta }, args) {
     let url = 'http://freeapi.ipip.net/' + args;
-    let d = await axios.get(url);
-    console.log(d.data);
-    return [d.data.join(' ')];
+    axios.get(url).then(res => {
+        meta.$send(res.data.join(' '));
+    }).catch(e => {
+        meta.$send(e.toString());
+    });
 }
+exports.register = ({ app }) => {
+    app.command('ip <ip>', '查询ip').action(_ip);
+};

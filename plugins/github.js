@@ -1,6 +1,6 @@
 'use strict';
 let config = { watch: [] };
-let CQ = null, coll_star;
+let app = null, coll_star;
 const fs = require('fs');
 const events = {
     async push(body) {
@@ -84,7 +84,7 @@ const events = {
     }
 };
 exports.init = function (item) {
-    CQ = item.CQ;
+    app = item.app;
     config = item.config;
     if (item.db) coll_star = item.db.collection('github_event_star');
     else console.warn('Use MongoDB for full features');
@@ -93,30 +93,15 @@ exports.init = function (item) {
             let event = ctx.request.headers['x-github-event'], body;
             if (typeof ctx.request.body.payload == 'string') body = JSON.parse(ctx.request.body.payload);
             else body = ctx.request.body;
-            console.log(body);
-            if (!events[event]) {
+            if (!events[event])
                 events[event] = body => `${body.repository.full_name} triggered an unknown event: ${event}`;
-                fs.writeFileSync('/root/unknown', JSON.stringify(body));
-            }
             let reponame = body.repository.full_name;
-            let owner = body.repository.owner.login;
             let cnt = 0;
             let message = await events[event](body);
             if (message)
-                for (let i of config.watch) {
-                    let hit = false
-                        || i.fliter.type == 'repo' && (new RegExp(i.fliter.value.replace(/\*/i, '.*')).test(reponame))
-                        || i.fliter.type == 'owner' && (new RegExp(i.fliter.value.replace(/\*/i, '.*')).test(owner));
-                    if (hit) {
-                        if (typeof i.target == 'string' || typeof i.target == 'number') {
-                            CQ('send_group_msg', { group_id: i.target, message });
-                            cnt++;
-                        } else
-                            for (let group_id of i.target) {
-                                CQ('send_group_msg', { group_id, message });
-                                cnt++;
-                            }
-                    }
+                for (let groupId of config.watch[reponame]) {
+                    app.sender.sendGroupMsgAsync(groupId, message);
+                    cnt++;
                 }
             ctx.body = `Pushed to ${cnt} group(s)`;
         } catch (e) {
@@ -125,27 +110,12 @@ exports.init = function (item) {
         }
     });
 };
-exports.message = (e, context) => {
-    try {
-        if (context.raw_message.startsWith('/repo add')) {
-            let result = context.raw_message.split(' ');
-            let reponame = result[2];
-            config.watch.push({ fliter: { type: 'repo', value: reponame }, target: context.group_id });
-            return `Watching ${reponame}
-(You have to create a webhook to http://2.masnn.io:6701/github for your repo.)`;
-        }
-    } catch (e) {
-        console.log(e);
-    }
-};
-exports.info = {
-    id: 'github',
-    author: 'masnn',
-    hidden: false,
-    contacts: {
-        email: 'masnn0@outlook.com',
-        github: 'https://github.com/masnn/'
-    },
-    description: 'Github',
-    usage: ''
+async function _add({ meta }, repo) {
+    if (config.watch[repo]) config.watch[repo].push(meta.groupId);
+    else config.watch[repo] = [meta.groupId];
+    meta.$send(`Watching ${repo}
+(You have to create a webhook to http://2.masnn.io:6701/github for your repo.)`);
+}
+exports.apply = ({ app }) => {
+    app.command('repo.add <repo>', '监听一个Repository的事件').action(_add);
 };

@@ -48,7 +48,7 @@ const FACE_MAP = [
 
 exports.msg_group = async (e, context) => {
     for (let i of config.maps) {
-        if (i[0] == context.group_id) {
+        if (i[0] == context.groupId) {
             let images = [], attachments = [];
             let message = context.message
                 .replace(/\[CQ:face,id=([0-9]+)\]/g, substr => {
@@ -82,7 +82,7 @@ exports.msg_group = async (e, context) => {
 };
 exports.rocket_msg_group = async (e, context) => {
     for (let i of config.maps) {
-        if (i[1] == context.group_id) {
+        if (i[1] == context.groupId) {
             let message = context.message
                 .replace(/\[/g, '&#91;').replace(/\]/g, '&#93;')
                 .replace(/:([a-z0-9]+):/g, substr => {
@@ -95,7 +95,7 @@ exports.rocket_msg_group = async (e, context) => {
                     return '[CQ:face,id=' + tmp[1] + ']';
                 });
             CQ('send_group_msg', {
-                group_id: i[0], message: (context.sender.card || context.sender.nickname) + ': ' + message
+                groupId: i[0], message: (context.sender.card || context.sender.nickname) + ': ' + message
             });
         }
     }

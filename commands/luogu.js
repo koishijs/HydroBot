@@ -1,6 +1,6 @@
 'use strict';
 const axios = require('axios');
-exports.exec = async (args, e, context) => {
+exports.exec = async (args) => {
     if (!args) return '请输入要查询的题号！';
     let res;
     try {
@@ -17,10 +17,9 @@ exports.exec = async (args, e, context) => {
         return '获取失败';
     }
     let p = res.data;
-    if (p.status == 200)
-        return [p.data.StringPID, ' ', p.data.Name, '\n', p.data.Description];
+    if (p.status == 200) return `${p.data.StringPID} ${p.data.Name}\n${p.data.Description}`;
     else return p.data;
-}
+};
 /*
 export interface IAPIProblem {
     StringPID: string

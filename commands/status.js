@@ -5,4 +5,4 @@ exports.exec = () =>
         + 'Mem usage: ' + ((os.totalmem() - os.freemem()) / 1073741824).toFixed(1) + 'GiB/'
         + (os.totalmem() / 1073741824).toFixed(1) + 'GiB\n'
         + 'Process uptime: ' + (process.uptime() / 60).toFixed(1) + 'min\n'
-        + 'System uptime: ' + (os.uptime() / 60).toFixed(1) + 'min')
+        + 'System uptime: ' + (os.uptime() / 60).toFixed(1) + 'min');
