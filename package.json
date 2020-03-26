@@ -9,6 +9,8 @@
     "koa-body": "^4.1.1",
     "koa-router": "^7.4.0",
     "koishi": "^1.11.1",
+    "koishi-database-memory": "^1.1.6",
+    "koishi-database-mysql": "^1.1.6",
     "koishi-plugin-common": "^2.1.7",
     "lodash": "^4.17.15",
     "mongodb": "^3.5.3",

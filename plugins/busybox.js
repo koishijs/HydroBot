@@ -26,20 +26,16 @@ async function _restart({ meta }, args) {
     }, 3000);
     return await meta.$send('Restarting in 3 secs...');
 }
-async function _start({ meta }, args) {
-    global.STOP = false;
-    return await meta.$send('started.');
+async function _authority({ meta }) {
+    return await meta.$send(meta.$user.authority.toString());
 }
-async function _stop({ meta }, args) {
-    global.STOP = true;
-    return await meta.$send('stopped.');
-}
+async function _ignore() { }
 
 exports.apply = (app) => {
+    app.command('_', '', { authority: 0 }).action(_ignore);
     app.command('_.eval <expression...>', '', { authority: 5 }).action(_eval);
     app.command('_.sh <command...>', '', { authority: 5 }).action(_sh);
     app.command('_.shutdown', '', { authority: 5 }).action(_shutdown);
     app.command('_.restart', '', { authority: 5 }).action(_restart);
-    app.command('_.start', '', { authority: 5 }).action(_start);
-    app.command('_.stop', '', { authority: 5 }).action(_stop);
+    app.command('_.authority', '', { authority: 0 }).action(_authority);
 };
