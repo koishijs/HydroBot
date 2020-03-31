@@ -1,121 +1,5 @@
 'use strict';
 const Axios = require('axios');
-
-class Parse {
-    constructor() {
-        this.CONTROL = '(?:' + [
-            '\\|\\|', '\\&\\&', ';;', '\\|\\&', '\\<\\(', '>>', '>\\&', '[&;()|<>]'
-        ].join('|') + ')';
-        this.META = '|&;()<> \\t';
-        this.BAREWORD = '(\\\\[\'"' + this.META + ']|[^\\s\'"' + this.META + '])+';
-        this.SINGLE_QUOTE = '"((\\\\"|[^"])*?)"';
-        this.DOUBLE_QUOTE = '\'((\\\\\'|[^\'])*?)\'';
-        this.TOKEN = '';
-        for (var i = 0; i < 4; i++)
-            this.TOKEN += (Math.pow(16, 8) * Math.random()).toString(16);
-    }
-    parse(s, env, opts) {
-        var mapped = this._parse(s, env, opts);
-        if (typeof env !== 'function') return mapped;
-        return mapped.reduce(function (acc, s) {
-            if (typeof s === 'object') return acc.concat(s);
-            var xs = s.split(RegExp('(' + this.TOKEN + '.*?' + this.TOKEN + ')', 'g'));
-            if (xs.length === 1) return acc.concat(xs[0]);
-            return acc.concat(xs.filter(Boolean).map(function (x) {
-                if (RegExp('^' + this.TOKEN).test(x)) return JSON.parse(x.split(this.TOKEN)[1]);
-                else return x;
-            }));
-        }, []);
-    }
-    _parse(s, env, opts) {
-        var chunker = new RegExp(['(' + this.CONTROL + ')', '(' + this.BAREWORD + '|' + this.SINGLE_QUOTE + '|' + this.DOUBLE_QUOTE + ')*'].join('|'), 'g');
-        var match = s.match(chunker).filter(Boolean);
-        var commented = false;
-        if (!match) return [];
-        if (!env) env = {};
-        if (!opts) opts = {};
-        return match.map(function (s, j) {
-            if (commented) return;
-            if (RegExp('^' + this.CONTROL + '$').test(s)) return { op: s };
-            var SQ = '\'';
-            var DQ = '"';
-            var DS = '$';
-            var BS = opts.escape || '\\';
-            var quote = false;
-            var esc = false;
-            var out = '';
-            var isGlob = false;
-            for (var i = 0, len = s.length; i < len; i++) {
-                var c = s.charAt(i);
-                isGlob = isGlob || (!quote && (c === '*' || c === '?'));
-                if (esc) {
-                    out += c;
-                    esc = false;
-                } else if (quote) {
-                    if (c === quote) quote = false;
-                    else if (quote == SQ) out += c;
-                    else { // Double quote
-                        if (c === BS) {
-                            i += 1;
-                            c = s.charAt(i);
-                            if (c === DQ || c === BS || c === DS) out += c;
-                            else out += BS + c;
-                        } else if (c === DS) out += parseEnvVar();
-                        else out += c;
-                    }
-                } else if (c === DQ || c === SQ) quote = c;
-                else if (RegExp('^' + this.CONTROL + '$').test(c)) return { op: s };
-                else if (RegExp('^#$').test(c)) {
-                    commented = true;
-                    if (out.length)
-                        return [out, { comment: s.slice(i + 1) + match.slice(j + 1).join(' ') }];
-                    return [{ comment: s.slice(i + 1) + match.slice(j + 1).join(' ') }];
-                } else if (c === BS) esc = true;
-                else if (c === DS) out += parseEnvVar();
-                else out += c;
-            }
-            if (isGlob) return { op: 'glob', pattern: out };
-            return out;
-            function parseEnvVar() {
-                i += 1;
-                var varend, varname;
-                if (s.charAt(i) === '{') {
-                    i += 1;
-                    if (s.charAt(i) === '}') throw new Error('Bad substitution: ' + s.substr(i - 2, 3));
-                    varend = s.indexOf('}', i);
-                    if (varend < 0) throw new Error('Bad substitution: ' + s.substr(i));
-                    varname = s.substr(i, varend - i);
-                    i = varend;
-                } else if (/[*@#?$!_\-]/.test(s.charAt(i))) {
-                    varname = s.charAt(i);
-                    i += 1;
-                } else {
-                    varend = s.substr(i).match(/[^\w\d_]/);
-                    if (!varend) {
-                        varname = s.substr(i);
-                        i = s.length;
-                    } else {
-                        varname = s.substr(i, varend.index);
-                        i += varend.index - 1;
-                    }
-                }
-                return getVar(null, '', varname);
-            }
-        }).reduce(function (prev, arg) {
-            if (arg === undefined)
-                return prev;
-            return prev.concat(arg);
-        }, []);
-        function getVar(_, pre, key) {
-            var r = typeof env === 'function' ? env(key) : env[key];
-            if (r === undefined && key != '') r = '';
-            else if (r === undefined) r = '$';
-            if (typeof r === 'object') return pre + this.TOKEN + JSON.stringify(r) + this.TOKEN;
-            else return pre + r;
-        }
-    }
-}
-const parse = new Parse();
 class ExecutorServer {
     constructor() {
         this.env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
@@ -123,46 +7,46 @@ class ExecutorServer {
         this.langs = {
             c: {
                 type: 'compiler',
-                compile: '/usr/bin/gcc -O2 -Wall -std=c99 -o code foo.c -lm',
+                compile: ['/usr/bin/gcc', '-O2', '-Wall', '-std=c99', '-o', 'code', 'foo.c', '-lm'],
                 code_file: 'foo.c',
-                execute: '/w/code'
+                execute: ['/w/code']
             },
             cc: {
                 type: 'compiler',
-                compile: '/usr/bin/g++ -O2 -Wall -std=c++11 -o code foo.cc -lm',
+                compile: ['/usr/bin/g++', '-O2', '-Wall', '-std=c++11', '-o', 'code', 'foo.cc', '-lm'],
                 code_file: 'foo.cc',
-                execute: '/w/code'
+                execute: ['/w/code']
             },
             pas: {
                 type: 'compiler',
-                compile: '/usr/bin/fpc -O2 -o/w/code foo.pas',
+                compile: ['/usr/bin/fpc', '-O2', '-o/w/code', 'foo.pas'],
                 code_file: 'foo.pas',
-                execute: '/w/code'
+                execute: ['/w/code']
             },
             py: {
                 type: 'interpreter',
                 code_file: 'foo.py',
-                execute: '/usr/bin/python foo.py'
+                execute: ['/usr/bin/python', 'foo.py']
             },
             py2: {
                 type: 'interpreter',
                 code_file: 'foo.py',
-                execute: '/usr/bin/python foo.py'
+                execute: ['/usr/bin/python', 'foo.py']
             },
             py3: {
                 type: 'interpreter',
                 code_file: 'foo.py',
-                execute: '/usr/bin/python3 foo.py'
+                execute: ['/usr/bin/python3', 'foo.py']
             }
         };
     }
-    async _post(execute, {
+    async _post(args, {
         time_limit_ms = 5000,
         memory_limit_mb = 128,
         process_limit = 32,
         stdin, copyIn = {}, copyOut = [], copyOutCached
     } = {}) {
-        let args = parse.parse(execute), result, body;
+        let result, body;
         try {
             body = {
                 cmd: [{
@@ -207,19 +91,25 @@ class ExecutorServer {
         if (!this.langs[lang]) return { status: 'SystemError', stdout: 'Language not supported' };
         copyIn[info.code_file] = { content: code };
         if (info.type == 'compiler') {
-            let { status, stdout, stderr, fileIds } = await _run(
+            let { status, stdout, stderr, fileIds } = await this._post(
                 info.compile, { copyIn, copyOutCached: ['code'] }
             );
             if (status != 'Accepted') return { status: 'Compile Error', stdout, stderr };
-            let res = await _run(info.execute, { copyIn: { code: { fileId: fileIds.code } } });
+            let res = await this._post(info.execute, { copyIn: { code: { fileId: fileIds.code } } });
             await this.axios.delete(`/file/${fileIds.code}`);
             return res;
         } else if (info.type == 'interpreter') {
-            return await _run(info.execute, { copyIn });
+            return await this._post(info.execute, { copyIn });
         }
     }
     async run(lang, code) {
-        let { status, stdout, stderr } = await _run(code, lang, '').catch(e => { return 'SystemError'; });
+        let { status, stdout, stderr } = await this._run(code, lang, '').catch(e => {
+            return {
+                status: 'SystemError',
+                stdout: e.toString(),
+                stderr: ''
+            };
+        });
         if (status == 'Accepted')
             return `执行${lang}结果: \n${stdout}\n${stderr}`;
         else

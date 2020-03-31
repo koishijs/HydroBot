@@ -16,8 +16,8 @@ exports.init = item => {
 };
 exports.message = async meta => {
     if (meta.$parsed.atMe) {
-        return `[CQ:at,qq=${meta.userId}]${getReply(meta.$parsed.message, `${meta.groupId || '0'}_${meta.userId}`)}`;
+        return `[CQ:at,qq=${meta.userId}]${await getReply(meta.$parsed.message, `${meta.groupId || '0'}_${meta.userId}`)}`;
     } else if (meta.rawMessage.startsWith('!')) {
-        return await getReply(meta.rawMessage.slice(0, 1), meta.userId);
+        return await meta.$send(await getReply(meta.rawMessage.slice(0, 1), meta.userId));
     }
 };

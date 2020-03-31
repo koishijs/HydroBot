@@ -66,10 +66,11 @@ const events = {
     },
     async star(body) {
         if (body.action == 'created') {
-            if (coll_star)
+            if (coll_star) {
                 if (await coll_star.findOne({ user: body.sender.login, repo: body.repository.full_name }))
                     return;
-            await coll_star.insertOne({ user: body.sender.login, repo: body.repository.full_name });
+                await coll_star.insertOne({ user: body.sender.login, repo: body.repository.full_name });
+            }
             return '{0} starred {1} (total {2} stargazers)'.translate().format(body.sender.login, body.repository.full_name, body.repository.stargazers_count);
         }
     },
@@ -99,10 +100,11 @@ exports.init = function (item) {
             let cnt = 0;
             let message = await events[event](body);
             if (message)
-                for (let groupId of config.watch[reponame]) {
-                    app.sender.sendGroupMsgAsync(groupId, message);
-                    cnt++;
-                }
+                if (config.watch[reponame])
+                    for (let groupId of config.watch[reponame]) {
+                        app.sender.sendGroupMsgAsync(groupId, message);
+                        cnt++;
+                    }
             ctx.body = `Pushed to ${cnt} group(s)`;
         } catch (e) {
             console.log(e);
@@ -116,6 +118,8 @@ async function _add({ meta }, repo) {
     meta.$send(`Watching ${repo}
 (You have to create a webhook to http://2.masnn.io:6701/github for your repo.)`);
 }
+async function _ignore() { }
 exports.apply = ({ app }) => {
-    app.command('repo.add <repo>', '监听一个Repository的事件').action(_add);
+    app.command('github', 'Github').action(_ignore);
+    app.command('github.listen <repo>', '监听一个Repository的事件').action(_add);
 };

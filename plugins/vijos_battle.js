@@ -14,7 +14,7 @@ exports.init = item => {
     coll = item.db.collection('vijos_battle_user');
     coll_battle = item.db.collection('vijos_battle_battle');
     log = item.log;
-}
+};
 exports.info = {
     id: 'vijos_battle',
     author: 'masnn',
@@ -31,7 +31,7 @@ exports.info = {
 \\vj join (tid) 加入挑战
 \\vj leave 退出挑战
 \\vj submit (tid) 刷新挑战结果`
-}
+};
 
 async function bind(uid, e, context) {
     let qq = context.userId.toString();
@@ -55,7 +55,7 @@ async function bind(uid, e, context) {
     } else if (res) {
         let code = random();
         await coll.findOneAndUpdate({ qq }, { $set: { code, uid, bind: false } });
-        return `请将账户的个人简介改为 ${code} 后再次进行验证。`
+        return `请将账户的个人简介改为 ${code} 后再次进行验证。`;
     } else {
         let code = random();
         await coll.insertOne({ qq, uid, code, bind: false });
@@ -76,7 +76,7 @@ async function challenge_create(e, context) {
     if (from.in_battle) return '请先完成之前的对战！';
     let id = random();
     await coll_battle.insertOne({ status: 'Waiting', from: qq, id });
-    return `已创建对战。等待其他玩家加入。使用\\vj join ${id}可加入对战。`
+    return `已创建对战。等待其他玩家加入。使用\\vj join ${id}可加入对战。`;
 }
 async function challenge_join(id, e, context) {
     let qq = context.userId.toString();
@@ -138,15 +138,15 @@ exports.message = async (e, context) => {
     let ops = context.raw_message.split(' ');
     try {
         switch (ops[1]) {
-            case 'bind': return await bind(ops[2], e, context);
-            case 'unbind': return await unbind(e, context);
-            case 'challenge': return await challenge_create(e, context);
-            case 'join': return await challenge_join(ops[2], e, context);
-            case 'leave': return await challenge_leave(e, context);
-            case 'submit': return await submit(ops[2], e, context);
-            case 'list': return await list(e, context);
+        case 'bind': return await bind(ops[2], e, context);
+        case 'unbind': return await unbind(e, context);
+        case 'challenge': return await challenge_create(e, context);
+        case 'join': return await challenge_join(ops[2], e, context);
+        case 'leave': return await challenge_leave(e, context);
+        case 'submit': return await submit(ops[2], e, context);
+        case 'list': return await list(e, context);
         }
     } catch (e) {
         return e.message + '\n' + e.stack;
     }
-}
+};

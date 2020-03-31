@@ -6,4 +6,4 @@ class ErrorMessage extends Error {
 }
 module.exports = {
     ErrorMessage
-}
+};

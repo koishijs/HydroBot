@@ -1,8 +1,8 @@
 const child = require('child_process');
-exports.exec = async args => {
-    args = args.replace(/&#91;/gm, '[');
-    args = args.replace(/&#93;/gm, ']');
-    args = args.replace(/&amp;/gm, '&');
-    if (args.includes('\'')) return 'Qoute detected. Calculation abort.';
-    return child.execSync(`wolframscript -cloud -c '${args}'`).toString();
+async function _calc({ meta }, expression) {
+    if (expression.includes('\'')) return 'Qoute detected. Calculation abort.';
+    return meta.$send(child.execSync(`wolframscript -cloud -c '${expression}'`).toString());
+}
+exports.register = ({ app }) => {
+    app.command('calc <expression>', '计算表达式', { minInterval: 10 }).action(_calc);
 };

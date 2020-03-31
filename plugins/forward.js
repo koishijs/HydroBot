@@ -44,7 +44,7 @@ const FACE_MAP = [
     ['178', 'xyx'],
     ['182', 'xk'],
     ['212', 'ts']
-]
+];
 
 exports.msg_group = async (e, context) => {
     for (let i of config.maps) {
@@ -58,7 +58,7 @@ exports.msg_group = async (e, context) => {
                             tmp[1] = i[1];
                             break;
                         }
-                    return ' :' + tmp[1] + ': '
+                    return ' :' + tmp[1] + ': ';
                 })
                 .replace(/\[CQ:image,file=(.+?),url=(.+?)\]/g, substr => {
                     let tmp = /\[CQ:image,file=(.+?),url=(.+?)\]/i.exec(substr);
@@ -71,7 +71,7 @@ exports.msg_group = async (e, context) => {
                     source: i[1],
                     format: 'json'
                 });
-                console.log('url=', res.data.image.image.url)
+                console.log('url=', res.data.image.image.url);
                 attachments.push({ image_url: res.data.image.image.url });
             }
             let msgobj = rocket.prepareMessage((context.sender.card || context.sender.nickname) + ': ' + message, i[1]);
