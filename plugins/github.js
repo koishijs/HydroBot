@@ -1,7 +1,6 @@
 'use strict';
 let config = { watch: [] };
 let app = null, coll_star;
-const fs = require('fs');
 const events = {
     async push(body) {
         let resp = 'Recent commit to {0}{1} by {2}'.translate().format(body.repository.full_name, body.ref == 'refs/heads/master' ? '' : ':' + body.ref, body.pusher.name);
@@ -62,8 +61,7 @@ const events = {
         } else resp = 'Unknwon pull request action: {0}'.translate().format(body.action);
         return resp;
     },
-    async watch(body) {
-    },
+    async watch() { },
     async star(body) {
         if (body.action == 'created') {
             if (coll_star) {
@@ -74,10 +72,9 @@ const events = {
             return '{0} starred {1} (total {2} stargazers)'.translate().format(body.sender.login, body.repository.full_name, body.repository.stargazers_count);
         }
     },
-    async check_run(body) {
-    },
-    async check_suite(body) {
-    },
+    async check_run() { },
+    async check_suite() { },
+    async repository_vulnerability_alert() { },
     async status(body) {
         return;
         let resp = '{0}:{1} {2}'.translate().format(body.context, body.state, body.repository.full_name);
@@ -100,8 +97,8 @@ exports.init = function (item) {
             let cnt = 0;
             let message = await events[event](body);
             if (message)
-                if (config.watch[reponame])
-                    for (let groupId of config.watch[reponame]) {
+                if (config.watch[reponame.toLowerCase()])
+                    for (let groupId of config.watch[reponame.toLowerCase()]) {
                         app.sender.sendGroupMsgAsync(groupId, message);
                         cnt++;
                     }
@@ -118,8 +115,10 @@ async function _add({ meta }, repo) {
     meta.$send(`Watching ${repo}
 (You have to create a webhook to http://2.masnn.io:6701/github for your repo.)`);
 }
-async function _ignore() { }
+async function _info({ meta }) {
+    return await meta.$send('Use github -h for help.');
+}
 exports.apply = ({ app }) => {
-    app.command('github', 'Github').action(_ignore);
+    app.command('github', 'Github').action(_info);
     app.command('github.listen <repo>', '监听一个Repository的事件').action(_add);
 };

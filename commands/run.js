@@ -88,7 +88,7 @@ class ExecutorServer {
     async _run(code, lang, input) {
         let copyIn = {};
         let info = this.langs[lang];
-        if (!this.langs[lang]) return { status: 'SystemError', stdout: 'Language not supported' };
+        if (!this.langs[lang]) return { status: 'SystemError', stdout: '不支持的语言', stderr: '目前支持c,cc,pas,py2,py3' };
         copyIn[info.code_file] = { content: code };
         if (info.type == 'compiler') {
             let { status, stdout, stderr, fileIds } = await this._post(
@@ -179,31 +179,31 @@ class Judge0 {
         };
         this.LANGNAME = name => {
             switch (name) {
-                case 'rb': return 'ruby';
-                case 'py': case 'python2': return 'python';
-                case 'py3': return 'python3';
-                case 'pl': return 'perl';
-                case 'coffee': return 'coffeescript';
-                case 'sh': return 'bash';
-                case 'asm': return 'assembly';
-                case 'cs': return 'csharp';
-                case 'erl': return 'erlang';
-                case 'rs': return 'rust';
-                case 'ex': return 'elixir';
-                case 'hs': return 'haskell';
-                case 'js': return 'javascript';
-                case 'ml': return 'ocaml';
-                case 'cpp': case 'java': case 'go': case 'php': case 'c':
-                case 'lua': case 'ruby': case 'perl': case 'd': case 'fortan':
-                case 'coffeescript': case 'bash': case 'assembly': case 'csharp':
-                case 'ocaml': case 'erlang': case 'rust': case 'elixir':
-                case 'haskell': case 'javascript': case 'python': case 'python3': return name;
-                default: return 'error';
+            case 'rb': return 'ruby';
+            case 'py': case 'python2': return 'python';
+            case 'py3': return 'python3';
+            case 'pl': return 'perl';
+            case 'coffee': return 'coffeescript';
+            case 'sh': return 'bash';
+            case 'asm': return 'assembly';
+            case 'cs': return 'csharp';
+            case 'erl': return 'erlang';
+            case 'rs': return 'rust';
+            case 'ex': return 'elixir';
+            case 'hs': return 'haskell';
+            case 'js': return 'javascript';
+            case 'ml': return 'ocaml';
+            case 'cpp': case 'java': case 'go': case 'php': case 'c':
+            case 'lua': case 'ruby': case 'perl': case 'd': case 'fortan':
+            case 'coffeescript': case 'bash': case 'assembly': case 'csharp':
+            case 'ocaml': case 'erlang': case 'rust': case 'elixir':
+            case 'haskell': case 'javascript': case 'python': case 'python3': return name;
+            default: return 'error';
             }
         };
     }
     async run(code, lang, input, base64 = false) {
-        if (!this.LANGS[lang]) return '不支持的语言:' + lang;
+        if (!this.LANGS[lang]) return `不支持的语言:${lang}`;
         let res;
         res = await Axios.post(`https://api.judge0.com/submissions/?base64_encoded=${base64}&wait=false`, {
             source_code: code,
