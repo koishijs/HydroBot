@@ -1,23 +1,21 @@
-const getFirstPinyin = data => {
-    return (data.pinyin.split(/\s+/).shift() || '')
-        .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
-        .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v');
-};
-const getLastPinyin = data => {
-    return (data.pinyin.split(/\s+/).pop() || '')
-        .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
-        .replace(/[īíǐì]/g, 'i').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜü]/g, 'v');
-};
-const fix = data => {
-    if ('味同嚼蜡' === data.word)
-        data.pinyin = data.pinyin.replace('cù', 'là');
-    if (data.word.endsWith('俩'))
-        data.pinyin = data.pinyin.replace('liǎng', 'liǎ');
+const getFirstPinyin = (data) => (data.pinyin.split(/\s+/).shift() || '')
+    .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
+    .replace(/[īíǐì]/g, 'i')
+    .replace(/[ūúǔù]/g, 'u')
+    .replace(/[ǖǘǚǜü]/g, 'v');
+const getLastPinyin = (data) => (data.pinyin.split(/\s+/).pop() || '')
+    .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
+    .replace(/[īíǐì]/g, 'i')
+    .replace(/[ūúǔù]/g, 'u')
+    .replace(/[ǖǘǚǜü]/g, 'v');
+const fix = (data) => {
+    if (data.word === '味同嚼蜡') data.pinyin = data.pinyin.replace('cù', 'là');
+    if (data.word.endsWith('俩')) data.pinyin = data.pinyin.replace('liǎng', 'liǎ');
     data.pinyin = data.pinyin.replace(/yi([ēéěèêe])/g, 'y$1');
     return data;
 };
-const indexed = json => {
-    let result = { firstPinyin: {}, lastPinyin: {}, word: {} };
+const indexed = (json) => {
+    const result = { firstPinyin: {}, lastPinyin: {}, word: {} };
     for (const data of json) {
         fix(data);
         if (data.word.length === 4) {
@@ -35,27 +33,30 @@ const indexed = json => {
     let pinyins = new Set(['yi']);
     for (let level = 1; pinyins.size > 0; ++level) {
         const newpinyins = new Set();
-        pinyins.forEach(pinyin => {
-            for (const data of result.lastPinyin[pinyin] || [])
+        pinyins.forEach((pinyin) => {
+            for (const data of result.lastPinyin[pinyin] || []) {
                 if (!data.level) {
                     data.level = level;
                     newpinyins.add(getFirstPinyin(data));
                 }
+            }
         });
         console.log(`Generate ${newpinyins.size} entries for level ${level}`);
         pinyins = newpinyins;
     }
     return result;
 };
-const handle = input => {
-    let result = [];
+const db = indexed(require('../database/yiGeDingLia.json'));
+
+const handle = (input) => {
+    const result = [];
     let data = db.word[input];
     while (data && data.level) {
-        const level = data.level;
+        const { level } = data;
         result.push(data);
         if (level > 1) {
             const next = db.firstPinyin[getLastPinyin(data)];
-            const filtered = next.filter(d => d.level && d.level < level);
+            const filtered = next.filter((d) => d.level && d.level < level);
             data = filtered[Math.floor(Math.random() * filtered.length)];
         } else {
             result.push({ word: '一个顶俩', pinyin: 'yī gè dǐng liǎ' });
@@ -64,12 +65,12 @@ const handle = input => {
     }
     return result;
 };
-const db = indexed(require('../database/yiGeDingLia.json'));
-exports.exec = async args => {
-    let d = await handle(args);
+
+exports.exec = async (args) => {
+    const d = await handle(args);
     if (d.length) {
-        let res = [];
-        for (let i in d) res.push(d[i].word, ' ');
+        const res = [];
+        for (const i in d) res.push(d[i].word, ' ');
         return res.join('');
     }
 };

@@ -1,11 +1,15 @@
-let config = require('./config.json');
 const beautify = require('json-beautify');
 const fs = require('fs');
-global.App = new (require('./main.js'))({ config });
+const config = require('./config.json');
+const Main = require('./main.js');
+
+global.App = new Main({ config });
+
 process.stdin.setEncoding('utf8');
-process.stdin.on('data', async input => {
+process.stdin.on('data', async (input) => {
     input = input.toString();
     try {
+    // eslint-disable-next-line no-eval
         let res = eval(input);
         if (res instanceof Promise) res = await res;
         console.log(res);

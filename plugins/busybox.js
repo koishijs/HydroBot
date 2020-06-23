@@ -1,12 +1,13 @@
 const child = require('child_process');
 
 async function _eval({ meta }, args) {
+    // eslint-disable-next-line no-eval
     let res = eval(args);
     if (res instanceof Promise) res = await res;
-    if (typeof res == 'string' || res instanceof Array) return await meta.$send(res.toString());
-    else if (typeof res == 'object') return await meta.$send(JSON.stringify(res));
-    else if (typeof res == 'undefined') return await meta.$send('undefined');
-    else return await meta.$send(res.toString());
+    if (typeof res === 'string' || res instanceof Array) return await meta.$send(res.toString());
+    if (typeof res === 'object') return await meta.$send(JSON.stringify(res));
+    if (typeof res === 'undefined') return await meta.$send('undefined');
+    return await meta.$send(res.toString());
 }
 async function _sh({ meta }, args) {
     await meta.$send(child.execSync(args).toString());

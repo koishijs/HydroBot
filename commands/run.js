@@ -1,5 +1,5 @@
-'use strict';
 const Axios = require('axios');
+
 class ExecutorServer {
     constructor() {
         this.env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
@@ -9,67 +9,117 @@ class ExecutorServer {
                 type: 'compiler',
                 compile: ['/usr/bin/gcc', '-O2', '-Wall', '-std=c99', '-o', 'code', 'foo.c', '-lm'],
                 code_file: 'foo.c',
-                execute: ['/w/code']
+                execute: ['/w/code'],
             },
             cc: {
                 type: 'compiler',
                 compile: ['/usr/bin/g++', '-O2', '-Wall', '-std=c++11', '-o', 'code', 'foo.cc', '-lm'],
                 code_file: 'foo.cc',
-                execute: ['/w/code']
+                execute: ['/w/code'],
             },
             pas: {
                 type: 'compiler',
                 compile: ['/usr/bin/fpc', '-O2', '-o/w/code', 'foo.pas'],
                 code_file: 'foo.pas',
-                execute: ['/w/code']
+                execute: ['/w/code'],
             },
             py: {
                 type: 'interpreter',
                 code_file: 'foo.py',
-                execute: ['/usr/bin/python', 'foo.py']
+                execute: ['/usr/bin/python', 'foo.py'],
             },
             py2: {
                 type: 'interpreter',
                 code_file: 'foo.py',
-                execute: ['/usr/bin/python', 'foo.py']
+                execute: ['/usr/bin/python', 'foo.py'],
             },
             py3: {
                 type: 'interpreter',
                 code_file: 'foo.py',
-                execute: ['/usr/bin/python3', 'foo.py']
-            }
+                execute: ['/usr/bin/python3', 'foo.py'],
+            },
+            java: {
+                type: 'compiler',
+                compile: ['/usr/bin/javac', '-d', '/w', '-encoding', 'utf8', './Main.java'],
+                code_file: 'Main.java',
+                execute: ['/usr/bin/java', 'Main'],
+            },
+            php: {
+                type: 'interpreter',
+                code_file: 'foo.php',
+                execute: ['/usr/bin/php', 'foo.php'],
+            },
+            rs: {
+                type: 'compiler',
+                compile: ['/usr/bin/rustc', '-O', '-o', '/w/foo', '/w/foo.rs'],
+                code_file: 'foo.rs',
+                execute: ['/w/foo'],
+            },
+            hs: {
+                type: 'compiler',
+                compile: ['/usr/bin/ghc', '-O', '-outputdir', '/tmp', '-o', 'foo', 'foo.hs'],
+                code_file: 'foo.hs',
+                execute: ['/w/foo'],
+            },
+            js: {
+                type: 'interpreter',
+                code_file: 'foo.js',
+                execute: ['/usr/bin/jsc', '/w/foo.js'],
+            },
+            go: {
+                type: 'compiler',
+                compile: ['/usr/bin/go', 'build', '-o', 'foo', 'foo.go'],
+                code_file: 'foo.go',
+                execute: ['/w/foo'],
+            },
+            rb: {
+                type: 'interpreter',
+                code_file: 'foo.rb',
+                execute: ['/usr/bin/ruby', 'foo.rb'],
+            },
+            cs: {
+                type: 'compiler',
+                compile: ['/usr/bin/mcs', '-optimize+', '-out:/w/foo', '/w/foo.cs'],
+                code_file: 'foo.cs',
+                execute: ['/usr/bin/mono', 'foo'],
+            },
         };
     }
+
     async _post(args, {
         time_limit_ms = 5000,
         memory_limit_mb = 128,
         process_limit = 32,
-        stdin, copyIn = {}, copyOut = [], copyOutCached
+        stdin, copyIn = {}, copyOut = [], copyOutCached,
     } = {}) {
-        let result, body;
+        let result; let
+            body;
         try {
             body = {
                 cmd: [{
-                    args, env: this.env,
+                    args,
+                    env: this.env,
                     files: [
                         stdin ? { src: stdin } : { content: '' },
-                        { name: 'stdout', max: 1024 },
-                        { name: 'stderr', max: 1024 }
+                        { name: 'stdout', max: 2048 },
+                        { name: 'stderr', max: 2048 },
                     ],
                     cpuLimit: time_limit_ms * 1000 * 1000,
                     readCpuLimit: time_limit_ms * 1200 * 1000,
                     memoryLimit: memory_limit_mb * 1024 * 1024,
                     procLimit: process_limit,
-                    copyIn, copyOut, copyOutCached
-                }]
+                    copyIn,
+                    copyOut,
+                    copyOutCached,
+                }],
             };
-            let res = await this.axios.post('/run', body);
+            const res = await this.axios.post('/run', body);
             result = res.data[0];
         } catch (e) {
             console.log(e);
             throw e;
         }
-        let ret = {
+        const ret = {
             status: result.status,
             time_usage_ms: result.time / 1000000,
             memory_usage_kb: result.memory / 1024,
@@ -85,35 +135,35 @@ class ExecutorServer {
         if (result.fileIds) ret.fileIds = result.fileIds;
         return ret;
     }
+
     async _run(code, lang, input) {
-        let copyIn = {};
-        let info = this.langs[lang];
-        if (!this.langs[lang]) return { status: 'SystemError', stdout: '不支持的语言', stderr: '目前支持c,cc,pas,py2,py3' };
+        const copyIn = {};
+        const info = this.langs[lang];
+        if (!this.langs[lang]) return { status: 'SystemError', stdout: '不支持的语言', stderr: '目前支持c,cc,pas,py2,py3,js,cs,hs,rs,rb,go,php,java' };
         copyIn[info.code_file] = { content: code };
         if (info.type == 'compiler') {
-            let { status, stdout, stderr, fileIds } = await this._post(
-                info.compile, { copyIn, copyOutCached: ['code'] }
+            const {
+                status, stdout, stderr, fileIds,
+            } = await this._post(
+                info.compile, { copyIn, copyOutCached: ['code'] },
             );
             if (status != 'Accepted') return { status: 'Compile Error', stdout, stderr };
-            let res = await this._post(info.execute, { copyIn: { code: { fileId: fileIds.code } } });
+            const res = await this._post(info.execute, { copyIn: { code: { fileId: fileIds.code } } });
             await this.axios.delete(`/file/${fileIds.code}`);
             return res;
-        } else if (info.type == 'interpreter') {
+        } if (info.type == 'interpreter') {
             return await this._post(info.execute, { copyIn });
         }
     }
+
     async run(lang, code) {
-        let { status, stdout, stderr } = await this._run(code, lang, '').catch(e => {
-            return {
-                status: 'SystemError',
-                stdout: e.toString(),
-                stderr: ''
-            };
-        });
-        if (status == 'Accepted')
-            return `执行${lang}结果: \n${stdout}\n${stderr}`;
-        else
-            return `执行${lang}出错: ${status}\n${stdout}\n${stderr}`;
+        const { status, stdout, stderr } = await this._run(code, lang, '').catch((e) => ({
+            status: 'SystemError',
+            stdout: e.toString(),
+            stderr: '',
+        }));
+        if (status == 'Accepted') return `执行${lang}结果: \n${stdout}\n${stderr}`;
+        return `执行${lang}出错: ${status}\n${stdout}\n${stderr}`;
     }
 }
 
@@ -160,7 +210,7 @@ class Judge0 {
             sh: 46,
             ts: 74,
             typescript: 74,
-            vb: 47
+            vb: 47,
         };
         this.STATUS = {
             1: 'In Queue',
@@ -175,9 +225,9 @@ class Judge0 {
             10: 'Runtime Error (SIGABRT)',
             11: 'Runtime Error (NZEC)',
             12: 'Runtime Error (Other)',
-            13: 'Internal Error'
+            13: 'Internal Error',
         };
-        this.LANGNAME = name => {
+        this.LANGNAME = (name) => {
             switch (name) {
             case 'rb': return 'ruby';
             case 'py': case 'python2': return 'python';
@@ -202,6 +252,7 @@ class Judge0 {
             }
         };
     }
+
     async run(code, lang, input, base64 = false) {
         if (!this.LANGS[lang]) return `不支持的语言:${lang}`;
         let res;
@@ -209,7 +260,7 @@ class Judge0 {
             source_code: code,
             language_id: lang,
             stdin: input,
-            wall_time_limit: 5
+            wall_time_limit: 5,
         });
         console.log(res.data.token);
         let result = { status_id: 1 };
@@ -221,15 +272,13 @@ class Judge0 {
             if (!result.status_id) result.status_id = 1;
         }
         console.log(result);
-        if (result.status_id == 3)
-            return `执行${this.langname(lang)}结果: \n${decode(result.stdout || '')}`;
-        else
-            return `执行${this.langname(lang)}出错: ${this.STATUS[result.status_id]}\n${decode(result.stderr || '')}`;
+        if (result.status_id == 3) return `执行${this.langname(lang)}结果: \n${decode(result.stdout || '')}`;
+        return `执行${this.langname(lang)}出错: ${this.STATUS[result.status_id]}\n${decode(result.stderr || '')}`;
     }
 }
 const judge0 = new Judge0();
 const executorserver = new ExecutorServer();
-const decode = str => (Buffer.from(str, 'base64').toString());
+const decode = (str) => (Buffer.from(str, 'base64').toString());
 async function _run({ meta, options }, language, code) {
     if (options.runner == 'judge0') {
         meta.$send(await judge0.run(code, language, '', options.base64));

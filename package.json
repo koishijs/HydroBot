@@ -1,25 +1,29 @@
 {
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.19.2",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.21.2",
     "is-url": "^1.2.4",
-    "js-yaml": "^3.13.1",
-    "jsdom": "^16.2.0",
+    "js-yaml": "^3.14.0",
+    "jsdom": "^16.2.2",
     "json-beautify": "^1.1.1",
     "koa": "^2.11.0",
-    "koa-body": "^4.1.1",
+    "koa-body": "^4.2.0",
     "koa-router": "^7.4.0",
-    "koishi": "^1.11.1",
-    "koishi-database-memory": "^1.1.6",
-    "koishi-database-mysql": "^1.1.6",
-    "koishi-plugin-common": "^2.1.7",
+    "koishi": "^1.12.0",
+    "koishi-database-memory": "^1.2.0",
+    "koishi-database-mysql": "^1.2.0",
+    "koishi-plugin-common": "^2.2.0",
     "lodash": "^4.17.15",
-    "mongodb": "^3.5.3",
+    "mongodb": "^3.5.9",
+    "sharp": "^0.25.4",
     "wikijs": "^5.5.1"
   },
   "name": "qqbot",
   "version": "1.0.0",
   "main": "socket.js",
   "scripts": {
+    "lint": "eslint commands plugins modules error.js log.js main.js robot.js utils.js --fix",
     "start": "node robot.js"
   },
   "repository": {
@@ -34,6 +38,6 @@
   "homepage": "https://github.com/masnn/qqbot#readme",
   "description": "",
   "devDependencies": {
-    "eslint": "^6.8.0"
+    "eslint": "^7.3.1"
   }
 }

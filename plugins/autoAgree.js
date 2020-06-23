@@ -1,12 +1,12 @@
-'use strict';
 let config = {};
-exports.init = item => {
+exports.init = (item) => {
     config = item.config;
 };
-exports.request = async meta => {
-    if (meta.requestType == 'friend') {
+exports.request = async (meta) => {
+    console.log(meta);
+    if (meta.requestType === 'friend') {
         if (config.friend) await meta.$approve();
-    } else if (meta.requestType == 'group') {
+    } else if (meta.requestType === 'group') {
         if (config.group) await meta.$approve();
     }
 };
