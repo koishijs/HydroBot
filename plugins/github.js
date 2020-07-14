@@ -1,6 +1,7 @@
 let config = { watch: [] };
 let app = null;
 let collStar;
+
 const events = {
     async push(body) {
         let resp = 'Recent commit to {0}{1} by {2}'.translate().format(
@@ -11,7 +12,7 @@ const events = {
             if (commit.added.length) det.push(`${commit.added.length}+`);
             if (commit.removed.length) det.push(`${commit.removed.length}-`);
             if (commit.modified.length) det.push(`${commit.modified.length}M`);
-            resp += `\n${commit.id.substr(0, 6)} ${commit.message.replace(/\n/g, ' ')} (${det.join(' ')})`;
+            resp += `\n${commit.id.substr(0, 6)} ${commit.message.replace(/\n/g, '\r\n')} (${det.join(' ')})`;
         }
         return resp;
     },
@@ -66,6 +67,8 @@ const events = {
         return resp;
     },
     async watch() { },
+    async project_card() { },
+    async project_column() { },
     async star(body) {
         if (body.action === 'created') {
             if (collStar) {
@@ -85,11 +88,7 @@ const events = {
     async check_run() { },
     async check_suite() { },
     async repository_vulnerability_alert() { },
-    async status(body) {
-        return;
-        const resp = '{0}:{1} {2}'.translate().format(body.context, body.state, body.repository.full_name);
-        return `${resp}\n${body.description}`;
-    },
+    async status(body) { },
 };
 exports.init = (item) => {
     app = item.app;
@@ -98,8 +97,8 @@ exports.init = (item) => {
     else console.warn('Use MongoDB for full features');
     item.router.post('/github', async (ctx) => {
         try {
-            const event = ctx.request.headers['x-github-event']; let
-                body;
+            const event = ctx.request.headers['x-github-event'];
+            let body;
             if (typeof ctx.request.body.payload === 'string') body = JSON.parse(ctx.request.body.payload);
             else body = ctx.request.body;
             if (!events[event]) events[event] = (b) => `${b.repository.full_name} triggered an unknown event: ${event}`;
@@ -129,10 +128,20 @@ async function _add({ meta }, repo) {
     meta.$send(`Watching ${repo}
 (请创建 webhook 投递至 http://2.masnn.io:6701/github ，格式 application/json )`);
 }
+async function _cancel({ meta }, repo) {
+    if (!repo) return meta.$send('缺少参数。');
+    repo = repo.toLowerCase();
+    if (config.watch[repo]) {
+        const index = config.watch[repo].indexOf(meta.groupId);
+        if (index > -1) config.watch[repo].splice(index, 1);
+    }
+    meta.$send(`Cancelled ${repo}`);
+}
 async function _info({ meta }) {
     return await meta.$send('Use github -h for help.');
 }
 exports.apply = () => {
     app.command('github', 'Github').action(_info);
     app.command('github.listen <repo>', '监听一个Repository的事件').action(_add);
+    app.command('github.cancel <repo>', '取消一个Repository的事件').action(_cancel);
 };

@@ -25,6 +25,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 function warp(event, target) {
     return async (meta, next) => {
+        if (meta.postType !== 'message') console.log(meta);
         if (meta.postType === event) {
             let res;
             try {
@@ -89,6 +90,9 @@ module.exports = class {
             exit: false,
             help: true,
             info: true,
+            handleFriend: true,
+            handleGroupAdd: true,
+            handleGroupInvite: true,
         });
         this.app.receiver.on('connect', async () => {
             console.log('Connected');
@@ -116,8 +120,9 @@ module.exports = class {
         });
         this.app.middleware(async (meta, next) => {
             if (meta.$parsed.prefix === '>') {
-                const command = meta.$parsed.message.replace(/\r/gm, '').split(' '); let app; let
-                    res;
+                const command = meta.$parsed.message.replace(/\r/gm, '').split(' ');
+                let app;
+                let res;
                 const cmd = command[0].replace(/\./gm, '/');
                 if (cmd[0] === '/') return meta.$send(`msh: command not found: ${cmd}`);
                 try {
