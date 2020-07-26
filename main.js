@@ -11,13 +11,9 @@ const body = require('koa-body');
 const Router = require('koa-router');
 const _ = require('lodash');
 const KoishiPluginCommon = require('koishi-plugin-common');
-const log = require('./log');
 const { messageOutput } = require('./utils.js');
-const i18n = require('./modules/i18n');
 
 require('koishi-database-memory');
-
-i18n(path.resolve(__dirname, 'locales', 'zh-CN.yaml'), 'zh-CN');
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at:', p, '\nreason:', reason);
@@ -66,7 +62,7 @@ module.exports = class {
         this.router = new Router();
         this.koa.use(body());
         this.info = {};
-        this.log = log;
+        this.log = console;
         this.lib = {};
         this.run();
     }
@@ -153,7 +149,7 @@ module.exports = class {
         if (this.config.api_port) {
             this.koa.use(this.router.routes()).use(this.router.allowedMethods());
             this.koa.listen(this.config.api_port);
-            this.log.log('API inited at port {0}'.translate().format(this.config.api_port));
+            this.log.log(`API inited at port ${this.config.api_port}`);
         }
         await this.app.start();
     }
@@ -204,7 +200,7 @@ module.exports = class {
                 this.app.plugin(plugin, { ...base, config: this.config.plugin[name] || {} });
             }
         } catch (err) {
-            this.log.error('Error loading plugin {0}:\n {1}'.translate().format(name, err));
+            this.log.error(`Error loading plugin ${name}:\n ${err}`);
         }
         return plugin;
     }

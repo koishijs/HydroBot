@@ -1,4 +1,3 @@
-const beautify = require('json-beautify');
 const fs = require('fs');
 const config = require('./config.json');
 const Main = require('./main.js');
@@ -16,6 +15,6 @@ process.stdin.on('data', async (input) => {
     } catch (e) { console.error(e); }
 });
 process.on('SIGINT', () => {
-    fs.writeFileSync('./config.json', beautify(global.App.config, null, 4, 80));
+    fs.writeFileSync('./config.json', JSON.stringify(global.App.config, null, 2));
     process.exit(0);
 });

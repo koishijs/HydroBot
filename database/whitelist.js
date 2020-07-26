@@ -1,7 +1,7 @@
 module.exports = {
-    whitelist:{
-        group:[],
-        private:[],
-        discuss:[]
-    }
+    whitelist: {
+        group: [],
+        private: [],
+        discuss: [],
+    },
 };

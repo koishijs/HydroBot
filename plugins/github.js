@@ -4,9 +4,8 @@ let collStar;
 
 const events = {
     async push(body) {
-        let resp = 'Recent commit to {0}{1} by {2}'.translate().format(
-            body.repository.full_name, body.ref === 'refs/heads/master' ? '' : `:${body.ref}`, body.pusher.name,
-        );
+        let resp = `Recent commit to ${body.repository.full_name}${
+            body.ref === 'refs/heads/master' ? '' : `: ${body.ref}`} by ${body.pusher.name}`;
         for (const commit of body.commits) {
             const det = [];
             if (commit.added.length) det.push(`${commit.added.length}+`);
@@ -19,28 +18,28 @@ const events = {
     async issues(body) {
         let resp;
         if (body.action === 'opened') {
-            resp = '{0} opened an issue for {1}#{2}'.translate().format(body.issue.user.login, body.repository.full_name, body.issue.number);
+            resp = `${body.issue.user.login} opened an issue for ${body.repository.full_name}#${body.issue.number}`;
             resp = `${resp}\n${body.issue.title}`;
         } else if (body.action === 'created') {
-            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
+            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
             resp += `\n${body.comment.body}`;
         } else if (body.action === 'assigned') {
-            resp = '{0}#{1}: Assigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
+            resp = `${body.repository.full_name}#${body.issue.number}: Assigned ${body.assignee.login}`;
         } else if (body.action === 'unassigned') {
-            resp = '{0}#{1}: Unassigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
+            resp = `${body.repository.full_name}#${body.issue.number}: Unassigned ${body.assignee.login}`;
         } else if (body.action === 'closed') {
-            resp = '{0} closed {1}#{2}.'.translate().format(body.sender.login, body.repository.full_name, body.issue.number);
+            resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
         } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
-            resp = '{0} {1} Issue:{2}#{3}'.translate().format(body.sender.login, body.action, body.repository.full_name, body.issue.number);
+            resp = `${body.sender.login} ${body.action} Issue:${body.repository.full_name}#${body.issue.number}`;
         } else if (body.action === 'labled') {
-            resp = '{0} labled {1}#{2} {3}'.translate().format(body.sender.login, body.repository.full_name, body.issue.number, body.lable.name);
-        } else resp = 'Unknwon issue action: {0}'.translate().format(body.action);
+            resp = `${body.sender.login} labled ${body.repository.full_name}#${body.issue.number} ${body.lable.name}`;
+        } else resp = `Unknwon issue action: ${body.action}`;
         return resp;
     },
     async issue_comment(body) {
         let resp;
         if (body.action === 'created') {
-            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
+            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
             resp += `\n${body.comment.body}`;
         }
         return resp;
@@ -48,22 +47,22 @@ const events = {
     async pull_request(body) {
         let resp;
         if (body.action === 'opened') {
-            resp = '{0} opened an pull request for {1}#{2}'.translate().format(body.issue.user.login, body.repository.full_name, body.issue.number);
+            resp = `${body.issue.user.login} opened an pull request for ${body.repository.full_name}#${body.issue.number}`;
             resp = `${resp}\n${body.issue.title}`;
         } else if (body.action === 'created') {
-            resp = '{0} commented on {1}#{2}'.translate().format(body.comment.user.login, body.repository.full_name, body.issue.number);
+            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
             resp += `\n${body.comment.body}`;
         } else if (body.action === 'assigned') {
-            resp = '{0}#{1}: Assigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
+            resp = `${body.repository.full_name}#${body.issue.number}: Assigned ${body.assignee.login}`;
         } else if (body.action === 'unassigned') {
-            resp = '{0}#{1}: Unassigned {2}'.translate().format(body.repository.full_name, body.issue.number, body.assignee.login);
+            resp = `${body.repository.full_name}#${body.issue.number}: Unassigned ${body.assignee.login}`;
         } else if (body.action === 'review_requested') {
-            resp = '{0}#{1}: Request a review'.translate().format(body.repository.full_name, body.issue.number);
+            resp = `${body.repository.full_name}#${body.issue.number}: Request a review.`;
         } else if (body.action === 'closed' && !body.merged) {
-            resp = '{0} closed {1}#{2}.'.translate().format(body.sender.login, body.repository.full_name, body.issue.number);
+            resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
         } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
-            resp = '{0} {1} PR:{2}#{3}'.translate().format(body.sender.login, body.action, body.repository.full_name, body.issue.number);
-        } else resp = 'Unknwon pull request action: {0}'.translate().format(body.action);
+            resp = `${body.sender.login} ${body.action} PR:${body.repository.full_name}#${body.issue.number}`;
+        } else resp = `Unknwon pull request action: ${body.action}`;
         return resp;
     },
     async watch() { },
@@ -79,16 +78,13 @@ const events = {
                     user: body.sender.login, repo: body.repository.full_name,
                 });
             }
-            return '{0} starred {1} (total {2} stargazers)'
-                .translate().format(
-                    body.sender.login, body.repository.full_name, body.repository.stargazers_count,
-                );
+            return `${body.sender.login} starred ${body.repository.full_name} (total ${body.repository.stargazers_count} stargazers)`;
         }
     },
     async check_run() { },
     async check_suite() { },
     async repository_vulnerability_alert() { },
-    async status(body) { },
+    async status() { },
 };
 exports.init = (item) => {
     app = item.app;

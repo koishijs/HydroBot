@@ -2,11 +2,9 @@ const axios = require('axios');
 const sharp = require('sharp');
 
 async function _tex({ meta }, message) {
-    const tex = message.slice(message.indexOf('tex') + 3).trim();
+    const tex = message.trim();
     if (!tex) return meta.$send('请输入要渲染的 LaTeX 代码。');
-    let { data: svg } = await axios.get('https://www.zhihu.com/equation', {
-        params: { tex },
-    });
+    let { data: svg } = await axios.get(`https://www.zhihu.com/equation?tex=${tex}`);
     const text = svg.match(/>([^<]+)<\/text>/);
     if (text) return meta.$send(text[1]);
     const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);

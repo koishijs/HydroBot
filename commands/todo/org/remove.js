@@ -3,5 +3,5 @@ exports.exec = async (args, meta, { db }) => {
     if (!org) return 'You haven\'t join an organization in this group.';
     const coll = db.collection('todo_orgs_todo');
     await coll.deleteOne({ org, content: args });
-    return 'Removed'.translate();
+    return 'Removed';
 };

@@ -17,7 +17,7 @@ exports.exec = async (args) => {
         return '获取失败';
     }
     const p = res.data;
-    if (p.status == 200) return `${p.data.StringPID} ${p.data.Name}\n${p.data.Description}`;
+    if (p.status === 200) return `${p.data.StringPID} ${p.data.Name}\n${p.data.Description}`;
     return p.data;
 };
 /*

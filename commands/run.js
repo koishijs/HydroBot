@@ -141,7 +141,7 @@ class ExecutorServer {
         return ret;
     }
 
-    async _run(code, lang, input) {
+    async _run(code, lang) {
         const copyIn = {};
         const info = this.langs[lang];
         if (!this.langs[lang]) return { status: 'SystemError', stdout: '不支持的语言', stderr: '目前支持sh,c,cc,pas,py2,py3,js,cs,hs,rs,rb,go,php,java' };
@@ -153,7 +153,9 @@ class ExecutorServer {
                 info.compile, { copyIn, copyOutCached: ['code'] },
             );
             if (status !== 'Accepted') return { status: `Compile Error:${status}`, stdout, stderr };
-            const res = await this._post(info.execute, { copyIn: { code: { fileId: fileIds.code } } });
+            const res = await this._post(
+                info.execute, { copyIn: { code: { fileId: fileIds.code } } },
+            );
             await this.axios.delete(`/file/${fileIds.code}`);
             return res;
         } if (info.type === 'interpreter') {

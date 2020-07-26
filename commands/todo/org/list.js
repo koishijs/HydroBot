@@ -5,5 +5,5 @@ exports.exec = async (args, meta, { db }) => {
     const todos = await coll.find({ org }).limit(5).toArray();
     const res = [];
     for (const i of todos) res.push(i.content + (i.status ? `(${i.status})` : ''));
-    return res.length ? res.join('\n') : 'Nothing here'.translate();
+    return res.length ? res.join('\n') : 'Nothing here';
 };
