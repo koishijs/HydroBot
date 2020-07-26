@@ -1,4 +1,5 @@
 const { CQCode } = require('koishi');
+const sharp = require('sharp');
 
 exports.messageOutput = (msg) => {
     msg = CQCode.parseAll(msg);
@@ -11,4 +12,10 @@ exports.messageOutput = (msg) => {
         else message += JSON.stringify(i);
     }
     return message;
+};
+
+exports.svg2png = async (svg) => {
+    const image = sharp(Buffer.from(svg)).png();
+    const buf = await image.toBuffer();
+    return buf.toString('base64');
 };

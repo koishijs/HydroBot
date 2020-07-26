@@ -1,5 +1,5 @@
 const axios = require('axios');
-const sharp = require('sharp');
+const { svg2png } = require('../utils');
 
 async function _tex({ meta }, message) {
     const tex = message.trim();
@@ -9,7 +9,7 @@ async function _tex({ meta }, message) {
     if (text) return meta.$send(text[1]);
     const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);
     if (viewBox) svg = svg.replace('\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`);
-    return meta.$send(`[CQ:image,file=base64://${(await sharp(Buffer.from(svg)).png().toBuffer()).toString('base64')}]`);
+    return meta.$send(`[CQ:image,file=base64://${await svg2png(svg)}]`);
 }
 
 exports.register = ({ app }) => {
