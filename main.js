@@ -36,6 +36,37 @@ function warp(event, target) {
     };
 }
 
+async function command(message, meta, context) {
+    const c = message.slice(1).replace(/\r/gm, '').split(' ');
+    let app;
+    let res;
+    const cmd = c[0].replace(/\./gm, '/');
+    if (cmd[0] === '/' || cmd[0] === '.') return `msh: command not found: ${cmd}`;
+    try {
+        app = require(path.resolve(__dirname, 'commands', `${cmd}.js`));
+    } catch (e) {
+        if (e.code === 'MODULE_NOT_FOUND') return `msh: command not found: ${cmd}`;
+        return `Error loading application:\n${e.message}${e.stack ? `\n${e.stack}` : ''}`;
+    }
+    if (app.platform && !app.platform.includes(os.platform())) {
+        return `This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`;
+    }
+    if (app.exec instanceof Function) {
+        try {
+            if (app.sudo && !context.config.admin.includes(meta.userId)) res = `msh: permission denied: ${cmd}`;
+            else {
+                res = await app.exec(_.drop(c, 1).join(' '), meta, context);
+                if (res instanceof Promise) res = await res;
+                if (res instanceof String) res = res.toString();
+                if (res instanceof Array) res = res.join('');
+            }
+        } catch (e) {
+            return `${e.message}\n${e.stack}`;
+        }
+        return res;
+    }
+}
+
 String.prototype.decode = function decode() {
     return this.replace(/&#91;/gm, '[').replace(/&#93;/gm, ']').replace(/&amp;/gm, '&');
 };
@@ -115,32 +146,11 @@ module.exports = class {
             return await next();
         });
         this.app.middleware(async (meta, next) => {
-            if (meta.$parsed.prefix === '>') {
-                const command = meta.$parsed.message.replace(/\r/gm, '').split(' ');
-                let app;
-                let res;
-                const cmd = command[0].replace(/\./gm, '/');
-                if (cmd[0] === '/') return meta.$send(`msh: command not found: ${cmd}`);
-                try {
-                    app = require(path.resolve(__dirname, 'commands', `${cmd}.js`));
-                    if (app.platform && !app.platform.includes(os.platform())) throw new Error(`This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`);
-                } catch (e) {
-                    if (e.code === 'MODULE_NOT_FOUND') return `msh: command not found: ${cmd}`;
-                    return meta.$send(`Error loading application:\n${e.message}${e.stack ? `\n${e.stack}` : ''}`);
-                }
-                if (app.exec instanceof Function) {
-                    try {
-                        if (app.sudo && !this.config.admin.includes(meta.userId)) res = `msh: permission denied: ${cmd}`;
-                        else {
-                            res = app.exec(_.drop(command, 1).join(' '), meta, this);
-                            if (res instanceof Promise) res = await res;
-                            if (res instanceof String) res = res.toString();
-                            if (res instanceof Array) res = res.join('');
-                        }
-                    } catch (e) {
-                        return meta.$send(`${e.message}\n${e.stack}`);
-                    }
-                    return meta.$send(res);
+            if (meta.message.startsWith('>')) {
+                const res = await command(meta.message, meta, this);
+                if (res) {
+                    await meta.$send(res);
+                    return;
                 }
             }
             return await next();
@@ -170,8 +180,8 @@ module.exports = class {
         for (const i of files) {
             const file = path.resolve(process.cwd(), 'commands', i);
             try {
-                let res; const
-                    app = require(file);
+                let res;
+                const app = require(file);
                 if (app.register) res = app.register(this);
                 if (res instanceof Promise) res = await res;
             } catch (e) {
