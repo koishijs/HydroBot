@@ -1,4 +1,5 @@
 const child = require('child_process');
+const text2img = require('../text2img');
 
 async function _eval({ meta }, args) {
     // eslint-disable-next-line no-eval
@@ -10,7 +11,9 @@ async function _eval({ meta }, args) {
     return await meta.$send(res.toString());
 }
 async function _sh({ meta }, args) {
-    await meta.$send(child.execSync(args).toString());
+    const p = child.execSync(args).toString();
+    const img = await text2img(p);
+    return await meta.$send(`[CQ:image,file=base64://${img.replace('data:image/png;base64,', '')}]`);
 }
 async function _shutdown({ meta }) {
     setTimeout(() => {

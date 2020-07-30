@@ -2,7 +2,6 @@
 /* eslint-disable global-require */
 /* eslint-disable no-await-in-loop */
 const os = require('os');
-const fs = require('fs');
 const path = require('path');
 const mongodb = require('mongodb');
 const { App: Koishi } = require('koishi');
@@ -10,6 +9,7 @@ const Koa = require('koa');
 const body = require('koa-body');
 const Router = require('koa-router');
 const _ = require('lodash');
+const fs = require('fs-extra');
 const KoishiPluginCommon = require('koishi-plugin-common');
 const { messageOutput } = require('./utils.js');
 
@@ -37,11 +37,11 @@ function warp(event, target) {
 }
 
 async function command(message, meta, context) {
-    const c = message.slice(1).replace(/\r/gm, '').split(' ');
+    const c = message.slice(1).replace(/\r\n/gm, '\n').replace(/\r/gm, '\n').split(' ');
     let app;
     let res;
     const cmd = c[0].replace(/\./gm, '/');
-    if (cmd[0] === '/' || cmd[0] === '.') return `msh: command not found: ${cmd}`;
+    if (cmd[0] === '/') return `msh: command not found: ${cmd}`;
     try {
         app = require(path.resolve(__dirname, 'commands', `${cmd}.js`));
     } catch (e) {
@@ -99,6 +99,7 @@ module.exports = class {
     }
 
     async run() {
+        fs.ensureDirSync(path.resolve(__dirname, '.cache'));
         if (this.config.db) {
             let url = 'mongodb://';
             if (this.config.db.username) url += `${this.config.db.username}:${this.config.db.password}@`;
