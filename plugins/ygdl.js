@@ -66,11 +66,15 @@ const handle = (input) => {
     return result;
 };
 
-exports.exec = async (args) => {
-    const d = await handle(args);
+function _ygdl({ meta }, args) {
+    const d = handle(args);
     if (d.length) {
         const res = [];
         for (const i in d) res.push(d[i].word, ' ');
-        return res.join('');
+        return meta.$send(res.join(''));
     }
+}
+
+exports.apply = (app) => {
+    app.command('成语接龙 <成语>', '成语接龙').action(_ygdl);
 };

@@ -12,7 +12,7 @@ async function _tex({ meta }, message) {
     return meta.$send(`[CQ:image,file=base64://${await svg2png(svg)}]`);
 }
 
-exports.register = ({ app }) => {
+exports.apply = (app) => {
     app.command('tex <code...>', 'KaTeX 渲染')
         .alias('katex <code...>')
         .usage('渲染器由 https://www.zhihu.com/equation 提供。')

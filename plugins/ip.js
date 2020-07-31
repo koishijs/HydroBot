@@ -8,6 +8,7 @@ function _ip({ meta }, args) {
         meta.$send(e.toString());
     });
 }
-exports.register = ({ app }) => {
+
+exports.apply = (app) => {
     app.command('ip <ip>', '查询ip').action(_ip);
 };

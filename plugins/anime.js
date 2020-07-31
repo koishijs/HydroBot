@@ -15,6 +15,6 @@ async function anime({ meta }, args) {
     }
     return meta.$send(ret);
 }
-exports.register = ({ app }) => {
-    app.command('anime <image>', '查询动漫图片出处', { minInterval: 30, showWarning: true }).action(anime);
+exports.apply = (app) => {
+    app.command('anime <image>', '查询动漫图片出处', { minInterval: 10000, showWarning: true }).action(anime);
 };

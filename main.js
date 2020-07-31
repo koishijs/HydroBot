@@ -1,14 +1,12 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable global-require */
 /* eslint-disable no-await-in-loop */
-const os = require('os');
 const path = require('path');
 const mongodb = require('mongodb');
 const { App: Koishi } = require('koishi');
 const Koa = require('koa');
 const body = require('koa-body');
 const Router = require('koa-router');
-const _ = require('lodash');
 const fs = require('fs-extra');
 const KoishiPluginCommon = require('koishi-plugin-common');
 const { messageOutput } = require('./utils.js');
@@ -34,37 +32,6 @@ function warp(event, target) {
         }
         return await next();
     };
-}
-
-async function command(message, meta, context) {
-    const c = message.slice(1).replace(/\r\n/gm, '\n').replace(/\r/gm, '\n').split(' ');
-    let app;
-    let res;
-    const cmd = c[0].replace(/\./gm, '/');
-    if (cmd[0] === '/') return `msh: command not found: ${cmd}`;
-    try {
-        app = require(path.resolve(__dirname, 'commands', `${cmd}.js`));
-    } catch (e) {
-        if (e.code === 'MODULE_NOT_FOUND') return `msh: command not found: ${cmd}`;
-        return `Error loading application:\n${e.message}${e.stack ? `\n${e.stack}` : ''}`;
-    }
-    if (app.platform && !app.platform.includes(os.platform())) {
-        return `This application require ${JSON.stringify(app.platform)}\nCurrent running on ${os.platform()}`;
-    }
-    if (app.exec instanceof Function) {
-        try {
-            if (app.sudo && !context.config.admin.includes(meta.userId)) res = `msh: permission denied: ${cmd}`;
-            else {
-                res = await app.exec(_.drop(c, 1).join(' '), meta, context);
-                if (res instanceof Promise) res = await res;
-                if (res instanceof String) res = res.toString();
-                if (res instanceof Array) res = res.join('');
-            }
-        } catch (e) {
-            return `${e.message}\n${e.stack}`;
-        }
-        return res;
-    }
 }
 
 String.prototype.decode = function decode() {
@@ -146,16 +113,6 @@ module.exports = class {
             await this.app.database.getUser(meta.userId, 1);
             return await next();
         });
-        this.app.middleware(async (meta, next) => {
-            if (meta.message.startsWith('>')) {
-                const res = await command(meta.message, meta, this);
-                if (res) {
-                    await meta.$send(res);
-                    return;
-                }
-            }
-            return await next();
-        });
         await this.load();
         if (this.config.api_port) {
             this.koa.use(this.router.routes()).use(this.router.allowedMethods());
@@ -175,18 +132,6 @@ module.exports = class {
                 this.set('metaEvent', plugin.metaEvent);
                 this.log.log(`插件 ${this.config.enabledplugins[i]} 已经启用`);
                 this.plugins[this.config.enabledplugins[i]] = plugin;
-            }
-        }
-        const files = fs.readdirSync(path.resolve(process.cwd(), 'commands'));
-        for (const i of files) {
-            const file = path.resolve(process.cwd(), 'commands', i);
-            try {
-                let res;
-                const app = require(file);
-                if (app.register) res = app.register(this);
-                if (res instanceof Promise) res = await res;
-            } catch (e) {
-                if (e.code !== 'MODULE_NOT_FOUND') this.log.log(`Failed to load: ${file}`, e, '\n');
             }
         }
     }

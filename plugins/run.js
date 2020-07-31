@@ -181,8 +181,8 @@ async function _run({ meta, options }, language, code) {
     } else return meta.$send('Unknown runner');
 }
 
-exports.register = ({ app }) => {
-    app.command('run <language> <code...>', '运行程序', { minInterval: 10, showWarning: true }).alias('code')
+exports.apply = (app) => {
+    app.command('run <language> <code...>', '运行程序', { minInterval: 1000, showWarning: true }).alias('code')
         .option('-b, --base64', '传入base64编码的程序')
         .option('-r, --runner <runner>', '指定运行环境，仅支持local', { default: 'local' })
         .action(_run);

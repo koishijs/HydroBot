@@ -49,7 +49,6 @@ async function _card({ meta }, id) {
     return meta.$send(`[CQ:image,file=https://art.hearthstonejson.com/v1/render/latest/zhCN/512x/${db[id]}.png]`);
 }
 
-exports.register = ({ app }) => {
-    app.command('card <name/id...>', 'Get a card')
-        .action(_card);
+exports.apply = (app) => {
+    app.command('card <name/id...>', 'Get a card').action(_card);
 };

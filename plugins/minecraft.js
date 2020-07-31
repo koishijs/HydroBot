@@ -42,12 +42,15 @@ class MCServStatus {
         });
     }
 }
-exports.register = ({ app }) => {
-    app.command('minecraft <host:port>', '查询mc服务器信息').action(async ({ meta }, args) => {
-        const [host, port = 25565] = args.split(':');
-        const r = await new MCServStatus(host, port).getStatus();
-        return meta.$send(`服务器版本：${r.version}
+
+async function _minecraft({ meta }, args) {
+    const [host, port = 25565] = args.split(':');
+    const r = await new MCServStatus(host, port).getStatus();
+    return meta.$send(`服务器版本：${r.version}
 玩家数：${r.current_players}/${r.max_players}  延迟：${r.latency}ms
 MOTD: ${r.motd.replace(/\u0000/g, '').replace(/[^\x00-\x7F]/g, '')}`);
-    });
+}
+
+exports.apply = (app) => {
+    app.command('minecraft <host:port>', '查询mc服务器信息').action(_minecraft);
 };

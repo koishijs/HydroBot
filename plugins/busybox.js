@@ -1,4 +1,5 @@
 const child = require('child_process');
+const os = require('os');
 const text2img = require('../text2img');
 
 async function _eval({ meta }, args) {
@@ -30,6 +31,16 @@ async function _restart({ meta }) {
     }, 3000);
     return await meta.$send('Restarting in 3 secs...');
 }
+function _status({ meta }) {
+    return meta.$send(`Running on: ${os.release()} ${os.arch()}\n`
+        + `Mem usage: ${((os.totalmem() - os.freemem()) / 1073741824).toFixed(1)}GiB/${(os.totalmem() / 1073741824).toFixed(1)}GiB\n`
+        + `Process uptime: ${(process.uptime() / 60).toFixed(1)}min\n`
+        + `System uptime: ${(os.uptime() / 60).toFixed(1)}min`);
+}
+function _leave({ meta, app }) {
+    return app.sender.setGroupLeave(meta.groupId);
+}
+
 async function _ignore() { }
 
 exports.apply = (app) => {
@@ -38,4 +49,6 @@ exports.apply = (app) => {
     app.command('_.sh <command...>', '', { authority: 5 }).action(_sh);
     app.command('_.shutdown', '', { authority: 5 }).action(_shutdown);
     app.command('_.restart', '', { authority: 5 }).action(_restart);
+    app.command('_.leave', '', { authority: 5 }).action(_leave);
+    app.command('status').action(_status);
 };

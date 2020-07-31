@@ -16,6 +16,6 @@ async function _calc({ meta }, expr) {
     if (!svg.startsWith('<?xml')) return meta.$send(svg);
     return meta.$send(`[CQ:image,file=base64://${await svg2png(svg)}]`);
 }
-exports.register = ({ app }) => {
+exports.apply = (app) => {
     app.command('calc <expression...>', '计算表达式', { minInterval: 10 }).action(_calc);
 };
