@@ -26,7 +26,7 @@ async function getPage(url, fullPage = false, viewport = '1920x1080') {
             height: parseInt(viewport.split('x')[1], 10),
             deviceScaleFactor: 1,
         });
-        await page.goto(url);
+        await page.goto(url, { waitUntil: 'networkidle0' });
         s = await page.screenshot({ fullPage });
     } catch (err) {
         e = err;
