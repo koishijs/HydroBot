@@ -7,7 +7,7 @@ function _url({ meta, options }, message) {
     const t = options.viewport.split('x');
     if (t.length !== 2) return meta.$send('Invalid vieport');
     return getPage(url, options.full, options.viewport)
-        .catch((e) => meta.$send(`${url}\n${e.toString()}`))
+        .catch((e) => meta.$send(`${e.toString()} at ${url}`))
         .then((image) => meta.$send(`[CQ:image,file=base64://${image}]`));
 }
 
