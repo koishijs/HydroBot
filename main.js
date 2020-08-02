@@ -84,7 +84,7 @@ module.exports = class {
             exec: false,
             exit: false,
             help: true,
-            info: true,
+            info: false,
             handleFriend: true,
             handleGroupAdd: true,
             handleGroupInvite: true,
