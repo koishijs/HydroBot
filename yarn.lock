@@ -1885,6 +1885,11 @@ koishi-plugin-common@^3.0.0-beta.3:
     koishi-core "^2.0.0-beta.3"
     koishi-utils "^2.1.2"
 
+koishi-plugin-eval@^2.0.0-beta.0:
+  version "2.0.0-beta.0"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.0.tgz#7468d24f0443a80fcfd8425b03306b7c2b4af2d8"
+  integrity sha512-APflXrYu+OkoZ4eli6a7fvLpxe5lcrk5uZb2eJLRDha0bDsQsWYOEx0LSWE8PYjw1EA5O0IV3uNFSpwF/6VrPw==
+
 koishi-plugin-mysql@^2.0.0-beta.1:
   version "2.0.0-beta.1"
   resolved "https://registry.yarnpkg.com/koishi-plugin-mysql/-/koishi-plugin-mysql-2.0.0-beta.1.tgz#cb59673154cfedd5b7068109a6262f1a3a93bdaa"

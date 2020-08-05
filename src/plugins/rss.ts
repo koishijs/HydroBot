@@ -27,8 +27,8 @@ export const apply = (app: App) => {
 
         feeder.on('new-item', async (payload) => {
             console.log(payload);
-            const source = payload.session.link.toLowerCase();
-            const message = `${payload.session.title} (${payload.author})\n${payload.title}`;
+            const source = payload.link.toLowerCase();
+            const message = `${payload.title} (${payload.author})\n${payload.title}`;
             const data = await coll.findOne({ _id: source });
             if (data) {
                 for (const [isGroup, id, selfId] of data.target) {

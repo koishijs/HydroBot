@@ -116,7 +116,7 @@ export const apply = (app: App) => {
                 const cnt = 0;
                 const message = await events[event](body);
                 if (message) {
-                    const data = await coll.findOne({ _id: reponame });
+                    const data = await coll.findOne({ _id: reponame.toLowerCase() });
                     if (data) {
                         for (const [isGroup, id, selfId] of data.target) {
                             if (isGroup) app.bots[selfId].sendGroupMsg(id, message);

@@ -8,6 +8,7 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import body from 'koa-body';
 import { apply as KoishiPluginCommon } from 'koishi-plugin-common';
+import { apply as KoishiPluginEval } from 'koishi-plugin-eval';
 import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
 
 process.on('unhandledRejection', (reason, p) => {
@@ -56,6 +57,14 @@ export = class {
     async run() {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
+        this.app.plugin(KoishiPluginEval, {
+            timeout: 5000,
+            resourceLimits: {
+                maxYoungGenerationSizeMb: 32,
+                maxOldGenerationSizeMb: 128,
+                codeRangeSizeMb: 32,
+            },
+        });
         this.app.plugin(KoishiPluginCommon, {
             admin: false,
             broadcast: true,
