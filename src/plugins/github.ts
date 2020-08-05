@@ -1,6 +1,6 @@
-let config = { watch: [] };
-let app = null;
-let collStar;
+/* eslint-disable no-empty-function */
+import { App, Session } from 'koishi';
+import { Collection } from 'mongodb';
 
 const events = {
     async push(body) {
@@ -68,76 +68,106 @@ const events = {
     async watch() { },
     async project_card() { },
     async project_column() { },
-    async star(body) {
+    async star(body, db) {
         if (body.action === 'created') {
-            if (collStar) {
+            if (db) {
+                const collStar = db.collection('github_event_star');
                 if (await collStar.findOne({
                     user: body.sender.login, repo: body.repository.full_name,
-                })) return;
+                })) return null;
                 await collStar.insertOne({
                     user: body.sender.login, repo: body.repository.full_name,
                 });
             }
             return `${body.sender.login} starred ${body.repository.full_name} (total ${body.repository.stargazers_count} stargazers)`;
         }
+        return null;
     },
     async check_run() { },
     async check_suite() { },
     async repository_vulnerability_alert() { },
     async status() { },
 };
-exports.init = (item) => {
-    app = item.app;
-    config = item.config;
-    if (item.db) collStar = item.db.collection('github_event_star');
-    else console.warn('Use MongoDB for full features');
-    item.router.post('/github', async (ctx) => {
-        try {
-            const event = ctx.request.headers['x-github-event'];
-            let body;
-            if (typeof ctx.request.body.payload === 'string') body = JSON.parse(ctx.request.body.payload);
-            else body = ctx.request.body;
-            if (!events[event]) events[event] = (b) => `${b.repository.full_name} triggered an unknown event: ${event}`;
-            const reponame = body.repository.full_name;
-            let cnt = 0;
-            const message = await events[event](body);
-            if (message) {
-                if (config.watch[reponame.toLowerCase()]) {
-                    for (const groupId of config.watch[reponame.toLowerCase()]) {
-                        app.sender.sendGroupMsgAsync(groupId, message);
-                        cnt++;
+
+// IsGroup? group/userId assignee
+type Target = [boolean, number, number];
+
+interface Subscription {
+    _id: string,
+    target: Target[],
+}
+
+function get(session: Session): Target {
+    return [!!session.groupId, session.groupId || session.userId, session.selfId];
+}
+
+export const apply = (app: App) => {
+    app.on('connect', () => {
+        const coll: Collection<Subscription> = app.database.db.collection('github_watch');
+
+        app.router.post('/github', async (ctx) => {
+            try {
+                const event = ctx.request.headers['x-github-event'];
+                let body;
+                if (typeof ctx.request.body.payload === 'string') body = JSON.parse(ctx.request.body.payload);
+                else body = ctx.request.body;
+                if (!events[event]) events[event] = (b) => `${b.repository.full_name} triggered an unknown event: ${event}`;
+                const reponame = body.repository.full_name;
+                const cnt = 0;
+                const message = await events[event](body);
+                if (message) {
+                    const data = await coll.findOne({ _id: reponame });
+                    if (data) {
+                        for (const [isGroup, id, selfId] of data.target) {
+                            if (isGroup) app.bots[selfId].sendGroupMsg(id, message);
+                            else app.bots[selfId].sendPrivateMsg(id, message);
+                        }
                     }
                 }
+                ctx.body = `Pushed to ${cnt} group(s)`;
+            } catch (e) {
+                console.log(e);
+                ctx.body = e.toString();
             }
-            ctx.body = `Pushed to ${cnt} group(s)`;
-        } catch (e) {
-            console.log(e);
-            ctx.body = e.toString();
-        }
+        });
+
+        app.command('github.listen <repo>', '监听一个Repository的事件')
+            .action(async ({ session }, repo) => {
+                if (!repo) return session.$send('缺少参数。');
+                repo = repo.toLowerCase();
+                const current = await coll.findOne({ _id: repo });
+                if (current) {
+                    await coll.updateOne(
+                        { _id: repo },
+                        {
+                            $addToSet: {
+                                target: get(session),
+                            },
+                        },
+                        { upsert: true },
+                    );
+                    return `Watching ${repo}`;
+                }
+                await coll.insertOne(
+                    {
+                        _id: repo,
+                        target: [get(session)],
+                    },
+                );
+                return `Watching ${repo}
+(请创建 webhook 投递至 http://2.masnn.io:6701/github ，格式 application/json )`;
+            });
+
+        app.command('github.cancel <repo>', '取消一个Repository的事件')
+            .action(async ({ session }, repo) => {
+                await coll.updateOne(
+                    { _id: repo },
+                    { $pull: { target: get(session) } },
+                );
+                return `Cancelled ${repo}.`;
+            });
     });
-};
-async function _add({ meta }, repo) {
-    if (!repo) return meta.$send('缺少参数。');
-    repo = repo.toLowerCase();
-    if (config.watch[repo]) config.watch[repo].push(meta.groupId);
-    else config.watch[repo] = [meta.groupId];
-    meta.$send(`Watching ${repo}
-(请创建 webhook 投递至 http://2.masnn.io:6701/github ，格式 application/json )`);
-}
-async function _cancel({ meta }, repo) {
-    if (!repo) return meta.$send('缺少参数。');
-    repo = repo.toLowerCase();
-    if (config.watch[repo]) {
-        const index = config.watch[repo].indexOf(meta.groupId);
-        if (index > -1) config.watch[repo].splice(index, 1);
-    }
-    meta.$send(`Cancelled ${repo}`);
-}
-async function _info({ meta }) {
-    return await meta.$send('Use github -h for help.');
-}
-exports.apply = () => {
-    app.command('github', 'Github').action(_info);
-    app.command('github.listen <repo>', '监听一个Repository的事件').action(_add);
-    app.command('github.cancel <repo>', '取消一个Repository的事件').action(_cancel);
+
+    app.command('github', 'Github')
+        .action(({ session }) => session.$send('Use github -h for help.'));
 };

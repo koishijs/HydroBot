@@ -5,19 +5,10 @@
     "logmode": "msg_only",
     "api_port": 6701,
     "enabledplugins": [
-        "autoAgree",
         "github",
         "anime",
-        "codeRunner",
-        "management",
-        "bot",
-        "repeater",
-        "vijos_battle"
+        "busybox"
     ],
-    "blacklist": {
-        "group": [],
-        "private": []
-    },
     "admin": [
         3402182471
     ],
@@ -25,22 +16,7 @@
     "db": {
         "host": "localhost",
         "port": 27017,
-        "name": "bot"
-    },
-    "plugin": {
-        "github": {
-            "watch": {}
-        },
-        "bot": {
-            "appid": "61457b3e11455a74beddb5a808b244c7",
-            "secret": "20d0ba464b0d429088098befa80cc156"
-        },
-        "repeater": {
-            "time": 4
-        },
-        "autoAgree": {
-            "friend": true,
-            "group": true
-        }
+        "name": "bot",
+        "prefix": "robot"
     }
 }

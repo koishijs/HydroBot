@@ -1,8 +1,6 @@
 module.exports = {
     root: true,
     env: {
-        commonjs: true,
-        es6: true,
         node: true,
     },
     extends: [
@@ -11,25 +9,42 @@ module.exports = {
     globals: {
         Atomics: 'readonly',
         SharedArrayBuffer: 'readonly',
+        BigInt: true,
     },
-    parserOptions: {
-        ecmaVersion: 2018,
-    },
+    parser: '@typescript-eslint/parser',
+    plugins: ['@typescript-eslint'],
     rules: {
         camelcase: 'off',
-        'no-restricted-syntax': 'off',
-        'no-param-reassign': 'off',
-        'no-console': 'off',
-        indent: ['warn', 4],
-        'no-extend-native': 'off',
-        'no-return-await': 'off',
+        '@typescript-eslint/no-unused-vars': 'error',
+        'global-require': 'off',
         'guard-for-in': 'off',
-        'no-underscore-dangle': 'off',
-        'no-plusplus': 'off',
-        radix: 'off',
-        'prefer-destructuring': 'off',
-        'no-empty-function': 'off',
-        'consistent-return': 'off',
+        'implicit-arrow-linebreak': 'off',
+        'import/extensions': 'off',
+        'import/prefer-default-export': 'off',
+        indent: ['warn', 4],
         'max-classes-per-file': 'off',
+        'no-bitwise': 'off',
+        'no-console': 'off',
+        'no-extend-native': 'off',
+        'no-inner-declarations': 'off',
+        'no-multi-assign': 'off',
+        'no-nested-ternary': 'off',
+        'no-param-reassign': 'off',
+        'no-plusplus': 'off',
+        'no-restricted-syntax': 'off',
+        'no-return-await': 'off',
+        'no-underscore-dangle': 'off',
+        'no-unused-vars': 'off',
+        'prefer-destructuring': 'off',
+    },
+    settings: {
+        'import/parsers': {
+            '@typescript-eslint/parser': ['.ts'],
+        },
+        'import/resolver': {
+            typescript: {
+                alwaysTryTypes: true,
+            },
+        },
     },
 };

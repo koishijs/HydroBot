@@ -1,14 +1,14 @@
-const axios = require('axios');
+import axios from 'axios';
 
-function _ip({ meta }, args) {
+function _ip({ session }, args) {
     const url = `http://freeapi.ipip.net/${args}`;
     axios.get(url).then((res) => {
-        meta.$send(res.data.join(' '));
+        session.$send(res.data.join(' '));
     }).catch((e) => {
-        meta.$send(e.toString());
+        session.$send(e.toString());
     });
 }
 
-exports.apply = (app) => {
+export const apply = (app) => {
     app.command('ip <ip>', '查询ip').action(_ip);
 };

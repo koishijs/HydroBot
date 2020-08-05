@@ -32,7 +32,7 @@ const indexed = (json) => {
     }
     let pinyins = new Set(['yi']);
     for (let level = 1; pinyins.size > 0; ++level) {
-        const newpinyins = new Set();
+        const newpinyins: Set<string> = new Set();
         pinyins.forEach((pinyin) => {
             for (const data of result.lastPinyin[pinyin] || []) {
                 if (!data.level) {
@@ -41,14 +41,13 @@ const indexed = (json) => {
                 }
             }
         });
-        console.log(`Generate ${newpinyins.size} entries for level ${level}`);
         pinyins = newpinyins;
     }
     return result;
 };
-const db = indexed(require('../database/yiGeDingLia.json'));
+const db = indexed(require('../../database/yiGeDingLia.json'));
 
-const handle = (input) => {
+const handle = (input: string) => {
     const result = [];
     let data = db.word[input];
     while (data && data.level) {
@@ -66,15 +65,15 @@ const handle = (input) => {
     return result;
 };
 
-function _ygdl({ meta }, args) {
+function _ygdl({ session }, args) {
     const d = handle(args);
     if (d.length) {
         const res = [];
         for (const i in d) res.push(d[i].word, ' ');
-        return meta.$send(res.join(''));
+        return session.$send(res.join(''));
     }
 }
 
-exports.apply = (app) => {
+export const apply = (app) => {
     app.command('成语接龙 <成语>', '成语接龙').action(_ygdl);
 };

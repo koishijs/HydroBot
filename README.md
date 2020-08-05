@@ -12,6 +12,7 @@
 git clone https://github.com/masnn/qqbot.git
 cd qqbot
 yarn
+yarn build
 ```
  
 ### Run CoolQ
@@ -23,5 +24,5 @@ rename config.sample.json to config.json and make some change.
 ### Run bot  
 
 ```sh
-node ./robot.js
+node bin/robot.js
 ```
