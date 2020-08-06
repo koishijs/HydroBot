@@ -9,6 +9,8 @@ import Router from 'koa-router';
 import body from 'koa-body';
 import { apply as KoishiPluginCommon } from 'koishi-plugin-common';
 import { apply as KoishiPluginEval } from 'koishi-plugin-eval';
+import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
+import { apply as KoishiPluginStatus } from 'koishi-plugin-status';
 import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
 
 process.on('unhandledRejection', (reason, p) => {
@@ -65,6 +67,19 @@ export = class {
                 codeRangeSizeMb: 32,
             },
         });
+        this.app.plugin(KoishiPluginTools, {
+            brainfuck: true,
+            bvid: true,
+            crypto: true,
+            magi: true,
+            maya: true,
+            mcping: true,
+            music: true,
+            oeis: true,
+            qrcode: true,
+            roll: true,
+            weather: true,
+        });
         this.app.plugin(KoishiPluginCommon, {
             admin: false,
             broadcast: true,
@@ -95,6 +110,7 @@ export = class {
         });
         await this.load();
         await this.app.start();
+        await this.app.getSelfIds();
         if (this.config.api_port) {
             this.app.koa.use(this.app.router.routes()).use(this.app.router.allowedMethods());
             this.app.koa.listen(this.config.api_port);

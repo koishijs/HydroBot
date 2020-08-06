@@ -1,5 +1,4 @@
 import child from 'child_process';
-import os from 'os';
 import { App } from 'koishi';
 import { getTargetId } from 'koishi-core';
 import { text2png } from '../lib/graph';
@@ -24,7 +23,7 @@ export const apply = (app: App) => {
             const p = child.execSync(cmd).toString();
             if (!p.trim().length) return session.$send('(execute success)');
             const img = await text2png(p);
-            return session.$send(`[CQ:image,file=base64://${img.replace('data:image/png;base64,', '')}]`);
+            return session.$send(`[CQ:image,file=base64://${img}]`);
         });
 
     app.command('_.shutdown', '', { authority: 5 })
@@ -57,10 +56,7 @@ export const apply = (app: App) => {
             return `Set ${userId} to ${authority}`;
         });
 
-    app.command('status')
-        .action(({ session }) =>
-            session.$send(`Running on: ${os.release()} ${os.arch()}\n`
-                + `Mem usage: ${((os.totalmem() - os.freemem()) / 1073741824).toFixed(1)}GiB/${(os.totalmem() / 1073741824).toFixed(1)}GiB\n`
-                + `Process uptime: ${(process.uptime() / 60).toFixed(1)}min\n`
-                + `System uptime: ${(os.uptime() / 60).toFixed(1)}min`));
+    app.command('_.mute <user> <periodSecs>', '', { authority: 3 })
+        .action(({ session }, user, secs = '600000') =>
+            session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
 };

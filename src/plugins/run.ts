@@ -180,20 +180,18 @@ async function run(code: string, lang: string, input: string) {
 }
 
 export const apply = (app: App) => {
-    app.command('run <language> <code...>', '运行程序', { minInterval: 1000, showWarning: true }).alias('code')
+    app.command('run <language> <code...>', '运行程序').alias('code')
         .option('-i, --input', '启用stdin')
         .option('-b, --base64', '传入base64编码的程序')
         .action(async ({ session, options }, lang, code) => {
-            if (options.input) {
-                await session.$prompt((session, next) => {
-
-                });
-            } else {
-                const response = await run(code, lang, '');
-                if (response.length > 512 || response.split('\n').length > 10) {
-                    return `[CQ:image,file=base64://${text2png(response)}`;
-                }
-                return response;
+            if (options.input) session.$send('Please input:');
+            const input: string = (options.input)
+                ? await session.$prompt(10000)
+                : '';
+            const response = await run(code, lang, input);
+            if (response.length > 512 || response.split('\n').length > 10) {
+                return `[CQ:image,file=base64://${text2png(response)}]`;
             }
+            return response;
         });
 };

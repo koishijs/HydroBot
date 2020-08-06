@@ -96,12 +96,22 @@ extendDatabase(MongoDatabase, {
             fields = User.fields;
         } else fields = args[0] as any;
         if (ids && !ids.length) return [];
-        return this.user.find({ _id: { $in: ids as number[] } }).toArray();
+        return this.user.find({ _id: { $in: ids as number[] } }).map((doc) => {
+            if (doc.timers._date) {
+                doc.timers.$date = doc.timers._date;
+                delete doc.timers._date;
+            }
+            return doc;
+        }).toArray();
     },
 
     async setUser(userId, data) {
-        if (data.timers) {
-            console.log(data);
+        const converted = { ...data };
+        if (converted.timers) {
+            if (converted.timers.$date) {
+                converted.timers._date = converted.timers.$date;
+                delete converted.timers.$date;
+            }
         }
         await this.user.updateOne({ _id: userId }, { $set: data }, { upsert: true });
     },
