@@ -59,6 +59,7 @@ export = class {
     async run() {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
+        this.app.plugin(KoishiPluginStatus);
         this.app.plugin(KoishiPluginEval, {
             timeout: 5000,
             resourceLimits: {

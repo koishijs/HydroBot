@@ -14,8 +14,9 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     plugins: ['@typescript-eslint'],
     rules: {
-        camelcase: 'off',
         '@typescript-eslint/no-unused-vars': 'error',
+        camelcase: 'off',
+        'consistent-return': 'off',
         'global-require': 'off',
         'guard-for-in': 'off',
         'implicit-arrow-linebreak': 'off',

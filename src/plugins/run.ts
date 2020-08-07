@@ -182,7 +182,6 @@ async function run(code: string, lang: string, input: string) {
 export const apply = (app: App) => {
     app.command('run <language> <code...>', '运行程序').alias('code')
         .option('-i, --input', '启用stdin')
-        .option('-b, --base64', '传入base64编码的程序')
         .action(async ({ session, options }, lang, code) => {
             if (options.input) session.$send('Please input:');
             const input: string = (options.input)

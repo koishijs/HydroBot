@@ -1,5 +1,5 @@
 import child from 'child_process';
-import { App } from 'koishi';
+import { App, Group } from 'koishi';
 import { getTargetId } from 'koishi-core';
 import { text2png } from '../lib/graph';
 
@@ -56,7 +56,31 @@ export const apply = (app: App) => {
             return `Set ${userId} to ${authority}`;
         });
 
+    app.command('_.deactivate', '', { authority: 3 })
+        .groupFields(['flag'])
+        .action(({ session }) => {
+            session.$group.flag |= Group.Flag.ignore;
+        });
+
+    app.command('_.activate', '', { authority: 3 })
+        .groupFields(['flag'])
+        .action(({ session }) => {
+            session.$group.flag &= ~Group.Flag.ignore;
+        });
+
     app.command('_.mute <user> <periodSecs>', '', { authority: 3 })
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
+
+    app.on('message/group', async (session) => {
+        await Promise.all([
+            session.$observeUser(['authority']),
+            session.$observeGroup(['flag']),
+        ]);
+        // @ts-expect-error
+        if (session.message === '>_.activate' && session.$user.authority >= 3) {
+            // @ts-expect-error
+            session.$group.flag &= ~Group.Flag.ignore;
+        }
+    });
 };
