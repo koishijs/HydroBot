@@ -140,7 +140,7 @@ async function _post(args: string[], {
     return ret;
 }
 
-async function _run(code, lang, input) {
+async function _run(code: string, lang: string, input: string) {
     const copyIn = {};
     const info = LANGS[lang];
     if (!LANGS[lang]) {
@@ -189,7 +189,7 @@ export const apply = (app: App) => {
                 : '';
             const response = await run(code, lang, input);
             if (response.length > 512 || response.split('\n').length > 10) {
-                return `[CQ:image,file=base64://${text2png(response)}]`;
+                return `[CQ:image,file=base64://${await text2png(response)}]`;
             }
             return response;
         });
