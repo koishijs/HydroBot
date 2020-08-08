@@ -13,8 +13,8 @@ import { apply as KoishiPluginStatus } from 'koishi-plugin-status';
 import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
 import 'koishi-adapter-cqhttp';
 
-process.on('unhandledRejection', (reason, p) => {
-    console.log('Unhandled Rejection at:', p, '\nreason:', reason);
+process.on('unhandledRejection', (_, p) => {
+    console.log('Unhandled Rejection:', p);
 });
 
 declare global {
@@ -74,7 +74,7 @@ export = class {
             maya: true,
             mcping: true,
             music: true,
-            oeis: true,
+            oeis: false,
             qrcode: true,
             roll: true,
             weather: true,
@@ -83,7 +83,6 @@ export = class {
         this.app.api = new Router();
         this.app.koa.use(body());
         this.app.on('connect', async () => {
-            console.log('Connected');
             for (const admin of this.config.admin) {
                 this.app.database.getUser(admin, 5);
                 console.log(`Opped ${admin}`);
