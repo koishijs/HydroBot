@@ -105,7 +105,7 @@ export const apply = (app: App) => {
     app.on('connect', () => {
         const coll: Collection<Subscription> = app.database.db.collection('github_watch');
 
-        app.router.post('/github', async (ctx) => {
+        app.api.post('/github', async (ctx) => {
             try {
                 const event = ctx.request.headers['x-github-event'];
                 let body;

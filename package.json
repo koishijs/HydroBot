@@ -1,6 +1,6 @@
 {
   "name": "qqbot",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "bin": "bin/robot.js",
   "main": "dist/main.js",
   "engines": {
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "debug": "node --enable-source-maps --async-stack-traces bin/robot.js",
+    "debug": "node --trace-deprecation --enable-source-maps --async-stack-traces bin/robot.js",
     "lint": "eslint bin src --ext ts,js --fix"
   },
   "repository": {
@@ -30,11 +30,11 @@
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
     "koa-router": "^9.1.0",
-    "koishi": "^2.0.0-beta.3",
-    "koishi-core": "^2.0.0-beta.5",
-    "koishi-plugin-common": "^3.0.0-beta.5",
-    "koishi-plugin-eval": "^2.0.0-beta.5",
-    "koishi-plugin-status": "^2.0.0-beta.3",
+    "koishi": "^2.0.0-beta.4",
+    "koishi-adapter-cqhttp": "^1.0.0-beta.0",
+    "koishi-core": "^2.0.0-beta.6",
+    "koishi-plugin-eval": "^2.0.0-beta.6",
+    "koishi-plugin-status": "^2.0.0-beta.4",
     "koishi-plugin-tools": "^1.0.0-beta.4",
     "koishi-utils": "^2.1.2",
     "lodash": "^4.17.19",

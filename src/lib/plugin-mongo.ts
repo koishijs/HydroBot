@@ -96,7 +96,9 @@ extendDatabase(MongoDatabase, {
             fields = User.fields;
         } else fields = args[0] as any;
         if (ids && !ids.length) return [];
-        return this.user.find({ _id: { $in: ids as number[] } }).map((doc) => {
+        const f = {};
+        for (const field of fields) f[field] = 1;
+        return this.user.find({ _id: { $in: ids as number[] } }).project(f).map((doc) => {
             if (doc.timers._date) {
                 doc.timers.$date = doc.timers._date;
                 delete doc.timers._date;
@@ -130,7 +132,9 @@ extendDatabase(MongoDatabase, {
         const selfId = typeof args[0] === 'number' ? args.shift() as number : 0;
         const fields = args[0] as any || Group.fields;
         if (fields && !fields.length) return {} as any;
-        const data = await this.group.findOne({ _id: groupId });
+        const f = {};
+        for (const field of fields) f[field] = 1;
+        const [data] = await this.group.find({ _id: groupId }).project(f).toArray();
         let fallback: Group;
         if (!data) {
             fallback = Group.create(groupId, selfId);
@@ -152,11 +156,11 @@ extendDatabase(MongoDatabase, {
     },
 
     async getAllGroups(...args) {
-        let assignees: readonly number[];
+        let assignees: number[];
         let fields: readonly Group.Field[];
         if (args.length > 1) {
             fields = args[0];
-            assignees = args[1];
+            assignees = args[1] as number[];
         } else if (args.length && typeof args[0][0] === 'number') {
             fields = Group.fields;
             assignees = args[0] as any;
@@ -165,7 +169,9 @@ extendDatabase(MongoDatabase, {
             assignees = await this.app.getSelfIds();
         }
         if (!assignees.length) return [];
-        return this.group.find({ assignee: { $in: assignees as number[] } }).toArray();
+        const f = {};
+        for (const field of fields) f[field] = 1;
+        return this.group.find({ assignee: { $in: assignees } }).project(f).toArray();
     },
 
     async setGroup(groupId, data) {

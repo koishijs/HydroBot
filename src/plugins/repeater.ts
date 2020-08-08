@@ -2,8 +2,9 @@ import { App } from 'koishi';
 
 const dataG = {};
 
-export const apply = (app: App, config) => {
-    app.on('message/group', (session) => {
+export const apply = (app: App) => {
+    app.on('message', (session) => {
+        if (!session.groupId) return;
         if (!dataG[session.groupId]) {
             dataG[session.groupId] = {};
             dataG[session.groupId].msg = session.message;
@@ -14,7 +15,7 @@ export const apply = (app: App, config) => {
                 dataG[session.groupId].t = 1;
                 dataG[session.groupId].msg = session.message;
             }
-            if (dataG[session.groupId].t === config.time) session.$send(dataG[session.groupId].msg);
+            if (dataG[session.groupId].t === 4) session.$send(dataG[session.groupId].msg);
         }
     });
 };
