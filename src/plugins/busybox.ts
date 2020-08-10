@@ -113,7 +113,7 @@ export const apply = (app: App) => {
 
     app.command('_.boardcast <message...>', '全服广播', { authority: 5 })
         .before((session) => !session.$app.database)
-        .option('-f, --forced', '无视 noEmit 标签进行广播')
+        .option('forced', '-f 无视 noEmit 标签进行广播', { value: false })
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
             let groups = await app.database.getAllGroups(['id', 'flag'], [session.selfId]);
@@ -139,6 +139,12 @@ export const apply = (app: App) => {
             return 'Activated';
         });
 
+    app.command('_.setWelcomeMsg <msg>', '设置欢迎信息', { authority: 3 })
+        .action(({ session }, welcomeMsg) => {
+            app.database.setGroup(session.groupId, { welcomeMsg });
+            return 'Activated';
+        });
+
     app.command('_.mute <user> <periodSecs>', '禁言用户', { authority: 3 })
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
@@ -158,6 +164,11 @@ export const apply = (app: App) => {
                 await session.$send('Activated');
             }
         }
+    });
+
+    app.on('group-increase', async (session) => {
+        const data = await app.database.group.findOne({ _id: session.groupId });
+        return await session.$send(data.welcomeMsg.replace('[@]', `[CQ:at,qq=${session.userId}`));
     });
 
     app.on('connect', () => {

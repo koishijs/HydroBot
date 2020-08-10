@@ -1,4 +1,5 @@
 # A Simple QQ Robot
+
 ## How to use:  
 
 ### Requirements: 
@@ -16,7 +17,7 @@ yarn build
 ```
  
 ### Run CoolQ
-[cqhttp](cqhttp.cc) is required for CoolQ, and it should run at websocket mode.
+[go-cqhttp](https://github.com/mrs4s/gp-cqhttp) is required, and it should run under websocket mode.
 
 ### Write config file
 rename config.sample.json to config.json and make some change.
@@ -24,5 +25,5 @@ rename config.sample.json to config.json and make some change.
 ### Run bot  
 
 ```sh
-node bin/robot.js
+node bin/robot.js # or `yarn debug`
 ```
