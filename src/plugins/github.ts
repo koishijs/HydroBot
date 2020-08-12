@@ -113,14 +113,15 @@ export const apply = (app: App) => {
                 else body = ctx.request.body;
                 if (!events[event]) events[event] = (b) => `${b.repository.full_name} triggered an unknown event: ${event}`;
                 const reponame = body.repository.full_name;
-                const cnt = 0;
                 const message = await events[event](body, app.database.db);
+                let cnt = 0;
                 if (message) {
                     const data = await coll.findOne({ _id: reponame.toLowerCase() });
                     if (data) {
                         for (const [isGroup, id, selfId] of data.target) {
                             if (isGroup) app.bots[selfId].sendGroupMsg(id, message);
                             else app.bots[selfId].sendPrivateMsg(id, message);
+                            cnt++;
                         }
                     }
                 }
