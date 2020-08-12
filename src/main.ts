@@ -10,7 +10,9 @@ import body from 'koa-body';
 import { apply as KoishiPluginEval } from 'koishi-plugin-eval';
 import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
 import { apply as KoishiPluginStatus } from 'koishi-plugin-status';
-import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
+import { apply as KoishiPluginImageSearch } from 'koishi-plugin-image-search';
+import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
+import { apply as KoishiPluginTeach } from './plugins/plugin-teach/index';
 import 'koishi-adapter-cqhttp';
 
 process.on('unhandledRejection', (_, p) => {
@@ -23,7 +25,7 @@ declare global {
         encode: () => string,
     }
 }
-declare module 'koishi-core' {
+declare module 'koishi-core/dist/context' {
     interface Context {
         koa: Koa
         api: Router
@@ -60,6 +62,8 @@ export = class {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
         this.app.plugin(KoishiPluginStatus);
+        this.app.plugin(KoishiPluginImageSearch);
+        this.app.plugin(KoishiPluginTeach);
         this.app.plugin(KoishiPluginEval, {
             timeout: 5000,
             resourceLimits: {
@@ -75,7 +79,7 @@ export = class {
             magi: true,
             maya: true,
             mcping: true,
-            music: true,
+            music: false,
             oeis: false,
             qrcode: true,
             roll: true,

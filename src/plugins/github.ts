@@ -31,7 +31,7 @@ function beautifyContent(content: string) {
 const events = {
     async push(body) {
         const ref = body.ref.split('/')[2];
-        let resp = `Recent commit to ${body.repository.full_name}${ref} by ${body.head_commit.author.username}`;
+        let resp = `Recent commit to ${body.repository.full_name}:${ref} by ${body.head_commit.author.username}`;
         for (const commit of body.commits) {
             const det = [];
             if (commit.added.length) det.push(`${commit.added.length}+`);
@@ -188,8 +188,9 @@ export const apply = (app: App) => {
             });
 
         app.command('github.list', 'List repos')
-            .action(async ({ session }, repo) => {
-                const docs = await coll.find({ target: { $elemMatch: get(session) } }).toArray();
+            .action(async ({ session }) => {
+                const docs = await coll.find({ target: { $elemMatch: { $eq: get(session) } } })
+                    .toArray();
                 return docs.map((doc) => doc._id).join('\n');
             });
 

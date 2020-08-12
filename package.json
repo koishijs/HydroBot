@@ -1,6 +1,6 @@
 {
   "name": "qqbot",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "bin": "bin/robot.js",
   "main": "dist/main.js",
   "engines": {
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "debug": "node --trace-deprecation --enable-source-maps --async-stack-traces bin/robot.js",
+    "debug": "node --trace-deprecation --inspect --enable-source-maps --async-stack-traces bin/robot.js",
     "lint": "eslint bin src --ext ts,js --fix"
   },
   "repository": {
