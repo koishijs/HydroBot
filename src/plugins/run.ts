@@ -88,7 +88,7 @@ const LANGS = {
     },
 };
 const env = ['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/w'];
-const axios = Axios.create({ baseURL: 'http://localhost:5051' });
+const axios = Axios.create({ baseURL: 'http://localhost:5050' });
 
 async function _post(args: string[], {
     time_limit_ms = 5000,

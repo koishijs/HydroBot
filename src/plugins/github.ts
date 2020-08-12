@@ -2,16 +2,42 @@
 import { App, Session } from 'koishi-core';
 import { Collection } from 'mongodb';
 
+interface BeautifyRule {
+    regex: RegExp,
+    process: (result: string[], content: string) => string,
+}
+
+const rules: BeautifyRule[] = [
+    {
+        // lgtm
+        regex: /^(This pull request .*?)when merging .*? - \[view on LGTM\.com\]\((.*?)\)\n\n.*\n([\s\S]*)$/gmi,
+        process: (result) => `${result[1]}${result[2]}${result[3]}`,
+    },
+    {
+        regex: /^(Bump [^ ]+ from [^ ]+ to [^ ]+)\n\nBumps /gmi,
+        process: (result) => `${result[1]}`,
+    },
+];
+
+function beautifyContent(content: string) {
+    for (const rule of rules) {
+        const result = rule.regex.exec(content);
+        console.log(rule, result);
+        if (result) return rule.process(result, content);
+    }
+    return content;
+}
+
 const events = {
     async push(body) {
-        let resp = `Recent commit to ${body.repository.full_name}${
-            body.ref === 'refs/heads/master' ? '' : `: ${body.ref}`} by ${body.pusher.name}`;
+        const ref = body.ref.split('/')[2];
+        let resp = `Recent commit to ${body.repository.full_name}${ref} by ${body.head_commit.author.username}`;
         for (const commit of body.commits) {
             const det = [];
             if (commit.added.length) det.push(`${commit.added.length}+`);
             if (commit.removed.length) det.push(`${commit.removed.length}-`);
             if (commit.modified.length) det.push(`${commit.modified.length}M`);
-            resp += `\n${commit.id.substr(0, 6)} ${commit.message.replace(/\n/g, '\r\n')} (${det.join(' ')})`;
+            resp += `\n${commit.id.substr(0, 6)} ${beautifyContent(commit.message).replace(/\n/g, '\r\n')} (${det.join(' ')})`;
         }
         return resp;
     },
@@ -39,8 +65,8 @@ const events = {
     async issue_comment(body) {
         let resp;
         if (body.action === 'created') {
-            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
-            resp += `\n${body.comment.body}`;
+            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}\n`;
+            resp += beautifyContent(body.comment.body);
         }
         return resp;
     },
@@ -62,12 +88,11 @@ const events = {
             resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
         } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
             resp = `${body.sender.login} ${body.action} PR:${body.repository.full_name}#${body.issue.number}`;
+        } else if (['synchronize'].includes(body.action)) {
+            return;
         } else resp = `Unknwon pull request action: ${body.action}`;
         return resp;
     },
-    async watch() { },
-    async project_card() { },
-    async project_column() { },
     async star(body, db) {
         if (body.action === 'created') {
             if (db) {
@@ -83,6 +108,9 @@ const events = {
         }
         return null;
     },
+    async watch() { },
+    async project_card() { },
+    async project_column() { },
     async check_run() { },
     async check_suite() { },
     async repository_vulnerability_alert() { },

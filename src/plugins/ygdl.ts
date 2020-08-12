@@ -1,3 +1,5 @@
+import { App } from 'koishi-core';
+
 const getFirstPinyin = (data) => (data.pinyin.split(/\s+/).shift() || '')
     .replace(/[āáǎà]/g, 'a').replace(/[ōóǒò]/g, 'o').replace(/[ēéěèê]/g, 'e')
     .replace(/[īíǐì]/g, 'i')
@@ -74,6 +76,6 @@ function _ygdl({ session }, args) {
     }
 }
 
-export const apply = (app) => {
+export const apply = (app: App) => {
     app.command('成语接龙 <成语>', '成语接龙').action(_ygdl);
 };

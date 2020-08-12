@@ -2046,6 +2046,15 @@ koishi-plugin-eval@^2.0.0-beta.9:
   resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.9.tgz#fce1381042e00e4bd9c84a52b7ff9d501022d933"
   integrity sha512-6jEeJBgArI3tZ1hCvcz91BeqIBYr/Zc0IMXesaDU8F3ylQKM4LDKje+PVcYh+2J37nZq8ZJQaIlZSHFENj2WfQ==
 
+koishi-plugin-image-search@^2.0.0-beta.5:
+  version "2.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-image-search/-/koishi-plugin-image-search-2.0.0-beta.5.tgz#2f6affbac48767cf5b950980ab8ff03cf15b311e"
+  integrity sha512-1BL5lZGEVpVrt5sV3pcDm1AzcE6Tmap9dDdJr9ils+PZjOh2CNNmTI7vDJ0caBpLjrXmjJlUdra7QEeweoZz2w==
+  dependencies:
+    axios "^0.19.2"
+    cheerio "^1.0.0-rc.3"
+    nhentai-api "^3.0.2"
+
 koishi-plugin-mongo@^1.0.0-beta.0:
   version "1.0.0-beta.0"
   resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.0-beta.0.tgz#0de572e98030430e4f3b3eb53aeb7aff0e57c06c"
@@ -2266,6 +2275,11 @@ negotiator@0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.2.tgz#feacf7ccf525a77ae9634436a64883ffeca346fb"
   integrity sha512-hZXc7K2e+PgeI1eDBe/10Ard4ekbfrrqG8Ep+8Jmf4JID2bNg7NvCPOZN+kfF574pFQI7mum2AUqDidoKqcTOw==
+
+nhentai-api@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/nhentai-api/-/nhentai-api-3.0.2.tgz#6c6fd4a4958e54398a69623188e07927b67b6e72"
+  integrity sha512-5Wz74DdmPMqDCpacEqzYH9pzIHXTUirxnAIRTQF/El7Ra0W3Ov004410TfzgJkrQpBbrryLBtcvkjOSk62RlGA==
 
 node-abi@^2.7.0:
   version "2.18.0"
