@@ -1,5 +1,5 @@
 import Axios from 'axios';
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 import { text2png } from '../lib/graph';
 
 const LANGS = {

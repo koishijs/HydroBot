@@ -1,6 +1,8 @@
 import child from 'child_process';
-import { App, Group } from 'koishi';
-import { getTargetId, Session } from 'koishi-core';
+import {
+    App, Group, getTargetId, Session,
+} from 'koishi-core';
+
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { text2png } from '../lib/graph';
 

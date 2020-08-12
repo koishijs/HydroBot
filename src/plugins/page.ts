@@ -1,4 +1,4 @@
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 import { getPage } from '../lib/graph';
 
 export const apply = (app: App) => {

@@ -1,4 +1,4 @@
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 import superagent from 'superagent';
 import { take } from 'lodash';
 

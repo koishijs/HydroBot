@@ -1,4 +1,4 @@
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 
 const ALLOW = [
     '100', '101', '200', '201', '202',

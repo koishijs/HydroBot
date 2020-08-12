@@ -2,7 +2,7 @@
 import path from 'path';
 import axios from 'axios';
 import { writeFile } from 'fs-extra';
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 
 const db = {};
 

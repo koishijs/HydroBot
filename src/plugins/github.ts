@@ -1,5 +1,5 @@
 /* eslint-disable no-empty-function */
-import { App, Session } from 'koishi';
+import { App, Session } from 'koishi-core';
 import { Collection } from 'mongodb';
 
 const events = {
@@ -114,7 +114,7 @@ export const apply = (app: App) => {
                 if (!events[event]) events[event] = (b) => `${b.repository.full_name} triggered an unknown event: ${event}`;
                 const reponame = body.repository.full_name;
                 const cnt = 0;
-                const message = await events[event](body);
+                const message = await events[event](body, app.database.db);
                 if (message) {
                     const data = await coll.findOne({ _id: reponame.toLowerCase() });
                     if (data) {
@@ -156,6 +156,12 @@ export const apply = (app: App) => {
                 );
                 return `Watching ${repo}
 (请创建 webhook 投递至 http://2.masnn.io:6701/github ，格式 application/json )`;
+            });
+
+        app.command('github.list', 'List repos')
+            .action(async ({ session }, repo) => {
+                const docs = await coll.find({ target: { $elemMatch: get(session) } }).toArray();
+                return docs.map((doc) => doc._id).join('\n');
             });
 
         app.command('github.cancel <repo>', '取消一个Repository的事件')

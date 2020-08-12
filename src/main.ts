@@ -2,7 +2,7 @@
 /* eslint-disable global-require */
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 import fs from 'fs-extra';
 import Koa from 'koa';
 import Router from 'koa-router';
@@ -45,8 +45,10 @@ export = class {
     constructor(item) {
         this.config = item.config;
         this.app = new App({
+            type: 'cqhttp:ws',
             server: `ws://${this.config.host || 'localhost'}:${this.config.port || '6700'}`,
             token: this.config.access_token,
+            secret: this.config.access_token,
             prefix: this.config.prompt as string,
             preferSync: true,
             defaultAuthority: 1,

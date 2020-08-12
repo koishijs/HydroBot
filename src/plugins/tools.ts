@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import child from 'child_process';
 import axios from 'axios';
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
 import { svg2png } from '../lib/graph';
 

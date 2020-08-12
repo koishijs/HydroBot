@@ -36,6 +36,7 @@ module.exports = {
         'no-return-await': 'off',
         'no-underscore-dangle': 'off',
         'no-unused-vars': 'off',
+        'no-useless-constructor': 'off',
         'prefer-destructuring': 'off',
     },
     settings: {

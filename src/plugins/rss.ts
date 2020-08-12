@@ -1,4 +1,4 @@
-import { App, Session } from 'koishi';
+import { App, Session } from 'koishi-core';
 import RssFeedEmitter from 'rss-feed-emitter';
 import { Collection } from 'mongodb';
 

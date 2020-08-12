@@ -1,5 +1,5 @@
 import superagent from 'superagent';
-import { getTargetId, App } from 'koishi';
+import { getTargetId, App } from 'koishi-core';
 
 export const apply = (app: App) => {
     app.command('luogu', 'Luogu');

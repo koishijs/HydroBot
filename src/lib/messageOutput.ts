@@ -1,4 +1,4 @@
-import { CQCode } from 'koishi';
+import { CQCode } from 'koishi-utils';
 
 export default function messageOutput(msg: string) {
     const parsed = CQCode.parseAll(msg);

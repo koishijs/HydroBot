@@ -1,4 +1,4 @@
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 import superagent from 'superagent';
 
 export function apply(app: App) {

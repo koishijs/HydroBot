@@ -1,4 +1,4 @@
-import { App } from 'koishi';
+import { App } from 'koishi-core';
 
 export async function apply(app: App) {
     app.command('about', 'About this bot')
