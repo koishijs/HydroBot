@@ -2028,10 +2028,10 @@ koishi-adapter-cqhttp@^1.0.0-beta.0:
     ms "^2.1.2"
     ws "^7.3.1"
 
-koishi-core@^2.0.0-beta.8:
-  version "2.0.0-beta.8"
-  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0-beta.8.tgz#973fb478f82319690a52cc63a4972b9596f88823"
-  integrity sha512-lMf7eTHXNsuS64f/xtft5EbHurtJgxp4VdTPiHlbYTvPkzDJ5iz4qM+x/BY2OR5xN1Lh+WLAXir5d5LGccGgjg==
+koishi-core@^2.0.0-beta.10:
+  version "2.0.0-beta.10"
+  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0-beta.10.tgz#6589ceed17e550272481e4fddd807be09ef55661"
+  integrity sha512-lE93ksNkjjxjuJsWoDpj7GJh9NiLpAnfR7wRKtr3Ql/6aARWjDtseuT6rHovMVmlQ1ykM88FN2qfIInDJchKDg==
   dependencies:
     "@types/koa-bodyparser" "^4.3.0"
     escape-string-regexp "^4.0.0"
@@ -2041,10 +2041,10 @@ koishi-core@^2.0.0-beta.8:
     koishi-utils "^2.2.0"
     leven "^3.1.0"
 
-koishi-plugin-eval@^2.0.0-beta.9:
-  version "2.0.0-beta.9"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.9.tgz#fce1381042e00e4bd9c84a52b7ff9d501022d933"
-  integrity sha512-6jEeJBgArI3tZ1hCvcz91BeqIBYr/Zc0IMXesaDU8F3ylQKM4LDKje+PVcYh+2J37nZq8ZJQaIlZSHFENj2WfQ==
+koishi-plugin-eval@^2.0.0-beta.10:
+  version "2.0.0-beta.10"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.10.tgz#28e078d65acd841d216cf25e24ba0f9ffb0e3cbb"
+  integrity sha512-agQjjQaN3TtPN9C10rwD1oS0uPPOyowbrPKX4uEyYT9yfNx5T57f5UG2qzb7kvtPAeqMx0VPi/i7MV59lW61fQ==
 
 koishi-plugin-image-search@^2.0.0-beta.5:
   version "2.0.0-beta.5"
@@ -2055,26 +2055,25 @@ koishi-plugin-image-search@^2.0.0-beta.5:
     cheerio "^1.0.0-rc.3"
     nhentai-api "^3.0.2"
 
-koishi-plugin-mongo@^1.0.0-beta.0:
-  version "1.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.0-beta.0.tgz#0de572e98030430e4f3b3eb53aeb7aff0e57c06c"
-  integrity sha512-oc6zlpVTiRcmsGzjTT55UCY9IQQLQiv9REomuGJWcu9Bbmw+ZFaNTh5tUugtncqAKegkjmGZxPUkK75p+2Q7Hg==
+koishi-plugin-mongo@^1.0.0-beta.2:
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.0-beta.2.tgz#5fa1041796a53ff69151e93168994f707f64c8a9"
+  integrity sha512-v/pwd9ECxTODiLYTvSdO5JyEfDPy9Frj8XjdvxNbfT/H+jdC0fTXFMleT7Sh+sQwSFHC4Kq0Hfpa/LM6ctMIsg==
   dependencies:
     mongodb "^3.6.0"
 
-koishi-plugin-status@^2.0.0-beta.6:
-  version "2.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-status/-/koishi-plugin-status-2.0.0-beta.6.tgz#94ec69cc051564b92fbe082f9f5904ad569d50b6"
-  integrity sha512-nWXWsdPfctURgWgQPOyP4Iprp87s7VMDLiRgC8QTsg5dIIHA0VZe2urB4Q4ToefSRa7bbe7Vy36kx//Kw/MzQg==
+koishi-plugin-status@^2.0.0-beta.8:
+  version "2.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-status/-/koishi-plugin-status-2.0.0-beta.8.tgz#f33113edf8115a861a461dd85fbb0d6908bee1a7"
+  integrity sha512-MiuvHdbqOC0eHS+XJxFz65RtGCcEjXaSQvuoFc38dmFWQGNN/kH9e0TPGBgN9TAjepKVLilou27cXmJINp+pfQ==
   dependencies:
     cross-spawn "^7.0.3"
-    koishi-core "^2.0.0-beta.8"
     koishi-utils "^2.2.0"
 
-koishi-plugin-tools@^1.0.0-beta.6:
-  version "1.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-tools/-/koishi-plugin-tools-1.0.0-beta.6.tgz#131766887e477ae49ba4e586a6e530de08dfcad5"
-  integrity sha512-tw84mXTnR8xm9Xxz8UJhw9tYbVmWX5RK9r24YjnD5Fz3mHo92Yvlt1pnJGY+FB9BYao0usDNB62thPztnD2s8w==
+koishi-plugin-tools@^1.0.0-beta.7:
+  version "1.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-tools/-/koishi-plugin-tools-1.0.0-beta.7.tgz#3cf5d9addaf8f4a954db51fe83290ab2077e2881"
+  integrity sha512-l1J7BhmWwpOeQFseqIx0QkY1CvxpYiws8f2wUVxF547WVVeLWUDxD5acc5r9rcqGBz5z63O8Pa9G3Ud9trESUw==
   dependencies:
     axios "^0.19.2"
     cheerio "^1.0.0-rc.3"
@@ -2844,10 +2843,10 @@ rimraf@^3.0.2:
   dependencies:
     glob "^7.1.3"
 
-rss-feed-emitter@^3.2.0:
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/rss-feed-emitter/-/rss-feed-emitter-3.2.1.tgz#358717d38fa594bcfc3afecac209a2fd9978e735"
-  integrity sha512-aL4SEbC/xWweftbXeMWhmsYWJdCQTgnvU9H8Z5xbmkYnuZSsJqVTUvzmjdP2/JCHmSUA+5nHrqQY/5PnlOIx2Q==
+rss-feed-emitter@^3.2.2:
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/rss-feed-emitter/-/rss-feed-emitter-3.2.2.tgz#d8b78263d05c2fb628ebb6dd5b03603d6a843c8c"
+  integrity sha512-QqdzUe90dXfrO2N97h6+75EmD2LRiXoU1oY3qpRheJ0qRIUtFH8wYNVjuMKrpGZ+pmNA9cATi6J7S4lx29CZUQ==
   dependencies:
     feedparser "1.1.4"
     request "^2.88.2"

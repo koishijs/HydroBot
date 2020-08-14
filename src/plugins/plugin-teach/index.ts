@@ -1,3 +1,5 @@
+/* eslint-disable import/export */
+/* eslint-disable import/no-named-as-default */
 /* eslint-disable no-irregular-whitespace */
 
 import { Context, ExecuteArgv, Session } from 'koishi-core';

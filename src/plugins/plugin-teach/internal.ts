@@ -114,7 +114,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
                 }
             }
         }
-        conditionals.push(query);
+        if (Object.keys(query)) conditionals.push(query);
     });
 
     function maybeAnswer(question: string, dialogues: Dialogue[]) {

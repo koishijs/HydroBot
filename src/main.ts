@@ -2,7 +2,7 @@
 /* eslint-disable global-require */
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import { App } from 'koishi-core';
+import { App, Command } from 'koishi-core';
 import fs from 'fs-extra';
 import Koa from 'koa';
 import Router from 'koa-router';
@@ -18,6 +18,8 @@ import 'koishi-adapter-cqhttp';
 process.on('unhandledRejection', (_, p) => {
     console.log('Unhandled Rejection:', p);
 });
+
+Command.defaultConfig.checkArgCount = true;
 
 declare global {
     interface String {
@@ -54,6 +56,7 @@ export = class {
             prefix: this.config.prompt as string,
             preferSync: true,
             defaultAuthority: 1,
+            similarityCoefficient: 0.9,
         });
         this.run();
     }

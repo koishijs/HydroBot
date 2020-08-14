@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 /* eslint-disable no-await-in-loop */
 import { Context } from 'koishi-core';
 import {

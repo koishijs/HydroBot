@@ -2,7 +2,6 @@ import child from 'child_process';
 import {
     App, Group, getTargetId, Session,
 } from 'koishi-core';
-
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { text2png } from '../lib/graph';
 
@@ -55,6 +54,12 @@ async function formatMessage(session: Session) {
         } else output += `[${code.type}]`;
     }
     return output;
+}
+
+declare module 'koishi-core/dist/database' {
+    interface Group {
+        welcomeMsg: string
+    }
 }
 
 export const apply = (app: App) => {

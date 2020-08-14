@@ -59,7 +59,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         predecessors, stateful, noRecursive,
     }, conditionals) => {
         if (noRecursive) {
-            conditionals.predecessors = { $eq: null };
+            conditionals.push({ predecessors: { $eq: null } });
         } else if (predecessors !== undefined) {
             // FIXME cannot understand.
             /*

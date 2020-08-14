@@ -22,7 +22,6 @@ const rules: BeautifyRule[] = [
 function beautifyContent(content: string) {
     for (const rule of rules) {
         const result = rule.regex.exec(content);
-        console.log(rule, result);
         if (result) return rule.process(result, content);
     }
     return content;

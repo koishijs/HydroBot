@@ -187,7 +187,7 @@ export const apply = (app: App) => {
             const input: string = (options.input)
                 ? await session.$prompt(10000)
                 : '';
-            const response = await run(code, lang, input);
+            const response = await run(code.replace(/\r/gmi, ''), lang, input);
             if (response.length > 512 || response.split('\n').length > 10) {
                 return `[CQ:image,file=base64://${await text2png(response)}]`;
             }
