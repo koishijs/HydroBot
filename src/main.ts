@@ -11,7 +11,7 @@ import { apply as KoishiPluginEval } from 'koishi-plugin-eval';
 import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
 import { apply as KoishiPluginStatus } from 'koishi-plugin-status';
 import { apply as KoishiPluginImageSearch } from 'koishi-plugin-image-search';
-import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
+import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
 import { apply as KoishiPluginTeach } from './plugins/plugin-teach/index';
 import 'koishi-adapter-cqhttp';
 

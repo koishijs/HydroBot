@@ -89,10 +89,14 @@ export namespace Dialogue {
     }
 
     export async function fromIds(ids: number[], ctx: Context) {
+        console.log(ids);
         if (!ids.length) return [];
         const dialogues = await ctx.database.db.collection('dialogue')
-            .find<Dialogue>({ _id: { $in: ids } }).toArray();
+            .find<Dialogue>({}).toArray();
+        console.log({ _id: { $in: ids } });
+        console.log(dialogues);
         dialogues.forEach((d) => defineProperty(d, '_backup', clone(d)));
+        console.log(dialogues);
         return dialogues;
     }
 

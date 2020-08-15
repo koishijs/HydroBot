@@ -174,8 +174,10 @@ export const apply = (app: App) => {
     });
 
     app.on('group-increase', async (session) => {
-        const data = await app.database.group.findOne({ _id: session.groupId });
-        return await session.$send(data.welcomeMsg.replace('[@]', `[CQ:at,qq=${session.userId}`));
+        const data = await session.$app.database.getGroup(session.groupId);
+        if (data.welcomeMsg) {
+            await session.$send(data.welcomeMsg.replace(/%@/gmi, `[CQ:at,qq=${session.userId}`));
+        }
     });
 
     app.on('connect', () => {
