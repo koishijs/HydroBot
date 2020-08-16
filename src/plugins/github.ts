@@ -30,7 +30,7 @@ function beautifyContent(content: string) {
 const events = {
     async push(body) {
         const ref = body.ref.split('/')[2];
-        let resp = `Recent commit to ${body.repository.full_name}:${ref} by ${body.head_commit.author.username}`;
+        let resp = `Recent commit to ${body.repository.full_name}:${ref} by ${body.head_commit ? body.head_commit.author.username : body.sender.login}`;
         for (const commit of body.commits) {
             const det = [];
             if (commit.added.length) det.push(`${commit.added.length}+`);

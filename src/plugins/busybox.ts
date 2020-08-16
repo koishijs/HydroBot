@@ -1,9 +1,13 @@
+/* eslint-disable no-shadow */
+/* eslint-disable no-return-assign */
+import { cpus, totalmem, freemem } from 'os';
 import child from 'child_process';
 import {
-    App, Group, getTargetId, Session,
+    App, Group, getTargetId, Session, extendDatabase,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { text2png } from '../lib/graph';
+import MongoDatabase from '../lib/plugin-mongo';
 
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
@@ -56,15 +60,139 @@ async function formatMessage(session: Session) {
     return output;
 }
 
+declare module 'koishi-core/dist/server' {
+    interface BotOptions {
+        label?: string
+    }
+    interface Bot {
+        counter: number[]
+    }
+}
+
 declare module 'koishi-core/dist/database' {
+    interface User {
+        lastCall: Date
+        coin: number,
+    }
     interface Group {
         welcomeMsg: string
     }
+    interface Database {
+        getActiveData(): Promise<ActiveData>
+    }
 }
+
+export interface ActiveData {
+    activeUsers: number
+    activeGroups: number
+}
+
+extendDatabase<typeof MongoDatabase>(MongoDatabase, {
+    async getActiveData() {
+        const $gt = new Date(new Date().getTime() - 1000 * 3600 * 24);
+        const [activeGroups, activeUsers] = await Promise.all([
+            this.group.find({ assignee: { $ne: null } }).count(),
+            this.user.find({ lastCall: { $gt } }).count(),
+        ]);
+        return { activeGroups, activeUsers };
+    },
+});
+
+function memoryRate() {
+    const totalMemory = totalmem();
+    return {
+        app: process.memoryUsage().rss / totalMemory,
+        total: 1 - freemem() / totalMemory,
+    };
+}
+
+function getCpuUsage() {
+    let totalIdle = 0;
+    let totalTick = 0;
+    const cpuInfo = cpus();
+    const usage = process.cpuUsage().user;
+    for (const cpu of cpuInfo) {
+        for (const type in cpu.times) totalTick += cpu.times[type];
+        totalIdle += cpu.times.idle;
+    }
+    return {
+        app: usage / 1000,
+        used: (totalTick - totalIdle) / cpuInfo.length,
+        total: totalTick / cpuInfo.length,
+    };
+}
+
+let usage = getCpuUsage();
+let appRate: number;
+let usedRate: number;
+
+function updateCpuUsage() {
+    const newUsage = getCpuUsage();
+    const totalDifference = newUsage.total - usage.total;
+    appRate = (newUsage.app - usage.app) / totalDifference;
+    usedRate = (newUsage.used - usage.used) / totalDifference;
+    usage = newUsage;
+}
+
+export interface Rate {
+    app: number
+    total: number
+}
+
+export interface Status extends ActiveData {
+    bots: BotStatus[]
+    memory: Rate
+    cpu: Rate
+    timestamp: number
+}
+
+export interface BotStatus {
+    label?: string
+    selfId: number
+    code: number
+    rate?: number
+}
+
+export enum StatusCode {
+    GOOD,
+    IDLE,
+    CQ_ERROR,
+    NET_ERROR,
+}
+
+let timer: NodeJS.Timeout;
 
 export const apply = (app: App) => {
     const logger = Logger.create('message', true);
     Logger.levels.message = 3;
+
+    let cachedStatus: Promise<Status>;
+    let timestamp: number;
+
+    async function _getStatus() {
+        const [data, bots] = await Promise.all([
+            app.database.getActiveData(),
+            Promise.all(app.bots.map(async (bot): Promise<BotStatus> => ({
+                selfId: bot.selfId,
+                label: bot.label,
+                code: await bot.getStatus(),
+                rate: bot.counter.slice(1).reduce((prev, curr) => prev + curr, 0),
+            }))),
+        ]);
+        const memory = memoryRate();
+        const cpu = { app: appRate, total: usedRate };
+        const status: Status = {
+            ...data, bots, memory, cpu, timestamp,
+        };
+        return status;
+    }
+
+    async function getStatus(): Promise<Status> {
+        const now = Date.now();
+        if (now - timestamp < 60000) return cachedStatus;
+        timestamp = now;
+        return cachedStatus = _getStatus();
+    }
 
     app.command('_', '', { authority: 5, hidden: true })
         .action(() => { });
@@ -112,6 +240,12 @@ export const apply = (app: App) => {
 
     app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5 })
         .action(async ({ session }, userId: string, authority: string) => {
+            if (authority === 'null') {
+                await app.database.setUser(getTargetId(userId), { flag: 1 });
+                authority = '0';
+            } else {
+                await app.database.setUser(getTargetId(userId), { flag: 0 });
+            }
             await session.$app.database.setUser(
                 getTargetId(userId), { authority: parseInt(authority, 10) },
             );
@@ -132,29 +266,61 @@ export const apply = (app: App) => {
             });
         });
 
-    app.command('_.deactivate', '在群内禁用', { authority: 3 })
+    app.command('_.deactivate', '在群内禁用', { authority: 4 })
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag |= Group.Flag.ignore;
             return 'Deactivated';
         });
 
-    app.command('_.activate', '在群内启用', { authority: 3 })
+    app.command('_.activate', '在群内启用', { authority: 4 })
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag &= ~Group.Flag.ignore;
             return 'Activated';
         });
 
-    app.command('_.setWelcomeMsg <msg>', '设置欢迎信息', { authority: 3 })
+    app.command('_.setWelcomeMsg <msg>', '设置欢迎信息', { authority: 4 })
         .action(({ session }, welcomeMsg) => {
             app.database.setGroup(session.groupId, { welcomeMsg });
             return 'Activated';
         });
 
-    app.command('_.mute <user> <periodSecs>', '禁言用户', { authority: 3 })
+    app.command('_.mute <user> <periodSecs>', '禁言用户', { authority: 4 })
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
+
+    app.command('status', '查看机器人运行状态', { hidden: true })
+        .shortcut('你的状态', { prefix: true })
+        .shortcut('你的状况', { prefix: true })
+        .shortcut('运行情况', { prefix: true })
+        .shortcut('运行状态', { prefix: true })
+        .action(async () => {
+            const {
+                bots: apps, cpu, memory, activeUsers, activeGroups,
+            } = await getStatus();
+            const output = apps.map(({
+                label, selfId, code, rate,
+            }) => `${label || selfId}：${code ? '无法连接' : `工作中（${rate}/min）`}`);
+            output.push('==========');
+            output.push(
+                `活跃用户数量：${activeUsers}`,
+                `活跃群数量：${activeGroups}`,
+                `CPU 使用率：${(cpu.app * 100).toFixed()}% / ${(cpu.total * 100).toFixed()}%`,
+                `内存使用率：${(memory.app * 100).toFixed()}% / ${(memory.total * 100).toFixed()}%`,
+            );
+            return output.join('\n');
+        });
+
+    app.command('checkin', '签到', { maxUsage: 1 })
+        .shortcut('签到', { prefix: true })
+        .userFields(['coin'])
+        .action(async ({ session }) => {
+            const add = Math.floor(Math.random() * 10);
+            if (!session.$user.coin) session.$user.coin = 0;
+            session.$user.coin += add;
+            return `签到成功，获得${add}个硬币（共有${session.$user.coin}个）`;
+        });
 
     app.on('message', async (session) => {
         const groupName = await getGroupName(session);
@@ -164,7 +330,7 @@ export const apply = (app: App) => {
         if (!session.groupId) return;
         if (session.message === '>_.activate') {
             const user = await app.database.getUser(session.userId);
-            if (user.authority >= 3) {
+            if (user.authority >= 4) {
                 const group = await app.database.getGroup(session.groupId);
                 const flag = group.flag & (~Group.Flag.ignore);
                 await app.database.setGroup(session.groupId, { flag });
@@ -180,7 +346,46 @@ export const apply = (app: App) => {
         }
     });
 
-    app.on('connect', () => {
+    app.on('before-command', ({ session }) => {
+        // @ts-expect-error
+        session.$user.lastCall = new Date();
+    });
+
+    app.on('before-send', (session) => {
+        const { counter } = app.bots[session.selfId];
+        counter[0] += 1;
+    });
+
+    app.on('before-disconnect', () => {
+        clearInterval(timer);
+    });
+
+    app.on('connect', async () => {
         Logger.lastTime = Date.now();
+        await app.getSelfIds();
+        app.bots.forEach((bot) => {
+            bot.label = bot.label || `${bot.selfId}`;
+            bot.counter = new Array(61).fill(0);
+        });
+
+        timer = setInterval(() => {
+            updateCpuUsage();
+            app.bots.forEach(({ counter }) => {
+                counter.unshift(0);
+                counter.splice(-1, 1);
+            });
+        }, 1000);
+
+        if (!app.server.router) return;
+        app.server.router.get('/status', async (ctx) => {
+            const status = await getStatus().catch<Status>((error) => {
+                app.logger('status').warn(error);
+                return null;
+            });
+            if (!status) return ctx.status = 500;
+            ctx.set('Content-Type', 'application/json');
+            ctx.set('Access-Control-Allow-Origin', '*');
+            ctx.body = status;
+        });
     });
 };

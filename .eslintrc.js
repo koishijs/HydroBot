@@ -26,6 +26,7 @@ module.exports = {
         'max-classes-per-file': 'off',
         'no-bitwise': 'off',
         'no-console': 'off',
+        'no-continue': 'off',
         'no-extend-native': 'off',
         'no-inner-declarations': 'off',
         'no-multi-assign': 'off',

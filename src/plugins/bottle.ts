@@ -32,10 +32,10 @@ export const apply = (app: App) => {
                 const [res] = await coll.find({}).skip(target).limit(1).toArray();
                 const shouldDestory = Math.random() > 0.5;
                 if (shouldDestory) await coll.deleteOne({ _id: res._id });
-                return `漂流瓶ID: ${res._id.toHexString()}
-来源：${res.isFromGroup ? `群组${res.groupId}` : ''} 用户${res.userId}
+                return `来源：${res.isFromGroup ? `群组${res.groupId}` : ''} 用户${res.userId}
+时间：${new Date(res._id.generationTime * 1000).toLocaleString()}
 内容：${res.content}
-投递事件：${new Date(res._id.generationTime * 1000).toLocaleString()}`;
+`;
             });
     });
 

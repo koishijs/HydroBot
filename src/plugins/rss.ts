@@ -1,4 +1,5 @@
 import { App, Session } from 'koishi-core';
+import superagent from 'superagent';
 import RssFeedEmitter from 'rss-feed-emitter';
 import { Collection } from 'mongodb';
 
@@ -32,6 +33,7 @@ export const apply = (app: App) => {
             const data = await coll.findOne({ _id: source });
             if (data) {
                 for (const [isGroup, id, selfId] of data.target) {
+                    if (!app.bots[selfId]) continue;
                     if (isGroup) app.bots[selfId].sendGroupMsg(id, message);
                     else app.bots[selfId].sendPrivateMsg(id, message);
                 }
@@ -54,6 +56,8 @@ export const apply = (app: App) => {
                     );
                     return `Watching ${url}`;
                 }
+                const res = await superagent.get(url).catch();
+                if (!res) return '无法获取内容。';
                 await coll.insertOne(
                     {
                         _id: url,
@@ -75,6 +79,5 @@ export const apply = (app: App) => {
             });
     });
 
-    app.command('rss', 'Rss')
-        .action(({ session }) => session.$send('Use rss -h for help.'));
+    app.command('rss', 'Rss').action(() => 'Use rss -h for help.');
 };

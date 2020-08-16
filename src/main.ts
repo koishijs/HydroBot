@@ -7,12 +7,8 @@ import fs from 'fs-extra';
 import Koa from 'koa';
 import Router from 'koa-router';
 import body from 'koa-body';
-import { apply as KoishiPluginEval } from 'koishi-plugin-eval';
 import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
-import { apply as KoishiPluginStatus } from 'koishi-plugin-status';
-import { apply as KoishiPluginImageSearch } from 'koishi-plugin-image-search';
 import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
-import { apply as KoishiPluginTeach } from './plugins/plugin-teach/index';
 import 'koishi-adapter-cqhttp';
 
 process.on('unhandledRejection', (_, p) => {
@@ -38,7 +34,7 @@ String.prototype.decode = function decode() {
     return this.replace(/&#91;/gm, '[').replace(/&#93;/gm, ']').replace(/&amp;/gm, '&');
 };
 String.prototype.encode = function encode() {
-    return this.replace(/\[/gm, '&#91;').replace(/\]/gm, '&#93;').replace(/&/gm, '&amp;');
+    return this.replace(/&/gm, '&amp;').replace(/\[/gm, '&#91;').replace(/\]/gm, '&#93;');
 };
 
 export = class {
@@ -64,17 +60,6 @@ export = class {
     async run() {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
-        this.app.plugin(KoishiPluginStatus);
-        this.app.plugin(KoishiPluginImageSearch);
-        this.app.plugin(KoishiPluginTeach);
-        this.app.plugin(KoishiPluginEval, {
-            timeout: 5000,
-            resourceLimits: {
-                maxYoungGenerationSizeMb: 32,
-                maxOldGenerationSizeMb: 128,
-                codeRangeSizeMb: 32,
-            },
-        });
         this.app.plugin(KoishiPluginTools, {
             brainfuck: true,
             bvid: true,
@@ -117,7 +102,9 @@ export = class {
         for (const plugin of this.config.enabledplugins) {
             try {
                 if (typeof plugin === 'string') {
-                    this.app.plugin(require(`./plugins/${plugin}`).apply);
+                    this.app.plugin(require(plugin).apply);
+                } else if (plugin instanceof Array) {
+                    this.app.plugin(require(plugin[0]).apply, plugin[1]);
                 }
             } catch (e) {
                 console.error('Failed to load ', plugin, e);

@@ -124,20 +124,22 @@ extendDatabase(MongoDatabase, {
     },
 
     async setUser(userId, data) {
-        const converted = { ...data };
-        if (converted.timers) {
-            if (converted.timers.$date) {
-                converted.timers._date = converted.timers.$date;
-                delete converted.timers.$date;
+        const $set = { ...data };
+        if ($set.timers) {
+            for (const key in $set.timers) {
+                if (key === '$date') $set['timers._date'] = $set.timers.$date;
+                else $set[`timers.${key}`] = $set.timers[key];
             }
         }
-        if (converted.usage) {
-            if (converted.usage.$date) {
-                converted.usage._date = converted.usage.$date;
-                delete converted.usage.$date;
+        if ($set.usage) {
+            for (const key in $set.usage) {
+                if (key === '$date') $set['usage._date'] = $set.usage.$date;
+                else $set[`usage.${key}`] = $set.usage[key];
             }
         }
-        await this.user.updateOne({ _id: userId }, { $set: data }, { upsert: true });
+        delete $set.timers;
+        delete $set.usage;
+        await this.user.updateOne({ _id: userId }, { $set }, { upsert: true });
     },
 
     async getGroup(groupId, ...args) {
