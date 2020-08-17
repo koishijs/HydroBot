@@ -93,6 +93,15 @@ extendDatabase(MongoDatabase, {
                     { upsert: true },
                 );
             }
+        } else {
+            if (data.timers?._date) {
+                data.timers.$date = data.timers._date;
+                delete data.timers._date;
+            }
+            if (data.usage?._date) {
+                data.usage.$date = data.usage._date;
+                delete data.usage._date;
+            }
         }
         return data || fallback;
     },

@@ -2,6 +2,8 @@
 import { App, Session } from 'koishi-core';
 import { Collection } from 'mongodb';
 
+const RE_REPLY = /^.*\[CQ:reply,id=(-?[0-9]+)\] ?(\[CQ:at,qq=[0-9]+\])?(.*)$/gmi;
+
 interface BeautifyRule {
     regex: RegExp,
     process: (result: string[], content: string) => string,
@@ -14,8 +16,14 @@ const rules: BeautifyRule[] = [
         process: (result) => `${result[1]}${result[2]}${result[3]}`,
     },
     {
+        // dependabot
         regex: /^(Bump [^ ]+ from [^ ]+ to [^ ]+)\n\nBumps /gmi,
         process: (result) => `${result[1]}`,
+    },
+    {
+        // Issue-label-bot
+        regex: /^Issue-Label Bot is automatically applying the label `(.*)` to this issue, with a confidence of (0\.[0-9]+)/gmi,
+        process: (result) => `Tag: ${result[1]}\nConfidence: ${result[2]}`,
     },
 ];
 
@@ -27,101 +35,17 @@ function beautifyContent(content: string) {
     return content;
 }
 
-const events = {
-    async push(body) {
-        const ref = body.ref.split('/')[2];
-        let resp = `Recent commit to ${body.repository.full_name}:${ref} by ${body.head_commit ? body.head_commit.author.username : body.sender.login}`;
-        for (const commit of body.commits) {
-            const det = [];
-            if (commit.added.length) det.push(`${commit.added.length}+`);
-            if (commit.removed.length) det.push(`${commit.removed.length}-`);
-            if (commit.modified.length) det.push(`${commit.modified.length}M`);
-            resp += `\n${commit.id.substr(0, 6)} ${beautifyContent(commit.message).replace(/\n/g, '\r\n')} (${det.join(' ')})`;
-        }
-        return resp;
-    },
-    async issues(body) {
-        let resp;
-        if (body.action === 'opened') {
-            resp = `${body.issue.user.login} opened an issue for ${body.repository.full_name}#${body.issue.number}`;
-            resp = `${resp}\n${body.issue.title}`;
-        } else if (body.action === 'created') {
-            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
-            resp += `\n${body.comment.body}`;
-        } else if (body.action === 'assigned') {
-            resp = `${body.repository.full_name}#${body.issue.number}: Assigned ${body.assignee.login}`;
-        } else if (body.action === 'unassigned') {
-            resp = `${body.repository.full_name}#${body.issue.number}: Unassigned ${body.assignee.login}`;
-        } else if (body.action === 'closed') {
-            resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
-        } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
-            resp = `${body.sender.login} ${body.action} Issue:${body.repository.full_name}#${body.issue.number}`;
-        } else if (body.action === 'labled') {
-            resp = `${body.sender.login} labled ${body.repository.full_name}#${body.issue.number} ${body.lable.name}`;
-        } else resp = `Unknwon issue action: ${body.action}`;
-        return resp;
-    },
-    async issue_comment(body) {
-        let resp;
-        if (body.action === 'created') {
-            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}\n`;
-            resp += beautifyContent(body.comment.body);
-        }
-        return resp;
-    },
-    async pull_request(body) {
-        let resp;
-        if (body.action === 'opened') {
-            resp = `${body.issue.user.login} opened an pull request for ${body.repository.full_name}#${body.issue.number}`;
-            resp = `${resp}\n${body.issue.title}`;
-        } else if (body.action === 'created') {
-            resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
-            resp += `\n${body.comment.body}`;
-        } else if (body.action === 'assigned') {
-            resp = `${body.repository.full_name}#${body.issue.number}: Assigned ${body.assignee.login}`;
-        } else if (body.action === 'unassigned') {
-            resp = `${body.repository.full_name}#${body.issue.number}: Unassigned ${body.assignee.login}`;
-        } else if (body.action === 'review_requested') {
-            resp = `${body.repository.full_name}#${body.issue.number}: Request a review.`;
-        } else if (body.action === 'closed' && !body.merged) {
-            resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
-        } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
-            resp = `${body.sender.login} ${body.action} PR:${body.repository.full_name}#${body.issue.number}`;
-        } else if (['synchronize'].includes(body.action)) {
-            return;
-        } else resp = `Unknwon pull request action: ${body.action}`;
-        return resp;
-    },
-    async star(body, db) {
-        if (body.action === 'created') {
-            if (db) {
-                const collStar = db.collection('github_event_star');
-                if (await collStar.findOne({
-                    user: body.sender.login, repo: body.repository.full_name,
-                })) return null;
-                await collStar.insertOne({
-                    user: body.sender.login, repo: body.repository.full_name,
-                });
-            }
-            return `${body.sender.login} starred ${body.repository.full_name} (total ${body.repository.stargazers_count} stargazers)`;
-        }
-        return null;
-    },
-    async watch() { },
-    async project_card() { },
-    async project_column() { },
-    async check_run() { },
-    async check_suite() { },
-    async repository_vulnerability_alert() { },
-    async status() { },
-};
-
 // IsGroup? group/userId assignee
 type Target = [boolean, number, number];
 
 interface Subscription {
     _id: string,
     target: Target[],
+}
+
+interface EventHandler {
+    hook?: (body: any) => Promise<[string?, NodeJS.Dict<any>?]>
+    interact?: (message: string, session: Session, event: any) => Promise<[string?, NodeJS.Dict<any>?]>
 }
 
 function get(session: Session): Target {
@@ -131,38 +55,181 @@ function get(session: Session): Target {
 export const apply = (app: App) => {
     app.on('connect', () => {
         const coll: Collection<Subscription> = app.database.db.collection('github_watch');
+        const collData: Collection<any> = app.database.db.collection('github_data');
+
+        const events: NodeJS.Dict<EventHandler> = {
+            push: {
+                async hook(body) {
+                    const ref = body.ref.split('/')[2];
+                    const sender = body.head_commit ? body.head_commit.author.username : body.sender.login;
+                    let resp = `Recent commit to ${body.repository.full_name}:${ref} by ${sender}`;
+                    for (const commit of body.commits) {
+                        const det = [];
+                        if (commit.added.length) det.push(`${commit.added.length}+`);
+                        if (commit.removed.length) det.push(`${commit.removed.length}-`);
+                        if (commit.modified.length) det.push(`${commit.modified.length}M`);
+                        resp += `\n${commit.id.substr(0, 6)} ${beautifyContent(commit.message).replace(/\n/g, '\r\n')} (${det.join(' ')})`;
+                    }
+                    return [resp, { link: body.compare }];
+                },
+                async interact(message, session, event) {
+                    if (message.includes('link')) return [event.link];
+                    return [];
+                },
+            },
+            issues: {
+                async hook(body) {
+                    let resp;
+                    if (body.action === 'opened') {
+                        resp = `${body.issue.user.login} opened an issue for ${body.repository.full_name}#${body.issue.number}`;
+                        resp = `${resp}\n${body.issue.title}`;
+                    } else if (body.action === 'created') {
+                        resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
+                        resp += `\n${body.comment.body}`;
+                    } else if (body.action === 'assigned') {
+                        resp = `${body.repository.full_name}#${body.issue.number}: Assigned ${body.assignee.login}`;
+                    } else if (body.action === 'unassigned') {
+                        resp = `${body.repository.full_name}#${body.issue.number}: Unassigned ${body.assignee.login}`;
+                    } else if (body.action === 'closed') {
+                        resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
+                    } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
+                        resp = `${body.sender.login} ${body.action} Issue:${body.repository.full_name}#${body.issue.number}`;
+                    } else if (body.action === 'labled') {
+                        resp = `${body.sender.login} labled ${body.repository.full_name}#${body.issue.number} ${body.lable.name}`;
+                    } else resp = `Unknwon issue action: ${body.action}`;
+                    return [resp];
+                },
+                async interact() {
+                    return [];
+                },
+            },
+            issue_comment: {
+                async hook(body) {
+                    let resp;
+                    if (body.action === 'created') {
+                        resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}\n`;
+                        resp += beautifyContent(body.comment.body);
+                    }
+                    return [resp];
+                },
+                async interact() {
+                    return [];
+                },
+            },
+            pull_request: {
+                async hook(body) {
+                    let resp;
+                    if (body.action === 'opened') {
+                        resp = `${body.issue.user.login} opened an pull request for ${body.repository.full_name}#${body.issue.number}`;
+                        resp = `${resp}\n${body.issue.title}`;
+                    } else if (body.action === 'created') {
+                        resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}`;
+                        resp += `\n${body.comment.body}`;
+                    } else if (body.action === 'assigned') {
+                        resp = `${body.repository.full_name}#${body.issue.number}: Assigned ${body.assignee.login}`;
+                    } else if (body.action === 'unassigned') {
+                        resp = `${body.repository.full_name}#${body.issue.number}: Unassigned ${body.assignee.login}`;
+                    } else if (body.action === 'review_requested') {
+                        resp = `${body.repository.full_name}#${body.issue.number}: Request a review.`;
+                    } else if (body.action === 'closed' && !body.merged) {
+                        resp = `${body.sender.login} closed ${body.repository.full_name}#${body.issue.number}.`;
+                    } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
+                        resp = `${body.sender.login} ${body.action} PR:${body.repository.full_name}#${body.issue.number}`;
+                    } else if (['synchronize'].includes(body.action)) {
+                        return;
+                    } else resp = `Unknwon pull request action: ${body.action}`;
+                    return [resp];
+                },
+                async interact() {
+                    return [];
+                },
+            },
+            star: {
+                async hook(body) {
+                    if (body.action === 'created') {
+                        if (await collData.findOne({
+                            user: body.sender.login, repo: body.repository.full_name,
+                        })) return [];
+                        return [
+                            `${body.sender.login} starred ${body.repository.full_name} (total ${body.repository.stargazers_count} stargazers)`,
+                            { user: body.sender.login, repo: body.repository.full_name },
+                        ];
+                    }
+                    return [];
+                },
+            },
+            watch: {},
+            project_card: {},
+            project_column: {},
+            check_run: {},
+            check_suite: {},
+            repository_vulnerability_alert: {},
+            status: {},
+            label: {},
+        };
 
         app.api.post('/github', async (ctx) => {
             try {
                 const event = ctx.request.headers['x-github-event'];
+                const _id = ctx.request.headers['x-github-delivery'];
                 let body;
                 if (typeof ctx.request.body.payload === 'string') body = JSON.parse(ctx.request.body.payload);
                 else body = ctx.request.body;
-                if (!events[event]) events[event] = (b) => `${b.repository.full_name} triggered an unknown event: ${event}`;
-                const reponame = body.repository.full_name;
-                const message = await events[event](body, app.database.db);
-                let cnt = 0;
-                if (message) {
-                    const data = await coll.findOne({ _id: reponame.toLowerCase() });
-                    if (data) {
-                        for (const [isGroup, id, selfId] of data.target) {
-                            if (isGroup) app.bots[selfId].sendGroupMsg(id, message);
-                            else app.bots[selfId].sendPrivateMsg(id, message);
-                            cnt++;
-                        }
-                    }
+                if (!events[event]) {
+                    events[event] = {
+                        hook: (b) => Promise.resolve([`${b.repository.full_name} triggered an unknown event: ${event}`]),
+                    };
                 }
-                ctx.body = `Pushed to ${cnt} group(s)`;
+                if (events[event].hook) {
+                    // TODO organization webhook?
+                    const reponame = body.repository.full_name;
+                    const [message, inf] = await events[event].hook(body);
+                    const res = await collData.findOne({ _id });
+                    if (!res) {
+                        let relativeIds = [];
+                        if (message) {
+                            const data = await coll.findOne({ _id: reponame.toLowerCase() });
+                            if (data) {
+                                for (const [isGroup, id, selfId] of data.target) {
+                                    if (isGroup) {
+                                        relativeIds.push(app.bots[selfId].sendGroupMsg(id, message));
+                                    } else {
+                                        relativeIds.push(app.bots[selfId].sendPrivateMsg(id, message));
+                                    }
+                                }
+                            }
+                            relativeIds = await Promise.all(relativeIds);
+                            await collData.insertOne({
+                                _id, type: event, relativeIds, ...inf,
+                            });
+                        }
+                        ctx.body = `Pushed to ${relativeIds.length} group(s)`;
+                    } else ctx.body = 'Duplicate event';
+                } else ctx.body = 'Event ignored.';
             } catch (e) {
                 console.log(e);
                 ctx.body = e.toString();
             }
         });
 
+        app.on('message', async (session) => {
+            if (!session.message.includes('[CQ:reply,id=')) return;
+            const [, id, , parsedMsg] = RE_REPLY.exec(session.message);
+            const replyTo = parseInt(id, 10);
+            console.log(replyTo, parsedMsg);
+            const relativeEvent = await collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } });
+            console.log(relativeEvent);
+            if (!relativeEvent) return;
+            if (!events[relativeEvent.type].interact) return;
+            const [message, $set] = await events[relativeEvent.type].interact(parsedMsg, session, relativeEvent);
+            if (message) await session.$send(message);
+            if ($set) await collData.updateOne({ _id: relativeEvent._id }, { $set });
+        });
+
         app.command('github.listen <repo>', '监听一个Repository的事件')
             .action(async ({ session }, repo) => {
-                if (!repo) return session.$send('缺少参数。');
                 repo = repo.toLowerCase();
+                if (repo.split('/').length !== 2) return '无效地址';
                 const current = await coll.findOne({ _id: repo });
                 if (current) {
                     await coll.updateOne(
@@ -203,6 +270,5 @@ export const apply = (app: App) => {
             });
     });
 
-    app.command('github', 'Github')
-        .action(({ session }) => session.$send('Use github -h for help.'));
+    app.command('github', 'Github').action(() => 'Use github -h for help.');
 };

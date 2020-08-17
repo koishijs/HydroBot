@@ -1,6 +1,6 @@
 {
   "name": "qqbot",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "bin": "bin/robot.js",
   "main": "dist/main.js",
   "engines": {
