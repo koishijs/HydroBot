@@ -94,13 +94,29 @@ extendDatabase(MongoDatabase, {
                 );
             }
         } else {
-            if (data.timers?._date) {
-                data.timers.$date = data.timers._date;
-                delete data.timers._date;
+            if (data.timers) {
+                if (data.timers._date) {
+                    data.timers.$date = data.timers._date;
+                    delete data.timers._date;
+                }
+                for (const key in data.timers) {
+                    if (key.includes('_')) {
+                        data.timers[key.replace(/_/gmi, '.')] = data.timers[key];
+                        delete data.timers[key];
+                    }
+                }
             }
-            if (data.usage?._date) {
-                data.usage.$date = data.usage._date;
-                delete data.usage._date;
+            if (data.usage) {
+                if (data.usage._date) {
+                    data.usage.$date = data.usage._date;
+                    delete data.usage._date;
+                }
+                for (const key in data.usage) {
+                    if (key.includes('_')) {
+                        data.usage[key.replace(/_/gmi, '.')] = data.usage[key];
+                        delete data.usage[key];
+                    }
+                }
             }
         }
         return data || fallback;
@@ -120,13 +136,29 @@ extendDatabase(MongoDatabase, {
         const f = {};
         for (const field of fields) f[field] = 1;
         return this.user.find({ _id: { $in: ids as number[] } }).project(f).map((doc) => {
-            if (doc.timers?._date) {
-                doc.timers.$date = doc.timers._date;
-                delete doc.timers._date;
+            if (doc.timers) {
+                if (doc.timers._date) {
+                    doc.timers.$date = doc.timers._date;
+                    delete doc.timers._date;
+                }
+                for (const key in doc.timers) {
+                    if (key.includes('_')) {
+                        doc.timers[key.replace(/_/gmi, '.')] = doc.timers[key];
+                        delete doc.timers[key];
+                    }
+                }
             }
-            if (doc.usage?._date) {
-                doc.usage.$date = doc.usage._date;
-                delete doc.usage._date;
+            if (doc.usage) {
+                if (doc.usage._date) {
+                    doc.usage.$date = doc.usage._date;
+                    delete doc.usage._date;
+                }
+                for (const key in doc.usage) {
+                    if (key.includes('_')) {
+                        doc.usage[key.replace(/_/gmi, '.')] = doc.usage[key];
+                        delete doc.usage[key];
+                    }
+                }
             }
             return doc;
         }).toArray();
@@ -137,13 +169,13 @@ extendDatabase(MongoDatabase, {
         if ($set.timers) {
             for (const key in $set.timers) {
                 if (key === '$date') $set['timers._date'] = $set.timers.$date;
-                else $set[`timers.${key}`] = $set.timers[key];
+                else $set[`timers.${key.replace(/./gmi, '_')}`] = $set.timers[key];
             }
         }
         if ($set.usage) {
             for (const key in $set.usage) {
                 if (key === '$date') $set['usage._date'] = $set.usage.$date;
-                else $set[`usage.${key}`] = $set.usage[key];
+                else $set[`usage.${key.replace(/./gmi, '_')}`] = $set.usage[key];
             }
         }
         delete $set.timers;

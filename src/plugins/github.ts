@@ -1,8 +1,15 @@
 /* eslint-disable no-empty-function */
+import superagent from 'superagent';
 import { App, Session } from 'koishi-core';
 import { Collection } from 'mongodb';
 
-const RE_REPLY = /^.*\[CQ:reply,id=(-?[0-9]+)\] ?(\[CQ:at,qq=[0-9]+\])?(.*)$/gmi;
+declare module 'koishi-core/dist/database' {
+    interface User {
+        GithubToken: string
+    }
+}
+
+const RE_REPLY = /\[CQ:reply,id=(-?[0-9]+)\]( ?\[CQ:at,qq=[0-9]+\])?(.*)$/gmi;
 
 interface BeautifyRule {
     regex: RegExp,
@@ -45,14 +52,14 @@ interface Subscription {
 
 interface EventHandler {
     hook?: (body: any) => Promise<[string?, NodeJS.Dict<any>?]>
-    interact?: (message: string, session: Session, event: any) => Promise<[string?, NodeJS.Dict<any>?]>
+    interact?: (message: string, session: Session, event: any, token: string) => Promise<[string?, NodeJS.Dict<any>?] | boolean>
 }
 
 function get(session: Session): Target {
     return [!!session.groupId, session.groupId || session.userId, session.selfId];
 }
 
-export const apply = (app: App) => {
+export const apply = (app: App, config: any) => {
     app.on('connect', () => {
         const coll: Collection<Subscription> = app.database.db.collection('github_watch');
         const collData: Collection<any> = app.database.db.collection('github_data');
@@ -73,7 +80,7 @@ export const apply = (app: App) => {
                     return [resp, { link: body.compare }];
                 },
                 async interact(message, session, event) {
-                    if (message.includes('link')) return [event.link];
+                    if (message.includes('!!link')) return [event.link];
                     return [];
                 },
             },
@@ -97,9 +104,24 @@ export const apply = (app: App) => {
                     } else if (body.action === 'labled') {
                         resp = `${body.sender.login} labled ${body.repository.full_name}#${body.issue.number} ${body.lable.name}`;
                     } else resp = `Unknwon issue action: ${body.action}`;
-                    return [resp];
+                    return [
+                        resp,
+                        {
+                            link: body.issue.html_url,
+                            reponame: body.repository.full_name,
+                            issueId: body.issue.number,
+                        },
+                    ];
                 },
-                async interact() {
+                async interact(message, session, event, token) {
+                    if (message.includes('!!link')) return [event.link];
+                    if (!token) return true;
+                    await superagent
+                        .post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
+                        .set('Accept', 'application/vnd.github.v3+json')
+                        .set('Authorization', `token ${token}`)
+                        .set('User-Agent', 'HydroBot')
+                        .send({ body: message });
                     return [];
                 },
             },
@@ -110,9 +132,24 @@ export const apply = (app: App) => {
                         resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.issue.number}\n`;
                         resp += beautifyContent(body.comment.body);
                     }
-                    return [resp];
+                    return [
+                        resp,
+                        {
+                            link: body.issue.html_url,
+                            reponame: body.repository.full_name,
+                            issueId: body.issue.number,
+                        },
+                    ];
                 },
-                async interact() {
+                async interact(message, session, event, token) {
+                    if (message.includes('!!link')) return [event.link];
+                    if (!token) return true;
+                    await superagent
+                        .post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
+                        .set('Accept', 'application/vnd.github.v3+json')
+                        .set('Authorization', `token ${token}`)
+                        .set('User-Agent', 'HydroBot')
+                        .send({ body: message });
                     return [];
                 },
             },
@@ -212,16 +249,47 @@ export const apply = (app: App) => {
             }
         });
 
+        app.api.get('/github/authorize', async (ctx) => {
+            const targetId = parseInt(ctx.query.state, 10);
+            if (Number.isNaN(targetId)) throw new Error('Invalid targetId');
+            const code = ctx.query.code;
+            const result = await superagent.post('https://github.com/login/oauth/access_token')
+                .send({
+                    client_id: config.client_id,
+                    client_secret: config.client_secret,
+                    code,
+                    redirect_uri: config.redirect_uri,
+                    state: ctx.query.state,
+                });
+            if (result.body.access_token) {
+                await app.database.setUser(targetId, { GithubToken: result.body.access_token });
+                ctx.body = 'Done';
+            } else {
+                ctx.body = 'Error';
+            }
+        });
+
         app.on('message', async (session) => {
             if (!session.message.includes('[CQ:reply,id=')) return;
-            const [, id, , parsedMsg] = RE_REPLY.exec(session.message);
+            const res = RE_REPLY.exec(session.message);
+            if (!res) return;
+            const [, id, , parsedMsg] = res;
             const replyTo = parseInt(id, 10);
             console.log(replyTo, parsedMsg);
-            const relativeEvent = await collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } });
+            const [relativeEvent, user] = await Promise.all([
+                collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } }),
+                app.database.getUser(session.userId, ['GithubToken']),
+            ]);
             console.log(relativeEvent);
             if (!relativeEvent) return;
             if (!events[relativeEvent.type].interact) return;
-            const [message, $set] = await events[relativeEvent.type].interact(parsedMsg, session, relativeEvent);
+            const result = await events[relativeEvent.type].interact(parsedMsg.trim(), session, relativeEvent, user.GithubToken);
+            console.log(result);
+            if (typeof result === 'boolean') {
+                return session.$send(`错误：您没有绑定Github账号。请点击下面的链接继续操作：
+https://github.com/apps/hydrobot-github-integration/installations/new?state=${session.userId}`);
+            }
+            const [message, $set] = result;
             if (message) await session.$send(message);
             if ($set) await collData.updateOne({ _id: relativeEvent._id }, { $set });
         });
