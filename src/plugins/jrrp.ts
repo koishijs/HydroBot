@@ -23,7 +23,7 @@ export const apply = (app: App) => {
                 expire.setMinutes(59);
                 expire.setSeconds(59);
                 await coll.insertOne({ _id: session.userId, num, expire });
-                return `啊咧 ${session.$username} 今天的人品值是：${num}`;
+                return `啊咧 ${session.$username.encode()} 今天的人品值是：${num}`;
             });
     });
 };

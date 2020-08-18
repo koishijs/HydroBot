@@ -55,6 +55,8 @@ async function formatMessage(session: Session) {
             output += `[face ${code.data.id}]`;
         } else if (code.type === 'image') {
             output += `[image ${(code.data.url as string).split('?')[0]}]`;
+        } else if (code.type === 'reply') {
+            output += `[reply ${code.data.id}]`;
         } else output += `[${code.type}]`;
     }
     return output;
@@ -209,22 +211,27 @@ export const apply = (app: App) => {
         });
 
     app.command('_.sh <command...>', '执行shell命令', { authority: 5 })
-        .action(async ({ session }, cmd) => {
-            const p = child.execSync(cmd).toString();
-            if (!p.trim().length) return session.$send('(execute success)');
+        .action(async (_, cmd) => {
+            let p: string;
+            try {
+                p = child.execSync(cmd).toString();
+            } catch (e) {
+                return `Error executing command: ${e}`;
+            }
+            if (!p.trim().length) return '(execute success)';
             const img = await text2png(p);
-            return session.$send(`[CQ:image,file=base64://${img}]`);
+            return `[CQ:image,file=base64://${img}]`;
         });
 
     app.command('_.shutdown', '关闭机器人', { authority: 5 })
-        .action(({ session }) => {
+        .action(() => {
             setTimeout(() => {
                 child.exec('pm2 stop robot');
                 setTimeout(() => {
                     global.process.exit();
                 }, 1000);
             }, 3000);
-            return session.$send('Exiting in 3 secs...');
+            return 'Exiting in 3 secs...';
         });
 
     app.command('_.restart', '重启机器人', { authority: 5 })

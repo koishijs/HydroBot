@@ -77,6 +77,13 @@ export const apply = (app: App) => {
                 );
                 return `Cancelled ${url}`;
             });
+
+        app.command('rss.list', 'List')
+            .action(async ({ session }) => {
+                const docs = await coll.find({ target: { $elemMatch: { $eq: get(session) } } })
+                    .toArray();
+                return docs.map((doc) => doc._id).join('\n');
+            });
     });
 
     app.command('rss', 'Rss').action(() => 'Use rss -h for help.');
