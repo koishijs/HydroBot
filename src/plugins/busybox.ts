@@ -266,7 +266,7 @@ export const apply = (app: App) => {
             if (!message) return '请输入要发送的文本。';
             let groups = await app.database.getAllGroups(['id', 'flag'], [session.selfId]);
             if (!options.forced) {
-                groups = groups.filter((g) => !(g.flag & Group.Flag.noEmit));
+                groups = groups.filter((g) => !(g.flag & Group.Flag.silent));
             }
             groups.forEach((group) => {
                 session.$bot.sendGroupMsg(group.id, message);
@@ -290,7 +290,7 @@ export const apply = (app: App) => {
     app.command('_.setWelcomeMsg <msg>', '设置欢迎信息', { authority: 4 })
         .action(({ session }, welcomeMsg) => {
             app.database.setGroup(session.groupId, { welcomeMsg });
-            return 'Activated';
+            return 'Updated.';
         });
 
     app.command('_.mute <user> <periodSecs>', '禁言用户', { authority: 4 })

@@ -5,9 +5,44 @@
     "logmode": "msg_only",
     "api_port": 6701,
     "enabledplugins": [
-        "github",
-        "anime",
-        "busybox"
+        "./plugins/anime",
+        "./plugins/jrrp",
+        "./plugins/hearthstone",
+        "./plugins/page",
+        "./plugins/run",
+        "./plugins/dress",
+        "./plugins/ygdl",
+        "./plugins/busybox",
+        [
+            "./plugins/github",
+            {
+                "client_id": "12345678",
+                "client_secret": "12345678",
+                "redirect_uri": "http://2.masnn.ml:6701/github/authorize",
+                "proxy": "socks://username:password@host:port"
+            }
+        ],
+        "./plugins/repeater",
+        "./plugins/rss",
+        "./plugins/luogu",
+        "koishi-plugin-image-search",
+        [
+            "koishi-plugin-eval",
+            {
+                "timeout": 5000,
+                "resourceLimits": {
+                    "maxYoungGenerationSizeMb": 32,
+                    "maxOldGenerationSizeMb": 128,
+                    "codeRangeSizeMb": 32
+                }
+            }
+        ],
+        "./plugins/oier",
+        "./plugins/httpcat",
+        "./plugins/about",
+        "./plugins/codeforces",
+        "./plugins/tools",
+        "./plugins/bottle"
     ],
     "admin": [
         3402182471
