@@ -55,12 +55,10 @@ export const apply = (app: App) => {
                 }
                 const res = await superagent.get(url).catch(() => { });
                 if (!res) return '无法获取内容。';
-                await coll.insertOne(
-                    {
-                        _id: url,
-                        target: [get(session)],
-                    },
-                );
+                await coll.insertOne({
+                    _id: url,
+                    target: [get(session)],
+                });
                 feeder.add({ url, refresh: 60000 });
                 return `Watching ${url}`;
             });
@@ -78,8 +76,7 @@ export const apply = (app: App) => {
 
         app.command('rss.list', 'List')
             .action(async ({ session }) => {
-                const docs = await coll.find({ target: { $elemMatch: { $eq: get(session) } } })
-                    .toArray();
+                const docs = await coll.find({ target: { $elemMatch: { $eq: get(session) } } }).toArray();
                 return docs.map((doc) => doc._id).join('\n');
             });
     });

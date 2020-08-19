@@ -265,7 +265,7 @@ export const apply = (app: App) => {
 
     app.command('_.boardcast <message...>', '全服广播', { authority: 5 })
         .before((session) => !session.$app.database)
-        .option('forced', '-f 无视 noEmit 标签进行广播', { value: false })
+        .option('forced', '-f 无视 silent 标签进行广播', { value: false })
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
             let groups = await app.database.getAllGroups(['id', 'flag'], [session.selfId]);
@@ -352,6 +352,7 @@ export const apply = (app: App) => {
 
     app.on('group-increase', async (session) => {
         const data = await session.$app.database.getGroup(session.groupId);
+        console.log('Event.Group_Increase', data);
         if (data.welcomeMsg) {
             await session.$send(data.welcomeMsg.replace(/%@/gmi, `[CQ:at,qq=${session.userId}`));
         }
@@ -378,7 +379,6 @@ export const apply = (app: App) => {
             bot.label = bot.label || `${bot.selfId}`;
             bot.counter = new Array(61).fill(0);
         });
-
         timer = setInterval(() => {
             updateCpuUsage();
             app.bots.forEach(({ counter }) => {
@@ -386,9 +386,7 @@ export const apply = (app: App) => {
                 counter.splice(-1, 1);
             });
         }, 1000);
-
-        if (!app.server.router) return;
-        app.server.router.get('/status', async (ctx) => {
+        app.api.get('/status', async (ctx) => {
             const status = await getStatus().catch<Status>((error) => {
                 app.logger('status').warn(error);
                 return null;

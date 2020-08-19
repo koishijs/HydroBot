@@ -87,9 +87,13 @@ export function apply(app: App, config: Config) {
             });
             try {
                 await new Promise((resolve, reject) => {
-                    const timer = setTimeout(() => (loaded
-                        ? session.$send('正在加载中，请稍等片刻~')
-                        : reject(new Error('navigation timeout'))), config.loadTimeout);
+                    const timer = setTimeout(
+                        () => (loaded
+                            ? session.$send('正在加载中，请稍等片刻~')
+                            : reject(new Error('navigation timeout'))
+                        ),
+                        config.loadTimeout,
+                    );
                     const _resolve = () => {
                         clearTimeout(timer);
                         resolve();

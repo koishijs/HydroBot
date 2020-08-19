@@ -4,6 +4,8 @@
 import path from 'path';
 import { App, Command } from 'koishi-core';
 import fs from 'fs-extra';
+import Koa from 'koa';
+import Router from 'koa-router';
 import body from 'koa-body';
 import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
 import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
@@ -12,6 +14,13 @@ import 'koishi-adapter-cqhttp';
 process.on('unhandledRejection', (_, p) => {
     console.log('Unhandled Rejection:', p);
 });
+
+declare module 'koishi-core/dist/app' {
+    interface App {
+        koa: Koa,
+        api: Router,
+    }
+}
 
 Command.defaultConfig.checkArgCount = true;
 
@@ -39,12 +48,13 @@ export = class {
         this.app = new App({
             type: 'cqhttp:ws',
             server: `ws://${this.config.host || 'localhost'}:${this.config.port || '6700'}/?access_token=${this.config.access_token}`,
-            port: this.config.api_port,
             prefix: this.config.prompt as string,
             preferSync: true,
             defaultAuthority: 1,
             similarityCoefficient: 0.9,
         });
+        this.app.koa = new Koa();
+        this.app.api = new Router();
         this.run();
     }
 
@@ -64,7 +74,7 @@ export = class {
             roll: true,
             weather: true,
         });
-        this.app.router.use(body());
+        this.app.use(body());
         this.app.on('connect', async () => {
             for (const admin of this.config.admin) {
                 this.app.database.getUser(admin, 5);
@@ -80,6 +90,8 @@ export = class {
         await this.load();
         await this.app.start();
         await this.app.getSelfIds();
+        this.app.koa.use(this.app.api.routes()).use(this.app.api.allowedMethods());
+        this.app.koa.listen(this.config.api_port || 8888);
     }
 
     async load() {
