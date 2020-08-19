@@ -350,16 +350,14 @@ export const apply = (app: App) => {
                 await session.$send('Activated');
             }
         }
-        app.on('message', async (session) => {
-            if (!session.message.includes('[CQ:reply,id=')) return;
-            const res = RE_REPLY.exec(session.message);
-            if (!res) return;
-            const [, id, msg] = res;
-            if (msg.includes('!!recall')) {
-                const user = await app.database.getUser(session.userId, ['authority']);
-                if (user.authority >= 4) return session.$bot.deleteMsg(parseInt(id, 10));
-            }
-        });
+        if (!session.message.includes('[CQ:reply,id=')) return;
+        const res = RE_REPLY.exec(session.message);
+        if (!res) return;
+        const [, id, msg] = res;
+        if (msg.includes('!!recall')) {
+            const user = await app.database.getUser(session.userId, ['authority']);
+            if (user.authority >= 4) return session.$bot.deleteMsg(parseInt(id, 10));
+        }
     });
 
     app.on('group-increase', async (session) => {
@@ -377,7 +375,7 @@ export const apply = (app: App) => {
 
     app.on('before-send', (session) => {
         const { counter } = app.bots[session.selfId];
-        counter[0] += 1;
+        counter[0]++;
     });
 
     app.on('before-disconnect', () => {

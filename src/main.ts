@@ -74,7 +74,7 @@ export = class {
             roll: true,
             weather: true,
         });
-        this.app.use(body());
+        this.app.api.use(body());
         this.app.on('connect', async () => {
             for (const admin of this.config.admin) {
                 this.app.database.getUser(admin, 5);
