@@ -35,6 +35,7 @@ module.exports = {
         'no-param-reassign': 'off',
         'no-plusplus': 'off',
         'no-restricted-syntax': 'off',
+        'no-return-assign': 'off',
         'no-return-await': 'off',
         'no-underscore-dangle': 'off',
         'no-unused-vars': 'off',

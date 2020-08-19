@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import child from 'child_process';
 import axios from 'axios';
+import sharp from 'sharp';
 import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
-import { svg2png } from '../lib/graph';
 
 export const apply = (app: App) => {
     app.command('tools/tex <code...>', 'KaTeX 渲染')
@@ -15,7 +15,8 @@ export const apply = (app: App) => {
             if (text) return session.$send(text[1]);
             const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);
             if (viewBox) svg = svg.replace('\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`);
-            return session.$send(`[CQ:image,file=base64://${await svg2png(svg)}]`);
+            const png = await sharp(Buffer.from(svg)).png().toBuffer();
+            return session.$send(`[CQ:image,file=base64://${png.toString('base64')}]`);
         });
 
     app.command('tools/ip <ip>', '查询ip').action(async ({ session }, args) => {
@@ -57,6 +58,6 @@ export const apply = (app: App) => {
                 return session.$send(e.toString());
             }
             if (!svg.startsWith('<?xml')) return session.$send(svg);
-            return session.$send(`[CQ:image,file=base64://${await svg2png(svg)}]`);
+            return session.$send(`[CQ:image,file=base64://${(await sharp(Buffer.from(svg)).png().toBuffer()).toString('base64')}]`);
         });
 };

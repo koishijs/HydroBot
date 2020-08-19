@@ -321,7 +321,6 @@ export const apply = (app: App, config: any) => {
                     redirect_uri: config.redirect_uri,
                     state: ctx.query.state,
                 });
-            console.log(result.body);
             if (result.body.access_token) {
                 await app.database.setUser(targetId, { GithubToken: result.body });
                 ctx.body = 'Done';
@@ -337,55 +336,55 @@ export const apply = (app: App, config: any) => {
             const [, id, msg] = res;
             const parsedMsg = msg.replace(/\[CQ:at,qq=[0-9]+\]/gmi, '');
             const replyTo = parseInt(id, 10);
-            console.log(replyTo, parsedMsg);
             const [relativeEvent, user] = await Promise.all([
                 collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } }),
                 app.database.getUser(session.userId, ['GithubToken']),
             ]);
-            console.log(relativeEvent);
             if (!relativeEvent) return;
             if (!events[relativeEvent.type].interact) return;
-            async function getToken() {
-                if (!user.GithubToken?.access_token) throw new InvalidTokenError();
-                const result = await superagent.get('https://api.github.com/')
-                    .proxy(config.proxy)
-                    .set('Authorization', `token ${user.GithubToken.access_token}`)
-                    .set('User-Agent', 'HydroBot');
-                if (result.status !== 200) {
-                    if (!user.GithubToken.refresh_token) throw new InvalidTokenError();
-                    const r = await superagent.post('https://github.com/login/oauth/access_token')
-                        .proxy(config.proxy)
-                        .set('User-Agent', 'HydroBot')
-                        .send({
-                            grant_type: 'refresh_token',
-                            client_id: config.client_id,
-                            client_secret: config.client_secret,
-                            refresh_token: user.GithubToken.refresh_token,
-                        });
-                    if (!r.body.access_token) throw new InvalidTokenError();
-                    await app.database.setUser(session.userId, { GithubToken: r.body });
-                    return r.body.access_token;
-                }
-                return user.GithubToken.access_token;
-            }
-            let result;
             try {
-                result = await events[relativeEvent.type].interact(parsedMsg.trim(), session, relativeEvent, getToken);
-                console.log(result);
-            } catch (e) {
-                console.log('catch', e);
-                if (e instanceof InvalidTokenError) {
-                    session.$send('请输入Github用户名');
-                    const login = await session.$prompt(60000);
-                    if (!login) return session.$send('输入超时');
-                    return session.$send(`请点击下面的链接继续操作：
-https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${session.userId}&redirect_url=${config.redirect_uri}&scope=admin%3Arepo_hook%2Crepo&login=${login}`); // eslint-disable-line max-len
+                async function getToken() {
+                    if (!user.GithubToken?.access_token) throw new InvalidTokenError();
+                    const result = await superagent.get('https://api.github.com/')
+                        .proxy(config.proxy)
+                        .set('Authorization', `token ${user.GithubToken.access_token}`)
+                        .set('User-Agent', 'HydroBot');
+                    if (result.status !== 200) {
+                        if (!user.GithubToken.refresh_token) throw new InvalidTokenError();
+                        const r = await superagent.post('https://github.com/login/oauth/access_token')
+                            .proxy(config.proxy)
+                            .set('User-Agent', 'HydroBot')
+                            .send({
+                                grant_type: 'refresh_token',
+                                client_id: config.client_id,
+                                client_secret: config.client_secret,
+                                refresh_token: user.GithubToken.refresh_token,
+                            });
+                        if (!r.body.access_token) throw new InvalidTokenError();
+                        await app.database.setUser(session.userId, { GithubToken: r.body });
+                        return r.body.access_token;
+                    }
+                    return user.GithubToken.access_token;
                 }
-                throw e;
-            }
-            const [message, $set] = result;
-            if (message) await session.$send(message);
-            if ($set) await collData.updateOne({ _id: relativeEvent._id }, { $set });
+                let result;
+                try {
+                    result = await events[relativeEvent.type].interact(parsedMsg.trim(), session, relativeEvent, getToken);
+                    console.log(result);
+                } catch (e) {
+                    console.log('catch', e);
+                    if (e instanceof InvalidTokenError) {
+                        session.$send('请输入Github用户名');
+                        const login = await session.$prompt(60000);
+                        if (!login) return session.$send('输入超时');
+                        return session.$send(`请点击下面的链接继续操作：
+https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${session.userId}&redirect_url=${config.redirect_uri}&scope=admin%3Arepo_hook%2Crepo&login=${login}`); // eslint-disable-line max-len
+                    }
+                    throw e;
+                }
+                const [message, $set] = result;
+                if (message) await session.$send(message);
+                if ($set) await collData.updateOne({ _id: relativeEvent._id }, { $set });
+            } catch (e) { session.$send(e.message); }
         });
 
         app.command('github.listen <repo>', '监听一个Repository的事件')

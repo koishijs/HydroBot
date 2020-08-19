@@ -204,6 +204,13 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.6.0.tgz#7d4411bf5157339337d7cff864d9ff45f177b499"
   integrity sha512-mikldZQitV94akrc4sCcSjtJfsTKt4p+e/s0AGscVA6XArQ9kFclP+ZiYUMnq987rc6QlYxXv/EivqlfSLxpKA==
 
+"@types/pngjs@^3.4.2":
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@types/pngjs/-/pngjs-3.4.2.tgz#8dc49b45fbcf18a5873179e3664f049388e39ecf"
+  integrity sha512-LJVPDraJ5YFEnMHnzxTN4psdWz1M61MtaAAWPn3qnDk5fvs7BAmmQ9pd3KPlrdrvozMyne4ktanD4pg0L7x1Pw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/puppeteer@^3.0.1":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@types/puppeteer/-/puppeteer-3.0.1.tgz#053ec20facc162b25a64785affccaa3e5817c607"
@@ -2035,19 +2042,19 @@ koa@^2.13.0:
     type-is "^1.6.16"
     vary "^1.1.2"
 
-koishi-adapter-cqhttp@^1.0.0-beta.2:
-  version "1.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/koishi-adapter-cqhttp/-/koishi-adapter-cqhttp-1.0.0-beta.2.tgz#8fcecdfb7f8a67dea82052186666d90ea7334142"
-  integrity sha512-s5ctJ8prni2ZF0EEP10Q0v/E8VGmtWfEU2AIKiSnS1j9YaDKtnvRKeulhtzVYlSJYBIhDs9wE0DxienLpFcHCA==
+koishi-adapter-cqhttp@^1.0.0-beta.3:
+  version "1.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/koishi-adapter-cqhttp/-/koishi-adapter-cqhttp-1.0.0-beta.3.tgz#484d65d780fbcdf37309aee3cec6455f010d6a56"
+  integrity sha512-nK8b9yRihQgvGFjCxQoBvc+UIMJTV24ajEGi9Akm+91PRHDO7cz1xLdvnGmvsfFIAuyZmz/4AMjjlUxZrt4P8A==
   dependencies:
     axios "^0.19.2"
     ms "^2.1.2"
     ws "^7.3.1"
 
-koishi-core@^2.0.0-beta.12:
-  version "2.0.0-beta.12"
-  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0-beta.12.tgz#a9c52a56e5577e3558a633be25d2b076ea4a1f5c"
-  integrity sha512-VyfMSZ9vUQP2LgwYfJyrYsps6juJKh2Coy0sK6CG0JoCEOp5nOL37PIIPjGrm/L2VWdMmumIMy06Mx0ubXBt2Q==
+koishi-core@^2.0.0-beta.13:
+  version "2.0.0-beta.13"
+  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0-beta.13.tgz#0b86c21b784c5894c314505ed071ff4017bae1c4"
+  integrity sha512-DYC7a/+w3VLK3ku6Ip+giwwg0CxzODY/kA2P3cpFA7Cq1XLEVmdFHM6MtXs0UYtpP7fY0ZS4gQvn7+v068ME+A==
   dependencies:
     "@types/koa-bodyparser" "^4.3.0"
     "@types/koa-router" "^7.4.1"
@@ -2059,10 +2066,10 @@ koishi-core@^2.0.0-beta.12:
     leven "^3.1.0"
     lru-cache "^6.0.0"
 
-koishi-plugin-eval@^2.0.0-beta.11:
-  version "2.0.0-beta.11"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.11.tgz#85597050c494e54137df9f84498bd8b5b9674381"
-  integrity sha512-yA6EAz63J5Qt6sdr3Yo0jEFIQd7FCbOKkGT0i9KO5E6oNiR6TeciPrEYLTANlFscVQkpbhKGfHlFEKsW5QsSRA==
+koishi-plugin-eval@^2.0.0-beta.12:
+  version "2.0.0-beta.12"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.12.tgz#d42e7a8f22a812bf0ce85e7dfe83f206d9db53f1"
+  integrity sha512-bBuGMzXGgg+zSDfXiKPioPH/iZPEhYRpqJjX+j08Ml11hPnqxtN3gt9MYNczVCa0vClnvVV5AwA/qPUUgJoLLw==
   dependencies:
     escape-string-regexp "^4.0.0"
 
@@ -2606,6 +2613,11 @@ pngjs@^3.3.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-3.4.0.tgz#99ca7d725965fb655814eaf65f38f12bbdbf555f"
   integrity sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==
+
+pngjs@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-5.0.0.tgz#e79dd2b215767fd9c04561c01236df960bce7fbb"
+  integrity sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==
 
 prebuild-install@^5.3.4:
   version "5.3.5"

@@ -8,7 +8,7 @@
         "./plugins/anime",
         "./plugins/jrrp",
         "./plugins/hearthstone",
-        "./plugins/page",
+        "./plugins/puppeteer",
         "./plugins/run",
         "./plugins/dress",
         "./plugins/ygdl",

@@ -211,7 +211,8 @@ export const apply = (app: App) => {
         });
 
     app.command('_.sh <command...>', '执行shell命令', { authority: 5 })
-        .action(async (_, cmd) => {
+        .option('i', 'Output as image')
+        .action(async ({ options }, cmd) => {
             let p: string;
             try {
                 p = child.execSync(cmd).toString();
@@ -219,7 +220,10 @@ export const apply = (app: App) => {
                 return `Error executing command: ${e}`;
             }
             if (!p.trim().length) return '(execute success)';
-            const img = await text2png(p);
+            if (!options.i) return p;
+            const page = await app.getPage();
+            const img = await text2png(page, p);
+            app.freePage(page);
             return `[CQ:image,file=base64://${img}]`;
         });
 

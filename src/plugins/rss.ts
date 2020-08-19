@@ -40,23 +40,20 @@ export const apply = (app: App) => {
             }
         });
 
-        app.command('rss.subscribe <repo>', 'Subscribe a rss url')
+        app.command('rss.subscribe <url>', 'Subscribe a rss url')
+            .alias('rss.add')
             .action(async ({ session }, url) => {
                 url = url.toLowerCase();
                 const current = await coll.findOne({ _id: url });
                 if (current) {
                     await coll.updateOne(
                         { _id: url },
-                        {
-                            $addToSet: {
-                                target: get(session),
-                            },
-                        },
+                        { $addToSet: { target: get(session) } },
                         { upsert: true },
                     );
                     return `Watching ${url}`;
                 }
-                const res = await superagent.get(url).catch();
+                const res = await superagent.get(url).catch(() => { });
                 if (!res) return '无法获取内容。';
                 await coll.insertOne(
                     {
@@ -68,7 +65,8 @@ export const apply = (app: App) => {
                 return `Watching ${url}`;
             });
 
-        app.command('rss.cancel <repo>', 'Cancel')
+        app.command('rss.cancel <url>', 'Cancel')
+            .alias('rss.remove')
             .action(async ({ session }, url) => {
                 url = url.toLowerCase();
                 await coll.updateOne(
