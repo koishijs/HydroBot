@@ -77,6 +77,22 @@ function sha256(str: string): string {
 }
 
 export const apply = (app: App, config: any) => {
+    function Get(url: string) {
+        return superagent
+            .get(url)
+            .proxy(config.proxy)
+            .set('Accept', 'application/vnd.github.v3+json')
+            .set('User-Agent', 'HydroBot');
+    }
+
+    function Post(url: string) {
+        return superagent
+            .post(url)
+            .proxy(config.proxy)
+            .set('Accept', 'application/vnd.github.v3+json')
+            .set('User-Agent', 'HydroBot');
+    }
+
     app.on('connect', () => {
         const coll: Collection<Subscription> = app.database.db.collection('github_watch');
         const collData: Collection<any> = app.database.db.collection('github_data');
@@ -133,12 +149,8 @@ export const apply = (app: App, config: any) => {
                 async interact(message, session, event, getToken) {
                     if (message.includes('!!link')) return [event.link];
                     const token = await getToken();
-                    await superagent
-                        .post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
-                        .proxy(config.proxy)
-                        .set('Accept', 'application/vnd.github.v3+json')
+                    await Get(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
                         .set('Authorization', `token ${token}`)
-                        .set('User-Agent', 'HydroBot')
                         .send({ body: message });
                     return [];
                 },
@@ -174,12 +186,8 @@ export const apply = (app: App, config: any) => {
                         console.log(commitMsg, resp);
                         return [];
                     }
-                    await superagent
-                        .post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
-                        .proxy(config.proxy)
-                        .set('Accept', 'application/vnd.github.v3+json')
+                    await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
                         .set('Authorization', `token ${token}`)
-                        .set('User-Agent', 'HydroBot')
                         .send({ body: message });
                     return [];
                 },
@@ -204,7 +212,9 @@ export const apply = (app: App, config: any) => {
                     } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
                         resp = `${body.sender.login} ${body.action} PR:${body.repository.full_name}#${body.pull_request.number}`;
                     } else if (['synchronize'].includes(body.action)) {
-                        return;
+                        resp = '';
+                    } else if (body.action === 'ready_for_review') {
+                        resp = `${body.repository.full_name}#${body.pull_request.number} is ready for review.`;
                     } else resp = `Unknwon pull request action: ${body.action}`;
                     return [
                         resp,
@@ -229,12 +239,8 @@ export const apply = (app: App, config: any) => {
                             .send({ commit_title: commitMsg });
                         console.log(commitMsg, resp);
                     } else {
-                        await superagent
-                            .post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/comments`)
-                            .proxy(config.proxy)
-                            .set('Accept', 'application/vnd.github.v3+json')
+                        await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/comments`)
                             .set('Authorization', `token ${token}`)
-                            .set('User-Agent', 'HydroBot')
                             .send({ body: message });
                     }
                     return [];

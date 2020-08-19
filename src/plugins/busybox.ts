@@ -12,6 +12,8 @@ import MongoDatabase from '../lib/plugin-mongo';
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
 
+const RE_REPLY = /\[CQ:reply,id=([0-9\-]+)\]([\s\S]+)$/gmi;
+
 async function getGroupName(session: Session) {
     if (session.messageType === 'private') return '私聊';
     const { groupId: id, $bot } = session;
@@ -348,6 +350,16 @@ export const apply = (app: App) => {
                 await session.$send('Activated');
             }
         }
+        app.on('message', async (session) => {
+            if (!session.message.includes('[CQ:reply,id=')) return;
+            const res = RE_REPLY.exec(session.message);
+            if (!res) return;
+            const [, id, msg] = res;
+            if (msg.includes('!!recall')) {
+                const user = await app.database.getUser(session.userId, ['authority']);
+                if (user.authority >= 4) return session.$bot.deleteMsg(parseInt(id, 10));
+            }
+        });
     });
 
     app.on('group-increase', async (session) => {
