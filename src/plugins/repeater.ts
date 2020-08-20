@@ -3,7 +3,7 @@ import { App } from 'koishi-core';
 const dataG = {};
 
 export const apply = (app: App) => {
-    app.on('message', (session) => {
+    app.middleware((session) => {
         if (!session.groupId) return;
         if (!dataG[session.groupId]) {
             dataG[session.groupId] = {};

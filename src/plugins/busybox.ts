@@ -6,8 +6,8 @@ import {
     App, Group, getTargetId, Session, extendDatabase,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
+import MongoDatabase from 'koishi-plugin-mongo';
 import { text2png } from '../lib/graph';
-import MongoDatabase from '../lib/plugin-mongo';
 
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
@@ -91,7 +91,7 @@ export interface ActiveData {
     activeGroups: number
 }
 
-extendDatabase<typeof MongoDatabase>(MongoDatabase, {
+extendDatabase(MongoDatabase, {
     async getActiveData() {
         const $gt = new Date(new Date().getTime() - 1000 * 3600 * 24);
         const [activeGroups, activeUsers] = await Promise.all([

@@ -46,8 +46,8 @@ const rules: BeautifyRule[] = [
     {
         // Codecov
         // eslint-disable-next-line max-len
-        regex: /^# \[Codecov\].*\n> Merging .* will \*\*([a-z])\*\* coverage by `(.*)`\n> The diff coverage is `(.*)`.\n\n\[!\[Impacted file tree graph\]\((.*)\)\]\((.*)\)/gmi,
-        process: (result) => `Merging will ${result[1]} coverage by ${result[2]}.\nThe diff coverage is ${result[3]}\n${result[5]}`,
+        regex: /^# \[Codecov\][\s\S]*Merging [\s\S] will (.*)\n> The diff coverage is `(.*)`.\n\n\[!\[Impacted file tree graph\]\((.*)\)\]\((.*)\)/gmi,
+        process: (result) => `Merging will ${result[1].replace(/\*\*/gmi, '')}\nThe diff coverage is ${result[3]}\n${result[5]}`,
     },
 ];
 
@@ -414,7 +414,7 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
                 }
                 await coll.insertOne({ _id: repo, target: [get(session)] });
                 return `Watching ${repo}
-(请创建 webhook 投递至 http://2.masnn.io:6701/github ，格式 application/json )`;
+(请创建 webhook 投递至 http://2.masnn.ml:6701/github ，格式 application/json )`;
             });
 
         app.command('github.list', 'List repos')
