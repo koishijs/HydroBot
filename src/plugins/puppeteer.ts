@@ -1,26 +1,9 @@
-import {
-    launch, LaunchOptions, Browser, Page,
-} from 'puppeteer';
-import { Context, App } from 'koishi-core';
-import { Logger, noop, defineProperty } from 'koishi-utils';
+import { App } from 'koishi-core';
+import { Logger, noop } from 'koishi-utils';
 import { PNG } from 'pngjs';
-
-declare module 'koishi-core/dist/app' {
-    interface App {
-        browser: Browser
-        _idlePages: Page[]
-    }
-}
-
-declare module 'koishi-core/dist/context' {
-    interface Context {
-        getPage(): Promise<Page>
-        freePage(page: Page): void
-    }
-}
+import { } from 'koishi-plugin-puppeteer';
 
 export interface Config {
-    browser?: LaunchOptions
     loadTimeout?: number
     idleTimeout?: number
     maxLength?: number
@@ -36,33 +19,10 @@ const allowedProtocols = ['http', 'https'];
 
 const logger = Logger.create('puppeteer');
 
-Context.prototype.getPage = async function getPage(this: Context) {
-    if (this.app._idlePages.length) return this.app._idlePages.pop();
-    logger.debug('create new page');
-    return this.app.browser.newPage();
-};
-
-Context.prototype.freePage = function freePage(this: Context, page: Page) {
-    this.app._idlePages.push(page);
-};
-
 export function apply(app: App, config: Config) {
     config = { ...defaultConfig, ...config };
-    defineProperty(app.app, '_idlePages', []);
 
-    app.on('before-connect', async () => {
-        app.app.browser = await launch({
-            args: ['--no-sandbox'],
-            defaultViewport: {
-                width: 1920,
-                height: 1080,
-            },
-        });
-    });
-
-    app.on('before-disconnect', async () => {
-        await app.app.browser?.close();
-    });
+    app.command('shot').dispose();
 
     app.command('page <url...>', 'Get page', { minInterval: 1000, checkArgCount: false })
         .alias('screenshot', 'shot')

@@ -683,6 +683,11 @@ chownr@^2.0.0:
   resolved "https://registry.yarnpkg.com/chownr/-/chownr-2.0.0.tgz#15bfbe53d2eab4cf70f18a8cd68ebe5b3cb1dece"
   integrity sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==
 
+chrome-finder@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/chrome-finder/-/chrome-finder-1.0.7.tgz#d92ac35d79c7564cfcbd9203496eabfffa93624b"
+  integrity sha512-Cxdl9ns86sXKMU5jIWy7rb0jX0SlWBNVV30/eBvtYCSx+GfLOM+MyODWd6gv72QONFWPbEmere8VL/xVIrTzmA==
+
 cliui@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/cliui/-/cliui-5.0.0.tgz#deefcfdb2e800784aa34f46fa08e06851c7bbbc5"
@@ -2051,10 +2056,10 @@ koishi-adapter-cqhttp@^1.0.0-beta.3:
     ms "^2.1.2"
     ws "^7.3.1"
 
-koishi-core@^2.0.0-beta.13:
-  version "2.0.0-beta.13"
-  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0-beta.13.tgz#0b86c21b784c5894c314505ed071ff4017bae1c4"
-  integrity sha512-DYC7a/+w3VLK3ku6Ip+giwwg0CxzODY/kA2P3cpFA7Cq1XLEVmdFHM6MtXs0UYtpP7fY0ZS4gQvn7+v068ME+A==
+koishi-core@^2.0.0-beta.14:
+  version "2.0.0-beta.14"
+  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0-beta.14.tgz#22d491c518a48242b6c659b06f81b3179e1a0148"
+  integrity sha512-VydvaGwd28Xrgb5V3Uu8sp8T9uqXZuR3s7UUQHho1Ig2y+sGzVO62+94lkSmfDOCXMAwgDH1VKLdYzTpBOLvpw==
   dependencies:
     "@types/koa-bodyparser" "^4.3.0"
     "@types/koa-router" "^7.4.1"
@@ -2065,6 +2070,13 @@ koishi-core@^2.0.0-beta.13:
     koishi-utils "^3.0.1"
     leven "^3.1.0"
     lru-cache "^6.0.0"
+
+koishi-plugin-chess@^2.0.0-beta.6:
+  version "2.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-chess/-/koishi-plugin-chess-2.0.0-beta.6.tgz#23bc4ca34412bd668f2e06260c264ec1af9d679f"
+  integrity sha512-o1YiqiavZvb8GZYU4BSg6ggOdH4FYiHo+30sPp+ymp8DjnHJb85mvWfPaiizJUejFjvCwRHsONsec+sCBMuZDA==
+  optionalDependencies:
+    koishi-plugin-puppeteer "^1.0.0-beta.8"
 
 koishi-plugin-eval@^2.0.0-beta.12:
   version "2.0.0-beta.12"
@@ -2081,6 +2093,27 @@ koishi-plugin-image-search@^2.0.0-beta.6:
     axios "^0.19.2"
     cheerio "^1.0.0-rc.3"
     nhentai-api "^3.0.2"
+
+koishi-plugin-mongo@^1.0.0-beta.3:
+  version "1.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.0-beta.3.tgz#aa184e4b8df3e913d52083bce3d656bdb3bbcb45"
+  integrity sha512-5UHq57DhQI24kHXVwh2OY8zpWpOahvXJEn0ySAYnImlVgg0JTFVv7TqHF6RWAxTfgim6+yrkb6yOwLAPuy1GBQ==
+  dependencies:
+    mongodb "^3.6.0"
+
+koishi-plugin-monitor@^1.0.0-beta.10:
+  version "1.0.0-beta.10"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-monitor/-/koishi-plugin-monitor-1.0.0-beta.10.tgz#47ea61893d598102812f4508904546276a73e714"
+  integrity sha512-54ChjuWltL3EXmes3MElEHSuGFFrg6DALGfgr+xaHI4HflMZlQPHh02OIEPTRo/oW3E4naRYxFJkYKC2YA7UCA==
+
+koishi-plugin-puppeteer@^1.0.0-beta.8:
+  version "1.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-puppeteer/-/koishi-plugin-puppeteer-1.0.0-beta.8.tgz#fd61122a8c6216b2c40ce2a88b1738bd5b728f67"
+  integrity sha512-m+99bgFQYrJGSNQLJVbUwDPb1RO2qwdMaK2sOaox6hdzGQOjf8O1CqqbVVnre2tAVLRRsYwKeJCfj1G3IAiIjw==
+  dependencies:
+    chrome-finder "^1.0.7"
+    pngjs "^5.0.0"
+    puppeteer-core "^5.2.1"
 
 koishi-plugin-tools@^1.0.0-beta.8:
   version "1.0.0-beta.8"
@@ -2258,7 +2291,7 @@ mkdirp@^1.0.3:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
-mongodb@^3.5.9:
+mongodb@^3.5.9, mongodb@^3.6.0:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.6.0.tgz#babd7172ec717e2ed3f85e079b3f1aa29dce4724"
   integrity sha512-/XWWub1mHZVoqEsUppE0GV7u9kanLvHxho6EvBxQbShXTKYF9trhZC2NzbulRGeG7xMJHD8IOWRcdKx5LPjAjQ==
@@ -2697,10 +2730,10 @@ punycode@^2.1.0, punycode@^2.1.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-puppeteer@^5.2.1:
+puppeteer-core@^5.2.1:
   version "5.2.1"
-  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-5.2.1.tgz#7f0564f0a5384f352a38c8cc42af875cd87f4ea6"
-  integrity sha512-PZoZG7u+T6N1GFWBQmGVG162Ak5MAy8nYSVpeeQrwJK2oYUlDWpHEJPcd/zopyuEMTv7DiztS1blgny1txR2qw==
+  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-5.2.1.tgz#0d21b5bbb30c82db9b439d255a459f3538cc7235"
+  integrity sha512-gLjEOrzwgcnwRH+sm4hS1TBqe2/DN248nRb2hYB7+lZ9kCuLuACNvuzlXILlPAznU3Ob+mEvVEBDcLuFa0zq3g==
   dependencies:
     debug "^4.1.0"
     devtools-protocol "0.0.781568"

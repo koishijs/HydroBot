@@ -43,6 +43,12 @@ const rules: BeautifyRule[] = [
         regex: /^Issue-Label Bot is automatically applying the label `(.*)` to this issue, with a confidence of (0\.[0-9]+)/gmi,
         process: (result) => `Tag: ${result[1]}\nConfidence: ${result[2]}`,
     },
+    {
+        // Codecov
+        // eslint-disable-next-line max-len
+        regex: /^# \[Codecov\].*\n> Merging .* will \*\*([a-z])\*\* coverage by `(.*)`\n> The diff coverage is `(.*)`.\n\n\[!\[Impacted file tree graph\]\((.*)\)\]\((.*)\)/gmi,
+        process: (result) => `Merging will ${result[1]} coverage by ${result[2]}.\nThe diff coverage is ${result[3]}\n${result[5]}`,
+    },
 ];
 
 function beautifyContent(content: string) {

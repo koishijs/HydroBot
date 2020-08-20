@@ -8,7 +8,7 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import body from 'koa-body';
 import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
-import { apply as KoishiPluginMongo } from './lib/plugin-mongo';
+import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
 import 'koishi-adapter-cqhttp';
 
 process.on('unhandledRejection', (_, p) => {

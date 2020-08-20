@@ -198,6 +198,8 @@ export const apply = (app: App) => {
         return cachedStatus = _getStatus();
     }
 
+    app.command('help', { authority: 1, hidden: true });
+
     app.command('_', '', { authority: 5, hidden: true })
         .action(() => { });
 
