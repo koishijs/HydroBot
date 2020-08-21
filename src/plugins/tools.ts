@@ -8,7 +8,6 @@ import { take, filter } from 'lodash';
 export const apply = (app: App) => {
     app.command('tools/tex <code...>', 'KaTeX 渲染')
         .alias('katex <code...>')
-        .usage('渲染器由 https://www.zhihu.com/equation 提供。')
         .action(async ({ session }, tex) => {
             let { data: svg } = await axios.get(`https://www.zhihu.com/equation?tex=${encodeURIComponent(tex)}`);
             const text = svg.match(/>([^<]+)<\/text>/);
@@ -46,6 +45,9 @@ export const apply = (app: App) => {
         });
 
     app.command('tools/calc <expression...>', '计算表达式', { minInterval: 10000 })
+        .example('calc 1+1')
+        .example('calc Solve[x^2+1==0,{x}]')
+        .example('calc FactorInteger[233333]')
         .action(async ({ session }, expr) => {
             expr = expr.decode().replace(/'/gmi, '\\\'').replace(/"/gmi, '\\"');
             console.log(`Calculating ${expr}`);

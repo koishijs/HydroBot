@@ -296,7 +296,7 @@ export const apply = (app: App) => {
             return 'Activated';
         });
 
-    app.command('_.setWelcomeMsg <msg>', '设置欢迎信息', { authority: 4 })
+    app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息', { authority: 4 })
         .groupFields(['welcomeMsg'])
         .action(({ session }, welcomeMsg) => {
             session.$group.welcomeMsg = welcomeMsg;

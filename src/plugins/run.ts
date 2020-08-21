@@ -5,13 +5,13 @@ import { text2png } from '../lib/graph';
 const LANGS = {
     c: {
         type: 'compiler',
-        compile: ['/usr/bin/gcc', '-O2', '-Wall', '-std=c99', '-o', 'code', 'foo.c', '-lm'],
+        compile: ['/usr/bin/gcc', '-O2', '-Wall', '-std=c99', '-o', 'code', 'foo.c', '-lm', '-fdiagnostics-color=always'],
         code_file: 'foo.c',
         execute: ['/w/code'],
     },
     cc: {
         type: 'compiler',
-        compile: ['/usr/bin/g++-7', '-O2', '-Wall', '-std=c++11', '-o', 'code', 'foo.cc', '-lm'],
+        compile: ['/usr/bin/g++-7', '-O2', '-Wall', '-std=c++11', '-o', 'code', 'foo.cc', '-lm', '-fdiagnostics-color=always'],
         code_file: 'foo.cc',
         execute: ['/w/code'],
     },
@@ -187,7 +187,7 @@ export const apply = (app: App) => {
             const input: string = (options.input)
                 ? await session.$prompt(10000)
                 : '';
-            const response = await run(code.replace(/\r/gmi, ''), lang, input);
+            const response = await run(code.replace(/\r/gmi, '').decode(), lang, input.decode());
             if (response.length > 256 || response.split('\n').length > 10) {
                 const page = await app.getPage();
                 const img = await text2png(page, response);
