@@ -252,6 +252,40 @@ export const apply = (app: App, config: any) => {
                     return [];
                 },
             },
+            pull_request_review: {
+                async hook(body) {
+                    if (body.review.state === 'commented') return [];
+                    if (body.review.state === 'approved') {
+                        return [`${body.review.login} approved ${body.repository.full_name}#${body.pull_request.number}`];
+                    }
+                    return [];
+                },
+            },
+            pull_request_review_comment: {
+                async hook(body) {
+                    let resp = '';
+                    if (body.action === 'created') {
+                        resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.pull_request.number}\n`;
+                        resp += beautifyContent(body.comment.body);
+                    }
+                    return [
+                        resp,
+                        {
+                            link: body.pull_request.html_url,
+                            reponame: body.repository.full_name,
+                            issueId: body.pull_request.number,
+                        },
+                    ];
+                },
+                async interact(message, session, event, getToken) {
+                    if (message.includes('!!link')) return [event.link];
+                    const token = await getToken();
+                    await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/comments`)
+                        .set('Authorization', `token ${token}`)
+                        .send({ body: message });
+                    return [];
+                },
+            },
             star: {
                 async hook(body) {
                     if (body.action === 'created') {
