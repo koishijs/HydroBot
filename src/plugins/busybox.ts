@@ -199,6 +199,7 @@ export const apply = (app: App) => {
     }
 
     app.command('help', { authority: 1, hidden: true });
+    app.command('tex', { authority: 1 });
 
     app.command('_', '', { authority: 5, hidden: true })
         .action(() => { });

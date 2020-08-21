@@ -21,9 +21,9 @@ function decode(source: string) {
     return result > 0 && result < 1e9 ? result : null;
 }
 
-const RE_BVID: [RegExp, number][] = [
-    [/^(BV[0-9a-zA-Z]+)$/gmi, 1],
-    [/^(https?:\/\/)?(www.)?bilibili.com\/video\/BV([0-9a-zA-Z])+$/gmi, 3],
+const RE_BVID: [RegExp, number, boolean][] = [
+    [/(BV[0-9a-zA-Z]{10})/gmi, 1, true],
+    [/av([0-9]+)/gmi, 1, false],
 ];
 
 export const apply = (app: App) => {
@@ -33,7 +33,8 @@ export const apply = (app: App) => {
         for (const RE of RE_BVID) {
             const result = RE[0].exec(session.message);
             if (result) {
-                av = decode(result[RE[1]]);
+                if (RE[2]) av = decode(result[RE[1]]);
+                else av = parseInt(result[RE[1]], 10);
                 break;
             }
         }

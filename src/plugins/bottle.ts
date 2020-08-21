@@ -36,6 +36,13 @@ export const apply = (app: App) => {
 时间：${new Date(res._id.generationTime * 1000).toLocaleString()}
 内容：${res.content}`;
             });
+
+        app.command('bottle.del <query>', { authority: 5, hidden: true })
+            .action(async (_, query) => {
+                // eslint-disable-next-line no-eval
+                const res = await coll.deleteMany(eval(query));
+                return res.deletedCount.toString();
+            });
     });
 
     app.command('bottle', '漂流瓶').action(() => 'Use bottle -h for help.');

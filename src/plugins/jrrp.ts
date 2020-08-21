@@ -12,7 +12,7 @@ export const apply = (app: App) => {
         const coll: Collection<Data> = app.database.db.collection('jrrp');
         coll.createIndex('expire', { expireAfterSeconds: 0 });
 
-        app.command('jrrp', '(?')
+        app.command('jrrp', { hidden: true })
             .shortcut('.jrrp', { options: { global: true } })
             .action(async ({ session }) => {
                 const res = await coll.findOne({ _id: session.userId });

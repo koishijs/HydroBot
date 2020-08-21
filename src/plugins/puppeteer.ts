@@ -28,7 +28,7 @@ export function apply(app: App, config: Config) {
         .alias('screenshot', 'shot')
         .option('full', '-f Full page')
         .option('viewport', '<viewport> 指定Viewport', { fallback: '1600x900' })
-        .action(async ({ session, options }, message) => {
+        .action(async ({ session, options }, message = '') => {
             let url = message.trim();
             if (!url) return '请输入网址。';
             console.log(url);
