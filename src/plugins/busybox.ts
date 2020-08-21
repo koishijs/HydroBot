@@ -3,7 +3,7 @@
 import { cpus, totalmem, freemem } from 'os';
 import child from 'child_process';
 import {
-    App, Group, getTargetId, Session, extendDatabase,
+    App, Group, getTargetId, Session, extendDatabase, User,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import MongoDatabase from 'koishi-plugin-mongo';
@@ -12,7 +12,7 @@ import { text2png } from '../lib/graph';
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
 
-const RE_REPLY = /\[CQ:reply,id=([0-9\-]+)\]([\s\S]+)$/gmi;
+const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
 
 async function getGroupName(session: Session) {
     if (session.messageType === 'private') return '私聊';
@@ -201,17 +201,17 @@ export const apply = (app: App) => {
     app.command('help', { authority: 1, hidden: true });
     app.command('tex', { authority: 1 });
 
-    app.command('_', '', { authority: 5, hidden: true })
+    app.command('_', { authority: 5, hidden: true })
         .action(() => { });
 
-    app.command('_.eval <expression...>', 'eval', { authority: 5 })
+    app.command('_.eval <expression...>', { authority: 5 })
         .action(async ({ session }, args) => {
             // eslint-disable-next-line no-eval
             let res = eval(args);
             if (res instanceof Promise) res = await res;
             if (typeof res === 'string' || res instanceof Array) return await session.$send(res.toString());
-            if (typeof res === 'object') return session.$send(JSON.stringify(res));
             if (typeof res === 'undefined') return session.$send('undefined');
+            if (res instanceof Object) return session.$send(JSON.stringify(res));
             return session.$send(res.toString());
         });
 
@@ -280,6 +280,61 @@ export const apply = (app: App) => {
             groups.forEach((group) => {
                 session.$bot.sendGroupMsg(group.id, message);
             });
+        });
+
+    app.command('contextify <message...>', '在特定上下文中触发指令', { authority: 3 })
+        .alias('ctxf')
+        .userFields(['authority'])
+        .before((session) => !session.$app.database)
+        .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
+        .option('group', '-g [id]  使用群聊上下文', { authority: 5 })
+        .option('member', '-m [id]  使用当前群/讨论组成员上下文')
+        .option('type', '-t [type]  确定发送信息的子类型')
+        .usage([
+            '私聊的子类型包括 other（默认），friend，group。',
+            '群聊的子类型包括 normal（默认），notice，anonymous。',
+        ].join('\n'))
+        .action(async ({ session, options }, message) => {
+            if (!message) return '请输入要触发的指令。';
+            if (options.member) {
+                if (session.messageType === 'private') {
+                    return '无法在私聊上下文使用 --member 选项。';
+                }
+                options.group = session.groupId;
+                options.user = options.member;
+            }
+            if (!options.user && !options.group) return '请提供新的上下文。';
+            const newSession = new Session(app, session);
+            newSession.$send = session.$send.bind(session);
+            newSession.$sendQueued = session.$sendQueued.bind(session);
+            delete newSession.groupId;
+            if (options.group) {
+                newSession.groupId = +options.group;
+                newSession.messageType = 'group';
+                newSession.subType = options.type || 'normal';
+                delete newSession.$group;
+                await newSession.$observeGroup(Group.fields);
+            } else {
+                newSession.messageType = 'private';
+                newSession.subType = options.type || 'other';
+            }
+            if (options.user) {
+                const id = getTargetId(options.user);
+                if (!id) return '未指定目标。';
+                newSession.userId = id;
+                newSession.sender.userId = id;
+                delete newSession.$user;
+                const user = await newSession.$observeUser(User.fields);
+                if (session.$user.authority <= user.authority) return '权限不足。';
+            }
+            if (options.group) {
+                const info = await session.$bot.getGroupMemberInfo(newSession.groupId, newSession.userId).catch(() => ({}));
+                Object.assign(newSession.sender, info);
+            } else if (options.user) {
+                const info = await session.$bot.getStrangerInfo(newSession.userId).catch(() => ({}));
+                Object.assign(newSession.sender, info);
+            }
+            return newSession.$execute(message);
         });
 
     app.command('_.deactivate', '在群内禁用', { authority: 4 })
@@ -388,7 +443,6 @@ export const apply = (app: App) => {
 
     app.on('connect', async () => {
         Logger.lastTime = Date.now();
-        await app.getSelfIds();
         app.bots.forEach((bot) => {
             bot.label = bot.label || `${bot.selfId}`;
             bot.counter = new Array(61).fill(0);
