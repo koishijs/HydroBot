@@ -20,7 +20,7 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
-const RE_REPLY = /\[CQ:reply,id=([0-9\-]+)\]([\s\S]+)$/gmi;
+const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
 
 interface BeautifyRule {
     regex: RegExp,

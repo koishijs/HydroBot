@@ -175,8 +175,8 @@ async function run(code: string, lang: string, input: string) {
         stderr: '',
     }));
     return (status === 'Accepted')
-        ? `执行${lang}结果: \n${stdout}\n${stderr}`
-        : `执行${lang}出错: ${status}\n${stdout}\n${stderr}`;
+        ? `Execute result: \n${stdout}\n${stderr}`
+        : `Error: ${status}\n${stdout}\n${stderr}`;
 }
 
 export const apply = (app: App) => {

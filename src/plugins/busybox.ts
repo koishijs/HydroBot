@@ -297,8 +297,9 @@ export const apply = (app: App) => {
         });
 
     app.command('_.setWelcomeMsg <msg>', '设置欢迎信息', { authority: 4 })
+        .groupFields(['welcomeMsg'])
         .action(({ session }, welcomeMsg) => {
-            app.database.setGroup(session.groupId, { welcomeMsg });
+            session.$group.welcomeMsg = welcomeMsg;
             return 'Updated.';
         });
 
