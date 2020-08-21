@@ -3,8 +3,8 @@ import { App } from 'koishi-core';
 const dataG = {};
 
 export const apply = (app: App) => {
-    app.middleware((session) => {
-        if (!session.groupId) return;
+    app.middleware((session, next) => {
+        if (!session.groupId) return next();
         if (!dataG[session.groupId]) {
             dataG[session.groupId] = {};
             dataG[session.groupId].msg = session.message;
@@ -17,5 +17,6 @@ export const apply = (app: App) => {
             }
             if (dataG[session.groupId].t === 4) session.$send(dataG[session.groupId].msg);
         }
+        return next();
     });
 };
