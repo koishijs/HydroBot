@@ -41,10 +41,10 @@ export * from './plugins/writer';
 export type Config = Dialogue.Config
 
 declare module 'koishi-core/dist/context' {
-  interface EventMap {
-    'dialogue/validate'(argv: Dialogue.Argv): void | string
-    'dialogue/execute'(argv: Dialogue.Argv): void | Promise<void | string>
-  }
+    interface EventMap {
+        'dialogue/validate'(argv: Dialogue.Argv): void | string
+        'dialogue/execute'(argv: Dialogue.Argv): void | Promise<void | string>
+    }
 }
 
 const cheatSheet = (p: string, authority: number) => `\
@@ -155,7 +155,9 @@ export function apply(ctx: Context, config: Dialogue.Config = {}) {
     config = { ...defaultConfig, ...config };
     registerPrefix(ctx, config.prefix);
 
-    ctx.command('teach', '添加教学对话', { authority: 2, checkUnknown: true, hideOptions: true })
+    ctx.command('teach', '添加教学对话', {
+        authority: 1, checkUnknown: true, hideOptions: true, hidden: true,
+    })
         .userFields(['authority', 'id'])
         .usage(({ $user }) => cheatSheet(config.prefix, $user.authority))
         .action(async ({ options, session, args }) => {
@@ -163,8 +165,8 @@ export function apply(ctx: Context, config: Dialogue.Config = {}) {
                 ctx, session, args, config, options,
             };
             return ctx.bail('dialogue/validate', argv)
-        || ctx.bail('dialogue/execute', argv)
-        || create(argv);
+                || ctx.bail('dialogue/execute', argv)
+                || create(argv);
         });
 
     // features

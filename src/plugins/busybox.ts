@@ -220,7 +220,7 @@ export const apply = (app: App) => {
         .action(async ({ options }, cmd) => {
             let p: string;
             try {
-                p = child.execSync(cmd).toString();
+                p = child.execSync(cmd.decode()).toString();
             } catch (e) {
                 return `Error executing command: ${e}`;
             }

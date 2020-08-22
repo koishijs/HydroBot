@@ -2094,16 +2094,6 @@ koishi-plugin-eval@^2.0.0-beta.13:
     escape-string-regexp "^4.0.0"
     koishi-utils "^3.0.1"
 
-koishi-plugin-image-search@^2.0.0-beta.7:
-  version "2.0.0-beta.7"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-image-search/-/koishi-plugin-image-search-2.0.0-beta.7.tgz#4f454d7f4c4e7b561113fc2065c0499acb7f568a"
-  integrity sha512-8CR+eMshBybPSxS+EYIo9HdsnXTDkJ1aQ8+Erps4/IwcTBQYznDDDhGGEVD39/v66Y5mxNhbhrE6dSonea9f2g==
-  dependencies:
-    axios "^0.20.0"
-    cheerio "^1.0.0-rc.3"
-    koishi-utils "^3.0.1"
-    nhentai-api "^3.0.2"
-
 koishi-plugin-mongo@^1.0.0-beta.4:
   version "1.0.0-beta.4"
   resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.0-beta.4.tgz#eed8971853b2b030bfd1038216589531f4d7e4d6"
@@ -2364,11 +2354,6 @@ netmask@^1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/netmask/-/netmask-1.0.6.tgz#20297e89d86f6f6400f250d9f4f6b4c1945fcd35"
   integrity sha1-ICl+idhvb2QA8lDZ9Pa0wZRfzTU=
-
-nhentai-api@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/nhentai-api/-/nhentai-api-3.0.2.tgz#6c6fd4a4958e54398a69623188e07927b67b6e72"
-  integrity sha512-5Wz74DdmPMqDCpacEqzYH9pzIHXTUirxnAIRTQF/El7Ra0W3Ov004410TfzgJkrQpBbrryLBtcvkjOSk62RlGA==
 
 node-abi@^2.7.0:
   version "2.18.0"
