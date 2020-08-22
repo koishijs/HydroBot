@@ -1,6 +1,7 @@
 import Axios from 'axios';
 import { App } from 'koishi-core';
 import { text2png } from '../lib/graph';
+import { } from 'koishi-plugin-puppeteer';
 
 const LANGS = {
     c: {
@@ -189,9 +190,9 @@ export const apply = (app: App) => {
                 : '';
             const response = await run(code.replace(/\r/gmi, '').decode(), lang, input.decode());
             if (response.length > 256 || response.split('\n').length > 10) {
-                const page = await app.getPage();
+                const page = await app.browser.newPage();
                 const img = await text2png(page, response);
-                app.freePage(page);
+                page.close();
                 return `[CQ:image,file=base64://${img}]`;
             }
             return response;

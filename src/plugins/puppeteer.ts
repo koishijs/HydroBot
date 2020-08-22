@@ -37,7 +37,7 @@ export function apply(app: App, config: Config) {
             const scheme = /^(\w+):\/\//.exec(url);
             if (!scheme) url = `http://${url}`;
             else if (!allowedProtocols.includes(scheme[1])) return '请输入正确的网址。';
-            const page = await app.getPage();
+            const page = await app.browser.newPage();
             let loaded = false;
             page.on('load', () => loaded = true);
             await page.setViewport({
@@ -64,7 +64,7 @@ export function apply(app: App, config: Config) {
                     }).then(_resolve, () => (loaded ? _resolve() : reject(new Error('navigation timeout'))));
                 });
             } catch (error) {
-                app.freePage(page);
+                page.close();
                 logger.debug(error);
                 return '无法打开页面。';
             }
@@ -72,7 +72,7 @@ export function apply(app: App, config: Config) {
             return page.screenshot({
                 fullPage: options.full,
             }).then(async (buffer) => {
-                app.freePage(page);
+                page.close();
                 if (buffer.byteLength > config.maxLength) {
                     await new Promise<PNG>((resolve, reject) => {
                         const png = new PNG();
@@ -87,7 +87,7 @@ export function apply(app: App, config: Config) {
                 }
                 return `[CQ:image,file=base64://${buffer.toString('base64')}]`;
             }, (error) => {
-                app.freePage(page);
+                page.close();
                 logger.debug(error);
                 return '截图失败。';
             });

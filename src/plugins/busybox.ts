@@ -226,9 +226,9 @@ export const apply = (app: App) => {
             }
             if (!p.trim().length) return '(execute success)';
             if (!options.i) return p;
-            const page = await app.getPage();
+            const page = await app.browser.newPage();
             const img = await text2png(page, p);
-            app.freePage(page);
+            page.close();
             return `[CQ:image,file=base64://${img}]`;
         });
 
