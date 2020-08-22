@@ -8,38 +8,42 @@ import MongoDatabase from 'koishi-plugin-mongo/dist/database';
 import { Dialogue, DialogueTest } from './utils';
 
 interface DialogueStats {
-  questions: number
-  dialogues: number
+    questions: number
+    dialogues: number
 }
 
 declare module 'koishi-core/dist/database' {
-  interface Database {
-    dialogueHistory: Record<number, Dialogue>
+    interface Database {
+        dialogueHistory: Record<number, Dialogue>
 
-    getDialoguesById<T extends Dialogue.Field>(ids: number[], fields?: T[]): Promise<Dialogue[]>
-    getDialoguesByTest(test: DialogueTest): Promise<Dialogue[]>
-    createDialogue(dialogue: Dialogue, argv: Dialogue.Argv, revert?: boolean): Promise<Dialogue>
-    removeDialogues(ids: number[], argv: Dialogue.Argv, revert?: boolean): Promise<void>
-    updateDialogues(dialogues: Observed<Dialogue>[], argv: Dialogue.Argv): Promise<void>
-    revertDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<string>
-    recoverDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<void>
-    getDialogueStats(): Promise<DialogueStats>
-  }
+        getDialoguesById<T extends Dialogue.Field>(ids: number[], fields?: T[]): Promise<Dialogue[]>
+        getDialoguesByTest(test: DialogueTest): Promise<Dialogue[]>
+        createDialogue(dialogue: Dialogue, argv: Dialogue.Argv, revert?: boolean): Promise<Dialogue>
+        removeDialogues(ids: number[], argv: Dialogue.Argv, revert?: boolean): Promise<void>
+        updateDialogues(dialogues: Observed<Dialogue>[], argv: Dialogue.Argv): Promise<void>
+        revertDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<string>
+        recoverDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<void>
+        getDialogueStats(): Promise<DialogueStats>
+    }
 }
 
 declare module 'koishi-core/dist/context' {
-  interface EventMap {
-    'dialogue/'(test: DialogueTest, conditionals?: string[]): void
-    'dialogue/mongo'(test: DialogueTest, conditionals?: FilterQuery<Dialogue>[]): void
-  }
+    interface EventMap {
+        'dialogue/'(test: DialogueTest, conditionals?: string[]): void
+        'dialogue/mongo'(test: DialogueTest, conditionals?: FilterQuery<Dialogue>[]): void
+    }
 }
 
 extendDatabase<typeof MongoDatabase>('koishi-plugin-mongo', {
     async getDialoguesById(ids, fields) {
         if (!ids.length) return [];
-        const p = {};
-        for (const field of fields) p[field] = 1;
-        const dialogues = await this.db.collection('dialogue').find({ _id: { $in: ids } }).project(p).toArray();
+        let cursor = this.db.collection('dialogue').find({ _id: { $in: ids } });
+        if (fields) {
+            const p = {};
+            for (const field of fields) p[field] = 1;
+            cursor = cursor.project(p);
+        }
+        const dialogues = await cursor.toArray();
         dialogues.forEach((d) => {
             d._id = d.id;
             defineProperty(d, '_backup', clone(d));
@@ -50,6 +54,7 @@ extendDatabase<typeof MongoDatabase>('koishi-plugin-mongo', {
     async getDialoguesByTest(test: DialogueTest) {
         const query: FilterQuery<Dialogue> = { $and: [] };
         this.app.emit('dialogue/mongo', test, query.$and);
+        if (!query.$and.length) delete query.$and;
         const dialogues = (await this.db.collection('dialogue').find(query).toArray())
             .filter((dialogue) => !this.app.bail('dialogue/fetch', dialogue, test));
         dialogues.forEach((d) => defineProperty(d, '_backup', clone(d)));
@@ -63,7 +68,16 @@ extendDatabase<typeof MongoDatabase>('koishi-plugin-mongo', {
             if (latest) dialogue.id = latest._id + 1;
             else dialogue.id = 1;
         }
-        await this.db.collection('dialogue').insertOne({ _id: dialogue.id, ...dialogue });
+        const v: Partial<Dialogue> = {
+            probS: 1.0,
+            probA: 0.0,
+            startTime: 0,
+            endTime: 0,
+            successorTimeout: 0,
+            writer: 0,
+            flag: 0,
+        };
+        await this.db.collection('dialogue').insertOne({ ...v, _id: dialogue.id, ...dialogue });
         Dialogue.addHistory(dialogue, '添加', argv, revert);
         return dialogue;
     },

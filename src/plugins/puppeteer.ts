@@ -31,7 +31,6 @@ export function apply(app: App, config: Config) {
         .action(async ({ session, options }, message = '') => {
             let url = message.trim();
             if (!url) return '请输入网址。';
-            console.log(url);
             const t = options.viewport.split('x');
             if (t.length !== 2) return session.$send('Invalid vieport');
             const scheme = /^(\w+):\/\//.exec(url);

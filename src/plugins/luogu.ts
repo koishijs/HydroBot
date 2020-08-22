@@ -8,7 +8,6 @@ export const apply = (app: App) => {
         .action(async (_, id) => {
             const res = await superagent.get(`https://www.luogu.com.cn/api/problem/detail/${id}`)
                 .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko');
-            console.log(res);
             const p = res.body;
             if (p.status === 200) return `${p.data.StringPID} ${p.data.Name}\n${p.data.Description}`;
             return p.data;

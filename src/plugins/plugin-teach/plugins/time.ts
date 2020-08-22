@@ -51,7 +51,7 @@ export default function apply(ctx: Context) {
         if (test.matchTime !== undefined) {
             conditionals.push({ $expr: { $gte: [expr, 0] } });
         }
-        if (test.matchTime !== undefined) {
+        if (test.mismatchTime !== undefined) {
             conditionals.push({ $expr: { $lt: [expr, 0] } });
         }
     });

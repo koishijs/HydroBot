@@ -7,24 +7,24 @@ import { FilterQuery } from 'mongodb';
 import { Dialogue, equal, RE_GROUPS } from '../utils';
 
 declare module '../utils' {
-  interface DialogueTest {
-    groups?: string[]
-    reversed?: boolean
-    partial?: boolean
-  }
-
-  interface Dialogue {
-    groups: string[]
-  }
-
-  namespace Dialogue {
-    interface Argv {
-      groups?: string[]
-      partial?: boolean
-      reversed?: boolean
-      noContextOptions?: boolean
+    interface DialogueTest {
+        groups?: string[]
+        reversed?: boolean
+        partial?: boolean
     }
-  }
+
+    interface Dialogue {
+        groups: string[]
+    }
+
+    namespace Dialogue {
+        interface Argv {
+            groups?: string[]
+            partial?: boolean
+            reversed?: boolean
+            noContextOptions?: boolean
+        }
+    }
 }
 
 export default function apply(ctx: Context, config: Dialogue.Config) {
@@ -38,12 +38,12 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
 
     ctx.on('dialogue/mongo', (test, conditionals) => {
         if (!test.groups || !test.groups.length) return;
-        const $and: FilterQuery<Dialogue>[] = test.groups.map((group) => ({ $not: { groups: group } }));
-        $and.push({ flag: { [test.reversed ? '$bitsAllSet' : '$bitsAllClear']: Dialogue.Flag.complement } });
+        const $and: FilterQuery<Dialogue>[] = test.groups.map((group) => ({ groups: { $ne: group } }));
+        $and.push({ flag: { [test.reversed ? '$bitsAllClear' : '$bitsAllSet']: Dialogue.Flag.complement } });
         conditionals.push({
             $or: [
                 {
-                    flag: { [test.reversed ? '$bitsAllClear' : '$bitsAllSet']: Dialogue.Flag.complement },
+                    flag: { [test.reversed ? '$bitsAllSet' : '$bitsAllClear']: Dialogue.Flag.complement },
                     groups: { $all: test.groups },
                 },
                 { $and },

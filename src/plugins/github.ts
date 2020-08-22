@@ -182,14 +182,13 @@ export const apply = (app: App, config: any) => {
                     const token = await getToken();
                     if (message.includes('!!merge')) {
                         const commitMsg = message.split('!!merge')[1];
-                        const resp = await superagent
+                        await superagent
                             .put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/merge`)
                             .proxy(config.proxy)
                             .set('Accept', 'application/vnd.github.v3+json')
                             .set('Authorization', `token ${token}`)
                             .set('User-Agent', 'HydroBot')
                             .send({ commit_title: commitMsg });
-                        console.log(commitMsg, resp);
                         return [];
                     }
                     await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
@@ -236,14 +235,13 @@ export const apply = (app: App, config: any) => {
                     const token = await getToken();
                     if (message.includes('!!merge')) {
                         const commitMsg = message.split('!!merge')[1];
-                        const resp = await superagent
+                        await superagent
                             .put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/merge`)
                             .proxy(config.proxy)
                             .set('Accept', 'application/vnd.github.v3+json')
                             .set('Authorization', `token ${token}`)
                             .set('User-Agent', 'HydroBot')
                             .send({ commit_title: commitMsg });
-                        console.log(commitMsg, resp);
                     } else {
                         await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/comments`)
                             .set('Authorization', `token ${token}`)

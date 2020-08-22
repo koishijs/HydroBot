@@ -9,12 +9,12 @@ import { Dialogue } from './utils';
 import { formatQuestionAnswers } from './search';
 
 class RegExpError extends Error {
-  name = 'RegExpError'
+    name = 'RegExpError'
 }
 
 const validator = new RegExpValidator({
     onEscapeCharacterSet(start, end, kind, negate) {
-    // eslint-disable-next-line curly
+        // eslint-disable-next-line curly
         if (kind === 'space') throw negate
             ? new RegExpError('四季酱会自动删除问题中的空白字符，你无需使用 \\s。')
             : new RegExpError('四季酱会自动删除问题中的空白字符，请使用 . 代替 \\S。');
@@ -101,11 +101,11 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
                         {
                             flag: { $bitsAllSet: Dialogue.Flag.regexp },
                             // ugly, but it works
-                            // eslint-disable-next-line no-eval
-                            $where: eval(`function () {
-                const regex = new RegExp(this.question)
-                return regex.test(${JSON.stringify(question)}) || regex.test(${JSON.stringify(original)})
-              }`),
+                            // eslint-disable-next-line no-new-func
+                            $where: new Function(`function where() {
+                                const regex = new RegExp(this.question)
+                                return !!(regex.test(${JSON.stringify(question)}) || regex.test(${JSON.stringify(original)}))
+                            }`),
                         },
                     ],
                 });
@@ -117,7 +117,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         return dialogues.every((dialogue) => {
             const dist = leven(question, dialogue.answer);
             return dist < dialogue.answer.length / 2
-        && dist < leven(question, dialogue.question);
+                && dist < leven(question, dialogue.question);
         });
     }
 
@@ -179,7 +179,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
     });
 
     ctx.on('dialogue/before-create', async ({ options, session, target }) => {
-    // 添加问答时缺少问题或回答
+        // 添加问答时缺少问题或回答
         if (!target && !(options.question && options.answer)) {
             await session.$send('缺少问题或回答，请检查指令语法。');
             return true;

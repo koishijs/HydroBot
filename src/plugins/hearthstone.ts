@@ -29,7 +29,6 @@ try {
 
 async function _card({ session }, id) {
     const url = id.trim();
-    console.log(url);
     if (!url) return await session.$send('请输入要查看的Card ID/Name');
     if (!Object.keys(db).length) {
         // Load CN
