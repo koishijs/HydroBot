@@ -20,60 +20,60 @@ function escapeRegExp(source: string) {
 }
 
 declare module 'koishi-core/dist/context' {
-  interface EventMap {
-    'dialogue/state'(state: SessionState): void
-    'dialogue/receive'(state: SessionState): void | boolean
-    'dialogue/prepare'(state: SessionState): void
-    'dialogue/before-attach-user'(state: SessionState, userFields: Set<User.Field>): void
-    'dialogue/attach-user'(state: SessionState): void | boolean
-    'dialogue/before-send'(state: SessionState): void | boolean | Promise<void | boolean>
-    'dialogue/send'(state: SessionState): void
-  }
+    interface EventMap {
+        'dialogue/state'(state: SessionState): void
+        'dialogue/receive'(state: SessionState): void | boolean
+        'dialogue/prepare'(state: SessionState): void
+        'dialogue/before-attach-user'(state: SessionState, userFields: Set<User.Field>): void
+        'dialogue/attach-user'(state: SessionState): void | boolean
+        'dialogue/before-send'(state: SessionState): void | boolean | Promise<void | boolean>
+        'dialogue/send'(state: SessionState): void
+    }
 
-  interface Context {
-    getSessionState(this: Context, session: Session): SessionState
-  }
+    interface Context {
+        getSessionState(this: Context, session: Session): SessionState
+    }
 }
 
 declare module 'koishi-core/dist/session' {
-  interface Session {
-    _redirected?: number
-  }
+    interface Session {
+        _redirected?: number
+    }
 }
 
 interface Question {
-  /** 去除句首句尾标点符号，句中空格后的句子 */
-  prefixed: string
-  /** 去除句首句尾标点符号，句中空格和句首称呼的句子 */
-  unprefixed: string
-  /** 是否含有称呼 */
-  appellative: boolean
-  /** 是否仅含有称呼 */
-  activated: boolean
+    /** 去除句首句尾标点符号，句中空格后的句子 */
+    prefixed: string
+    /** 去除句首句尾标点符号，句中空格和句首称呼的句子 */
+    unprefixed: string
+    /** 是否含有称呼 */
+    appellative: boolean
+    /** 是否仅含有称呼 */
+    activated: boolean
 }
 
 declare module './utils' {
-  namespace Dialogue {
-    interface Config {
-      nickname?: string | string[]
-      appellationTimeout?: number
-      maxRedirections?: number
-      _stripQuestion?(source: string): Question
+    namespace Dialogue {
+        interface Config {
+            nickname?: string | string[]
+            appellationTimeout?: number
+            maxRedirections?: number
+            _stripQuestion?(source: string): Question
+        }
     }
-  }
 }
 
 // TODO change name
 export interface SessionState {
-  userId: number
-  groupId: number
-  answer?: string
-  session?: Session<User.Field>
-  test?: DialogueTest
-  dialogue?: Dialogue
-  dialogues?: Dialogue[]
-  next?: NextFunction
-  isSearch?: boolean
+    userId: number
+    groupId: number
+    answer?: string
+    session?: Session<User.Field>
+    test?: DialogueTest
+    dialogue?: Dialogue
+    dialogues?: Dialogue[]
+    next?: NextFunction
+    isSearch?: boolean
 }
 
 const states: Record<number, SessionState> = {};
@@ -108,75 +108,75 @@ export async function getTotalWeight(ctx: Context, state: SessionState) {
 }
 
 export class MessageBuffer {
-  private buffer = ''
+    private buffer = ''
 
-  private original = false
+    private original = false
 
-  public hasData = false
+    public hasData = false
 
-  public send: Session['$send']
+    public send: Session['$send']
 
-  public sendQueued: Session['$sendQueued']
+    public sendQueued: Session['$sendQueued']
 
-  constructor(private session: Session) {
-      this.send = session.$send.bind(session);
-      this.sendQueued = session.$sendQueued.bind(session);
+    constructor(private session: Session) {
+        this.send = session.$send.bind(session);
+        this.sendQueued = session.$sendQueued.bind(session);
 
-      session.$send = async (message: string) => {
-          if (!message) return;
-          this.hasData = true;
-          if (this.original) {
-              return this.send(message);
-          }
-          this.buffer += message;
-      };
+        session.$send = async (message: string) => {
+            if (!message) return;
+            this.hasData = true;
+            if (this.original) {
+                return this.send(message);
+            }
+            this.buffer += message;
+        };
 
-      session.$sendQueued = async (message, delay) => {
-          if (!message) return;
-          this.hasData = true;
-          if (this.original) {
-              return this.sendQueued(message, delay);
-          }
-          return this._flush(this.buffer + message, delay);
-      };
-  }
+        session.$sendQueued = async (message, delay) => {
+            if (!message) return;
+            this.hasData = true;
+            if (this.original) {
+                return this.sendQueued(message, delay);
+            }
+            return this._flush(this.buffer + message, delay);
+        };
+    }
 
-  write(message: string) {
-      if (!message) return;
-      this.hasData = true;
-      this.buffer += message;
-  }
+    write(message: string) {
+        if (!message) return;
+        this.hasData = true;
+        this.buffer += message;
+    }
 
-  private async _flush(message: string, delay?: number) {
-      this.original = true;
-      message = message.trim();
-      await this.sendQueued(message, delay);
-      this.buffer = '';
-      this.original = false;
-  }
+    private async _flush(message: string, delay?: number) {
+        this.original = true;
+        message = message.trim();
+        await this.sendQueued(message, delay);
+        this.buffer = '';
+        this.original = false;
+    }
 
-  flush() {
-      return this._flush(this.buffer);
-  }
+    flush() {
+        return this._flush(this.buffer);
+    }
 
-  async run<T>(callback: () => T | Promise<T>) {
-      this.original = false;
-      const send = this.session.$send;
-      const sendQueued = this.session.$sendQueued;
-      const result = await callback();
-      this.session.$sendQueued = sendQueued;
-      this.session.$send = send;
-      this.original = true;
-      return result;
-  }
+    async run<T>(callback: () => T | Promise<T>) {
+        this.original = false;
+        const send = this.session.$send;
+        const sendQueued = this.session.$sendQueued;
+        const result = await callback();
+        this.session.$sendQueued = sendQueued;
+        this.session.$send = send;
+        this.original = true;
+        return result;
+    }
 
-  async end(message = '') {
-      this.write(message);
-      await this.flush();
-      this.original = true;
-      delete this.session.$send;
-      delete this.session.$sendQueued;
-  }
+    async end(message = '') {
+        this.write(message);
+        await this.flush();
+        this.original = true;
+        delete this.session.$send;
+        delete this.session.$sendQueued;
+    }
 }
 
 export async function triggerDialogue(ctx: Context, session: Session, config: Dialogue.Config, next: NextFunction = noop) {
@@ -206,6 +206,8 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     }
     if (!dialogue) return next();
     logger.debug('[attach]', session.messageId);
+
+    console.log(dialogue);
 
     // parse answer
     state.dialogue = dialogue;

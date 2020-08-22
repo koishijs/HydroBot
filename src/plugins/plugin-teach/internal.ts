@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 /* eslint-disable no-mixed-operators */
 import { Context } from 'koishi-core';
 import { RegExpValidator } from 'regexpp';
@@ -86,8 +87,8 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         regexp, answer, question, original,
     }, conditionals) => {
         if (regexp) {
-            if (answer !== undefined) conditionals.push({ answer: { $regex: new RegExp(answer) } });
-            if (question !== undefined) conditionals.push({ question: { $regex: new RegExp(original) } });
+            if (answer !== undefined) conditionals.push({ answer: { $regex: new RegExp(answer, 'i') } });
+            if (question !== undefined) conditionals.push({ question: { $regex: new RegExp(original, 'i') } });
             return;
         }
         if (answer !== undefined) conditionals.push({ answer });
@@ -101,11 +102,14 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
                         {
                             flag: { $bitsAllSet: Dialogue.Flag.regexp },
                             // ugly, but it works
-                            // eslint-disable-next-line no-new-func
-                            $where: new Function(`function where() {
-                                const regex = new RegExp(this.question)
-                                return !!(regex.test(${JSON.stringify(question)}) || regex.test(${JSON.stringify(original)}))
-                            }`),
+                            $expr: {
+                                body(field: string, question: string, original: string) {
+                                    const regex = new RegExp(field, 'i');
+                                    return regex.test(question) || regex.test(original);
+                                },
+                                args: ['$name', question, original],
+                                lang: 'js',
+                            },
                         },
                     ],
                 });
