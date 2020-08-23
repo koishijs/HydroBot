@@ -131,7 +131,7 @@ export async function update(argv: Dialogue.Argv) {
     const {
         ctx, session, options, target, config,
     } = argv;
-    const { maxShownDialogues = 10, detailDelay: detailInterval = 500 } = config;
+    const { maxShownDialogues = 3, detailDelay: detailInterval = 500 } = config;
     const {
         revert, review, remove, search,
     } = options;
