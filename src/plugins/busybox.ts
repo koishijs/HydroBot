@@ -267,11 +267,12 @@ export const apply = (app: App) => {
 
     app.command('_.switch <command>', '启用/停用命令')
         .userFields(['authority'])
+        .groupFields(['disallowedCommands'])
         .before(checkGroupAdmin)
         .before(checkEnv)
-        .groupFields(['disallowedCommands'])
         .action(({ session }, command) => {
-            if ((session.$group.disallowedCommands || []).includes(command)) {
+            session.$group.disallowedCommands = session.$group.disallowedCommands || [];
+            if (session.$group.disallowedCommands.includes(command)) {
                 const set = new Set(session.$group.disallowedCommands);
                 set.delete(command);
                 session.$group.disallowedCommands = Array.from(set);
