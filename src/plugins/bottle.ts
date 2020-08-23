@@ -15,13 +15,14 @@ export const apply = (app: App) => {
 
         app.command('bottle.throw <content...>', 'Throw a bottle')
             .action(async ({ session }, content) => {
-                await coll.insertOne({
+                if (session.isDialogue) return '不支持在插值中调用该命令。';
+                const res = await coll.insertOne({
                     isFromGroup: !!session.groupId,
                     groupId: session.groupId,
                     userId: session.userId,
                     content: content.trim(),
                 });
-                return '已丢出。';
+                return `已丢出。(${res.insertedId})`;
             });
 
         app.command('bottle.pick', 'Pick a bottle')
@@ -40,7 +41,7 @@ export const apply = (app: App) => {
         app.command('bottle.del <query>', { authority: 5, hidden: true })
             .action(async (_, query) => {
                 // eslint-disable-next-line no-eval
-                const res = await coll.deleteMany(eval(query));
+                const res = await coll.deleteMany(JSON.parse(query.decode()));
                 return res.deletedCount.toString();
             });
     });

@@ -81,6 +81,7 @@ export const apply = (app: App) => {
         .action(() => { });
 
     app.command('_.eval <expression...>', { authority: 5 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .action(async ({ session }, args) => {
             // eslint-disable-next-line no-eval
             let res = eval(args);
@@ -92,6 +93,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.sh <command...>', '执行shell命令', { authority: 5 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .option('i', 'Output as image')
         .action(async ({ options }, cmd) => {
             let p: string;
@@ -109,6 +111,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.shutdown', '关闭机器人', { authority: 5 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .action(() => {
             setTimeout(() => {
                 child.exec('pm2 stop robot');
@@ -120,6 +123,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.restart', '重启机器人', { authority: 5 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .action(({ session }) => {
             setTimeout(() => {
                 child.exec('pm2 restart robot');
@@ -131,6 +135,7 @@ export const apply = (app: App) => {
         .action(({ session }) => session.$bot.setGroupLeave(session.groupId));
 
     app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5 })
+        .before((session) => !session.$app.database && (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .action(async ({ session }, userId: string, authority: string) => {
             if (authority === 'null') {
                 await app.database.setUser(getTargetId(userId), { flag: 1 });
@@ -145,7 +150,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.boardcast <message...>', '全服广播', { authority: 5 })
-        .before((session) => !session.$app.database)
+        .before((session) => !session.$app.database && (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .option('forced', '-f 无视 silent 标签进行广播', { value: false })
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
@@ -159,9 +164,9 @@ export const apply = (app: App) => {
         });
 
     app.command('contextify <message...>', '在特定上下文中触发指令', { authority: 3 })
+        .before((session) => !session.$app.database && (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .alias('ctxf')
         .userFields(['authority'])
-        .before((session) => !session.$app.database)
         .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
         .option('group', '-g [id]  使用群聊上下文', { authority: 5 })
         .option('member', '-m [id]  使用当前群/讨论组成员上下文')
@@ -214,6 +219,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.deactivate', '在群内禁用', { authority: 4 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag |= Group.Flag.ignore;
@@ -221,6 +227,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.activate', '在群内启用', { authority: 4 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag &= ~Group.Flag.ignore;
@@ -228,6 +235,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息', { authority: 4 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .groupFields(['welcomeMsg'])
         .action(({ session }, welcomeMsg) => {
             session.$group.welcomeMsg = welcomeMsg;
@@ -235,6 +243,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.mute <user> <periodSecs>', '禁言用户', { authority: 4 })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
 

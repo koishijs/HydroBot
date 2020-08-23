@@ -153,6 +153,7 @@ export function apply(ctx: Context, config: Dialogue.Config = {}) {
     ctx.command('teach', '添加教学对话', {
         authority: 1, checkUnknown: true, hideOptions: true, hidden: true,
     })
+        .before((session) => (session.isDialogue ? '不支持在插值中调用该命令。' : true))
         .userFields(['authority', 'id'])
         .usage(({ $user }) => cheatSheet(config.prefix, $user.authority))
         .action(async ({ options, session, args }) => {

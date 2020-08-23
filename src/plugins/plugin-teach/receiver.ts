@@ -32,6 +32,7 @@ declare module 'koishi-core/dist/context' {
 declare module 'koishi-core/dist/session' {
     interface Session {
         _redirected?: number
+        isDialogue?: boolean
     }
 }
 
@@ -177,6 +178,7 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     const state = ctx.getSessionState(session);
     state.next = next;
     state.test = {};
+    session.isDialogue = true;
 
     if (ctx.bail('dialogue/receive', state)) return next();
     const logger = ctx.logger('dialogue');

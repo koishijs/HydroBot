@@ -13,23 +13,23 @@ import {
 } from './search';
 
 declare module 'koishi-core/dist/context' {
-  interface EventMap {
-    'dialogue/before-modify'(argv: Dialogue.Argv): void | string | Promise<void | string>
-    'dialogue/modify'(argv: Dialogue.Argv, dialogue: Dialogue): void
-    'dialogue/before-create'(argv: Dialogue.Argv): void | boolean | Promise<void | boolean>
-    'dialogue/after-modify'(argv: Dialogue.Argv): void | Promise<void>
-    'dialogue/before-detail'(argv: Dialogue.Argv): void | Promise<void>
-    'dialogue/detail'(dialogue: Dialogue, output: string[], argv: Dialogue.Argv): void | Promise<void>
-  }
+    interface EventMap {
+        'dialogue/before-modify'(argv: Dialogue.Argv): void | string | Promise<void | string>
+        'dialogue/modify'(argv: Dialogue.Argv, dialogue: Dialogue): void
+        'dialogue/before-create'(argv: Dialogue.Argv): void | boolean | Promise<void | boolean>
+        'dialogue/after-modify'(argv: Dialogue.Argv): void | Promise<void>
+        'dialogue/before-detail'(argv: Dialogue.Argv): void | Promise<void>
+        'dialogue/detail'(dialogue: Dialogue, output: string[], argv: Dialogue.Argv): void | Promise<void>
+    }
 }
 
 declare module './utils' {
-  namespace Dialogue {
-    interface Config {
-      detailDelay?: number
-      maxShownDialogues?: number
+    namespace Dialogue {
+        interface Config {
+            detailDelay?: number
+            maxShownDialogues?: number
+        }
     }
-  }
 }
 
 export default function apply(ctx: Context) {
@@ -39,7 +39,7 @@ export default function apply(ctx: Context) {
         .option('includeLast', '-l [count]  包含最近的修改数量', { type: 'string', validate: isIntegerOrInterval })
         .option('excludeLast', '-L [count]  排除最近的修改数量', { type: 'string', validate: isIntegerOrInterval })
         .option('target', '<ids>  查看或修改已有问题', { type: 'string', validate: RE_DIALOGUES })
-        .option('remove', '-r  彻底删除问答');
+        .option('remove', '-r  彻底删除问答', { authority: 2 });
 
     ctx.before('dialogue/execute', (argv) => {
         const { remove, revert, target } = argv.options;
