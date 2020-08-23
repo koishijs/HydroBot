@@ -275,8 +275,10 @@ export const apply = (app: App) => {
                 const set = new Set(session.$group.disallowedCommands);
                 set.delete(command);
                 session.$group.disallowedCommands = Array.from(set);
-                return `${command} 命令为禁用状态。`;
+                return `${command} 命令为启用状态。`;
             }
+            session.$group.disallowedCommands.push(command);
+            return `${command} 命令为禁用状态。`;
         });
 
     app.command('_.mute <user> <periodSecs>', '禁言用户')
