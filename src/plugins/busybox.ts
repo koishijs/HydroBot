@@ -79,7 +79,11 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
-const checkGroupAdmin = (session: Session) => (!['admin', 'owner'].includes(session.sender.role) ? '仅管理员可执行该操作。' : false);
+const checkGroupAdmin = (session: Session<'authority'>) => (
+    (session.$user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role))
+        ? false
+        : '仅管理员可执行该操作。'
+);
 const checkEnv = (session: Session) => (session._redirected ? '不支持在插值中调用该命令。' : false);
 
 export const apply = (app: App) => {
@@ -142,6 +146,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.leave', '退出该群')
+        .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
         .action(({ session }) => session.$bot.setGroupLeave(session.groupId));
@@ -231,6 +236,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.deactivate', '在群内禁用')
+        .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
         .groupFields(['flag'])
@@ -240,6 +246,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.activate', '在群内启用')
+        .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
         .groupFields(['flag'])
@@ -249,6 +256,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息')
+        .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
         .groupFields(['welcomeMsg'])
@@ -258,6 +266,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.switch <command>', '启用/停用命令')
+        .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
         .groupFields(['disallowedCommands'])
@@ -271,6 +280,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.mute <user> <periodSecs>', '禁言用户')
+        .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
         .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
