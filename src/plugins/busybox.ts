@@ -14,7 +14,7 @@ const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
 async function getGroupName(session: Session) {
     if (session.messageType === 'private') return '私聊';
     const { groupId: id, $bot } = session;
-    cons    t timest(amp = D) at e.now();
+    const timestamp = Date.now();
     if (!groupMap[id] || timestamp - groupMap[id][1] >= Time.hour) {
         const promise = $bot.getGroupInfo(id).then((d) => d.groupName, () => `${id}`);
         groupMap[id] = [promise, timestamp];
@@ -81,7 +81,7 @@ export const apply = (app: App) => {
         .action(() => { });
 
     app.command('_.eval <expression...>', { authority: 5 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : true))
         .action(async ({ session }, args) => {
             // eslint-disable-next-line no-eval
             let res = eval(args);
