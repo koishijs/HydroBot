@@ -6,9 +6,18 @@ import {
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { text2png } from '../lib/graph';
 
+declare module 'koishi-core/dist/database' {
+    interface Group {
+        disallowedCommands: string[]
+    }
+}
+
+Group.extend(() => ({
+    disallowedCommands: [],
+}));
+
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
-
 const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
 
 async function getGroupName(session: Session) {
@@ -70,18 +79,19 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
+const checkGroupAdmin = (session: Session) => (!['admin', 'owner'].includes(session.sender.role) ? '仅管理员可执行该操作。' : false);
+const checkEnv = (session: Session) => (session._redirected ? '不支持在插值中调用该命令。' : false);
+
 export const apply = (app: App) => {
     const logger = Logger.create('busybox', true);
     Logger.levels.message = 3;
 
     app.command('help', { authority: 1, hidden: true });
     app.command('tex', { authority: 1 });
-
-    app.command('_', { authority: 5, hidden: true })
-        .action(() => { });
+    app.command('_', '管理工具');
 
     app.command('_.eval <expression...>', { authority: 5 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : true))
+        .before(checkEnv)
         .action(async ({ session }, args) => {
             // eslint-disable-next-line no-eval
             let res = eval(args);
@@ -93,7 +103,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.sh <command...>', '执行shell命令', { authority: 5 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before(checkEnv)
         .option('i', 'Output as image')
         .action(async ({ options }, cmd) => {
             let p: string;
@@ -111,7 +121,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.shutdown', '关闭机器人', { authority: 5 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before(checkEnv)
         .action(() => {
             setTimeout(() => {
                 child.exec('pm2 stop robot');
@@ -123,7 +133,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.restart', '重启机器人', { authority: 5 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before(checkEnv)
         .action(({ session }) => {
             setTimeout(() => {
                 child.exec('pm2 restart robot');
@@ -131,11 +141,13 @@ export const apply = (app: App) => {
             return session.$send('Restarting in 3 secs...');
         });
 
-    app.command('_.leave', '退出该群', { authority: 5 })
+    app.command('_.leave', '退出该群')
+        .before(checkGroupAdmin)
+        .before(checkEnv)
         .action(({ session }) => session.$bot.setGroupLeave(session.groupId));
 
     app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5 })
-        .before((session) => !session.$app.database && (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before(checkEnv)
         .action(async ({ session }, userId: string, authority: string) => {
             if (authority === 'null') {
                 await app.database.setUser(getTargetId(userId), { flag: 1 });
@@ -150,7 +162,7 @@ export const apply = (app: App) => {
         });
 
     app.command('_.boardcast <message...>', '全服广播', { authority: 5 })
-        .before((session) => !session.$app.database && (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before(checkEnv)
         .option('forced', '-f 无视 silent 标签进行广播', { value: false })
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
@@ -164,7 +176,7 @@ export const apply = (app: App) => {
         });
 
     app.command('contextify <message...>', '在特定上下文中触发指令', { authority: 3 })
-        .before((session) => !session.$app.database && (session._redirected ? '不支持在插值中调用该命令。' : false))
+        .before(checkEnv)
         .alias('ctxf')
         .userFields(['authority'])
         .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
@@ -218,31 +230,49 @@ export const apply = (app: App) => {
             return newSession.$execute(message);
         });
 
-    app.command('_.deactivate', '在群内禁用', { authority: 4 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+    app.command('_.deactivate', '在群内禁用')
+        .before(checkGroupAdmin)
+        .before(checkEnv)
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag |= Group.Flag.ignore;
             return 'Deactivated';
         });
 
-    app.command('_.activate', '在群内启用', { authority: 4 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+    app.command('_.activate', '在群内启用')
+        .before(checkGroupAdmin)
+        .before(checkEnv)
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag &= ~Group.Flag.ignore;
             return 'Activated';
         });
 
-    app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息', { authority: 4 })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+    app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息')
+        .before(checkGroupAdmin)
+        .before(checkEnv)
         .groupFields(['welcomeMsg'])
         .action(({ session }, welcomeMsg) => {
             session.$group.welcomeMsg = welcomeMsg;
             return 'Updated.';
         });
 
-    app.command('_.mute <user> <periodSecs>', '禁言用户', { authority: 4 })
+    app.command('_.switch <command>', '启用/停用命令')
+        .before(checkGroupAdmin)
+        .before(checkEnv)
+        .groupFields(['disallowedCommands'])
+        .action(({ session }, command) => {
+            if ((session.$group.disallowedCommands || []).includes(command)) {
+                const set = new Set(session.$group.disallowedCommands);
+                set.delete(command);
+                session.$group.disallowedCommands = Array.from(set);
+                return `${command} 命令为禁用状态。`;
+            }
+        });
+
+    app.command('_.mute <user> <periodSecs>', '禁言用户')
+        .before(checkGroupAdmin)
+        .before(checkEnv)
         .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
@@ -298,6 +328,15 @@ export const apply = (app: App) => {
                 session.$bot.setGroupLeave(session.groupId);
             }, 5000);
         }
+    });
+
+    app.on('before-command', (argv) => {
+        // @ts-ignore
+        if ((argv.session.$group.disallowedCommands || []).includes(argv.command.name)) return '';
+    });
+
+    app.on('before-attach-group', (session, fields) => {
+        fields.add('disallowedCommands');
     });
 
     app.on('request/group/invite', async (session) => {
