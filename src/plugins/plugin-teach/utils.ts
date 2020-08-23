@@ -6,123 +6,123 @@ import {
 } from 'koishi-utils';
 
 declare module 'koishi-core/dist/context' {
-  interface EventMap {
-    'dialogue/fetch'(dialogue: Dialogue, test: DialogueTest): boolean | void
-    'dialogue/permit'(argv: Dialogue.Argv, dialogue: Dialogue): boolean
-    'dialogue/flag'(flag: keyof typeof Dialogue.Flag): void
-  }
+    interface EventMap {
+        'dialogue/fetch'(dialogue: Dialogue, test: DialogueTest): boolean | void
+        'dialogue/permit'(argv: Dialogue.Argv, dialogue: Dialogue): boolean
+        'dialogue/flag'(flag: keyof typeof Dialogue.Flag): void
+    }
 }
 
 declare module 'koishi-core/dist/database' {
-  interface Tables {
-    dialogue: Dialogue
-  }
+    interface Tables {
+        dialogue: Dialogue
+    }
 }
 
 export interface Dialogue {
-  id?: number
-  question: string
-  answer: string
-  original: string
-  flag: number
-  _weight?: number
-  _capture?: RegExpExecArray
-  _type?: Dialogue.ModifyType
-  _operator?: number
-  _timestamp?: number
-  _backup?: Readonly<Dialogue>
+    id?: number
+    question: string
+    answer: string
+    original: string
+    flag: number
+    _weight?: number
+    _capture?: RegExpExecArray
+    _type?: Dialogue.ModifyType
+    _operator?: number
+    _timestamp?: number
+    _backup?: Readonly<Dialogue>
 }
 
 export interface DialogueTest {
-  original?: string
-  question?: string
-  answer?: string
-  regexp?: boolean
-  activated?: boolean
-  appellative?: boolean
-  noRecursive?: boolean
+    original?: string
+    question?: string
+    answer?: string
+    regexp?: boolean
+    activated?: boolean
+    appellative?: boolean
+    noRecursive?: boolean
 }
 
 export namespace Dialogue {
-  export type ModifyType = '添加' | '修改' | '删除'
-  export type Field = keyof Dialogue
+    export type ModifyType = '添加' | '修改' | '删除'
+    export type Field = keyof Dialogue
 
-  type Getter = () => Partial<Dialogue>
-  const getters: Getter[] = [];
+    type Getter = () => Partial<Dialogue>
+    const getters: Getter[] = [];
 
-  export function extend(getter: Getter) {
-      getters.push(getter);
-  }
+    export function extend(getter: Getter) {
+        getters.push(getter);
+    }
 
-  extend(() => ({
-      flag: 0,
-      probA: 0,
-      probS: 1,
-      startTime: 0,
-      endTime: 0,
-      groups: [],
-      predecessors: [],
-  }));
+    extend(() => ({
+        flag: 0,
+        probA: 0,
+        probS: 1,
+        startTime: 0,
+        endTime: 0,
+        groups: [],
+        predecessors: [],
+    }));
 
-  export function create() {
-      const result = {} as Dialogue;
-      for (const getter of getters) {
-          Object.assign(result, getter());
-      }
-      return result;
-  }
+    export function create() {
+        const result = {} as Dialogue;
+        for (const getter of getters) {
+            Object.assign(result, getter());
+        }
+        return result;
+    }
 
-  export const history: Record<number, Dialogue> = [];
+    export const history: Record<number, Dialogue> = [];
 
-  export interface Config {
-    prefix?: string
-    historyAge?: number
-  }
+    export interface Config {
+        prefix?: string
+        historyAge?: number
+    }
 
-  export enum Flag {
-    /** 冻结：只有 4 级以上权限者可修改 */
-    frozen = 1,
-    /** 正则：使用正则表达式进行匹配 */
-    regexp = 2,
-    /** 上下文：后继问答可以被上下文内任何人触发 */
-    context = 4,
-    /** 代行者：由教学者完成回答的执行 */
-    substitute = 8,
-    /** 补集：上下文匹配时取补集 */
-    complement = 16,
-  }
+    export enum Flag {
+        /** 冻结：只有 4 级以上权限者可修改 */
+        frozen = 1,
+        /** 正则：使用正则表达式进行匹配 */
+        regexp = 2,
+        /** 上下文：后继问答可以被上下文内任何人触发 */
+        context = 4,
+        /** 代行者：由教学者完成回答的执行 */
+        substitute = 8,
+        /** 补集：上下文匹配时取补集 */
+        complement = 16,
+    }
 
-  export function addHistory(dialogue: Dialogue, type: Dialogue.ModifyType, argv: Dialogue.Argv, revert: boolean, target = argv.ctx.database.dialogueHistory) {
-      if (revert) return delete target[dialogue.id];
-      target[dialogue.id] = dialogue;
-      const time = Date.now();
-      defineProperty(dialogue, '_timestamp', time);
-      defineProperty(dialogue, '_operator', argv.session.userId);
-      defineProperty(dialogue, '_type', type);
-      setTimeout(() => {
-          if (argv.ctx.database.dialogueHistory[dialogue.id]?._timestamp === time) {
-              delete argv.ctx.database.dialogueHistory[dialogue.id];
-          }
-      }, argv.config.historyAge ?? 600000);
-  }
+    export function addHistory(dialogue: Dialogue, type: Dialogue.ModifyType, argv: Dialogue.Argv, revert: boolean, target = argv.ctx.database.dialogueHistory) {
+        if (revert) return delete target[dialogue.id];
+        target[dialogue.id] = dialogue;
+        const time = Date.now();
+        defineProperty(dialogue, '_timestamp', time);
+        defineProperty(dialogue, '_operator', argv.session.userId);
+        defineProperty(dialogue, '_type', type);
+        setTimeout(() => {
+            if (argv.ctx.database.dialogueHistory[dialogue.id]?._timestamp === time) {
+                delete argv.ctx.database.dialogueHistory[dialogue.id];
+            }
+        }, argv.config.historyAge ?? 600000);
+    }
 
-  export interface Argv {
-    ctx: Context
-    session: Session<'authority' | 'id'>
-    args: string[]
-    config: Config
-    target?: number[]
-    options: Record<string, any>
-    appellative?: boolean
+    export interface Argv {
+        ctx: Context
+        session: Session<'authority' | 'id'>
+        args: string[]
+        config: Config
+        target?: number[]
+        options: Record<string, any>
+        appellative?: boolean
 
-    // modify status
-    dialogues?: Dialogue[]
-    dialogueMap?: Record<number, Dialogue>
-    skipped?: number[]
-    updated?: number[]
-    unknown?: number[]
-    uneditable?: number[]
-  }
+        // modify status
+        dialogues?: Dialogue[]
+        dialogueMap?: Record<number, Dialogue>
+        skipped?: number[]
+        updated?: number[]
+        unknown?: number[]
+        uneditable?: number[]
+    }
 }
 
 export function sendResult(argv: Dialogue.Argv, prefix?: string, suffix?: string) {

@@ -102,7 +102,7 @@ export default function apply(ctx: Context) {
     });
 }
 
-export function formatAnswer(source: string, { maxAnswerLength = 100 }: Dialogue.Config) {
+export function formatAnswer(source: string, { maxAnswerLength = 10 }: Dialogue.Config) {
     let trimmed = false;
     const lines = source.split(/(\r?\n|\$n)/g);
     if (lines.length > 1) {

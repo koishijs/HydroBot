@@ -50,8 +50,8 @@ const cheatSheet = (p: string, authority: number) => `\
 　查看问答：${p}id
 　修改问题：${p}id 问题
 　修改回答：${p}id ~ 回答
-　删除问答：${p}id -r
-　批量查看：${p}${p}id
+　删除问答：${p}id -r${authority >= 2 ? `
+　批量查看：${p}${p}id` : ''}
 搜索选项：
 　管道语法：　　　|
 　结果页码：　　　/ page
@@ -66,9 +66,9 @@ const cheatSheet = (p: string, authority: number) => `\
 　无视上下文搜索：-G` : ''}
 问答选项：${authority >= 3 ? `
 　锁定问答：　　　-f/-F
-　教学者代行：　　-s/-S` : ''}
+　教学者代行：　　-s/-S` : ''}${authority >= 2 ? `
 　设置问题作者：　-w uid
-　设置为匿名：　　-W
+　设置为匿名：　　-W` : ''}
 　忽略智能提示：　-i
 　重定向：　　　　=>
 匹配规则：${authority >= 3 ? `

@@ -5,31 +5,31 @@ import { isInteger, deduplicate } from 'koishi-utils';
 import { Dialogue } from '../utils';
 
 declare module '../utils' {
-  interface DialogueTest {
-    writer?: number
-    frozen?: boolean
-    substitute?: boolean
-  }
-
-  interface Dialogue {
-    writer: number
-  }
-
-  namespace Dialogue {
-    interface Argv {
-      userMap?: Record<number, string>
-      /** 用于保存用户权限的键值对，键的范围包括目标问答列表的全体作者以及 -w 参数 */
-      authMap?: Record<number, number>
+    interface DialogueTest {
+        writer?: number
+        frozen?: boolean
+        substitute?: boolean
     }
-  }
+
+    interface Dialogue {
+        writer: number
+    }
+
+    namespace Dialogue {
+        interface Argv {
+            userMap?: Record<number, string>
+            /** 用于保存用户权限的键值对，键的范围包括目标问答列表的全体作者以及 -w 参数 */
+            authMap?: Record<number, number>
+        }
+    }
 }
 
 export default function apply(ctx: Context) {
     ctx.command('teach')
         .option('frozen', '-f  锁定这个问答', { authority: 4 })
         .option('frozen', '-F, --no-frozen  解锁这个问答', { authority: 4, value: false })
-        .option('writer', '-w <uid>  添加或设置问题的作者')
-        .option('writer', '-W, --anonymous  添加或设置匿名问题', { value: 0 })
+        .option('writer', '-w <uid>  添加或设置问题的作者', { authority: 2 })
+        .option('writer', '-W, --anonymous  添加或设置匿名问题', { authority: 2, value: 0 })
         .option('substitute', '-s  由教学者完成回答的执行')
         .option('substitute', '-S, --no-substitute  由触发者完成回答的执行', { value: false });
 
@@ -81,7 +81,7 @@ export default function apply(ctx: Context) {
                 for (const userId in memberMap) {
                     userMap[userId] = userMap[userId] || memberMap[userId];
                 }
-            } catch {}
+            } catch { }
         }
     });
 
@@ -107,13 +107,13 @@ export default function apply(ctx: Context) {
             { authority } = session.$user;
         return (
             (newWriter && authority <= authMap[newWriter])
-      || ((flag & Dialogue.Flag.frozen) && authority < 4)
-      || (writer !== session.$user.id && (
-          (target && authority < 3) || (
-              (substitute || (flag & Dialogue.Flag.substitute))
-          && (authority <= (authMap[writer] || 2))
-          )
-      ))
+            || ((flag & Dialogue.Flag.frozen) && authority < 4)
+            || (writer !== session.$user.id && (
+                (target && authority < 3) || (
+                    (substitute || (flag & Dialogue.Flag.substitute))
+                    && (authority <= (authMap[writer] || 2))
+                )
+            ))
         );
     });
 
