@@ -14,8 +14,8 @@ export const apply = (app: App) => {
         const coll: Collection<Bottle> = app.database.db.collection('bottle');
 
         app.command('bottle.throw <content...>', 'Throw a bottle')
+            .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
             .action(async ({ session }, content) => {
-                if (session.isDialogue) return '不支持在插值中调用该命令。';
                 const res = await coll.insertOne({
                     isFromGroup: !!session.groupId,
                     groupId: session.groupId,
