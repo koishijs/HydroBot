@@ -30,10 +30,10 @@ declare module '../utils' {
 export default function apply(ctx: Context, config: Dialogue.Config) {
     ctx.command('teach')
         .option('disable', '-d  在当前环境下禁用问答')
-        .option('disableGlobal', '-D  在所有环境下禁用问答', { authority: 3 })
+        .option('disableGlobal', '-D  在所有环境下禁用问答', { authority: 4 })
         .option('enable', '-e  在当前环境下启用问答')
-        .option('enableGlobal', '-E  在所有环境下启用问答', { authority: 3 })
-        .option('groups', '-g <gids>  设置具体的生效环境', { authority: 3, type: 'string', validate: RE_GROUPS })
+        .option('enableGlobal', '-E  在所有环境下启用问答', { authority: 4 })
+        .option('groups', '-g <gids>  设置具体的生效环境', { authority: 4, type: 'string', validate: RE_GROUPS })
         .option('global', '-G  无视上下文搜索');
 
     ctx.on('dialogue/mongo', (test, conditionals) => {

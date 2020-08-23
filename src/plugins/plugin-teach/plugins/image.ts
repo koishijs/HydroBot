@@ -11,26 +11,26 @@ import axios from 'axios';
 import { Dialogue } from '../utils';
 
 declare module 'koishi-core/dist/app' {
-  interface App {
-    getImageServerStatus (): Promise<ImageServerStatus>
-  }
+    interface App {
+        getImageServerStatus(): Promise<ImageServerStatus>
+    }
 }
 
 declare module '../utils' {
-  namespace Dialogue {
-    interface Config {
-      imagePath?: string
-      imageServer?: string
-      uploadKey?: string
-      uploadPath?: string
-      uploadServer?: string
+    namespace Dialogue {
+        interface Config {
+            imagePath?: string
+            imageServer?: string
+            uploadKey?: string
+            uploadPath?: string
+            uploadServer?: string
+        }
     }
-  }
 }
 
 interface ImageServerStatus {
-  totalSize: number
-  totalCount: number
+    totalSize: number
+    totalCount: number
 }
 
 const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;

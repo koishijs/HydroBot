@@ -7,7 +7,6 @@ import fs from 'fs-extra';
 import Koa from 'koa';
 import Router from 'koa-router';
 import body from 'koa-body';
-import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
 import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
 import 'koishi-adapter-cqhttp';
 
@@ -61,19 +60,6 @@ export = class {
     async run() {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
-        this.app.plugin(KoishiPluginTools, {
-            brainfuck: true,
-            bvid: true,
-            crypto: true,
-            magi: true,
-            maya: true,
-            mcping: true,
-            music: false,
-            oeis: false,
-            qrcode: true,
-            roll: true,
-            weather: true,
-        });
         this.app.api.use(body());
         this.app.on('connect', async () => {
             for (const admin of this.config.admin) {

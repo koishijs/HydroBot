@@ -9,15 +9,9 @@ import {
     Context, User, Session, NextFunction, Command,
 } from 'koishi-core';
 import {
-    CQCode, simplify, noop,
+    CQCode, simplify, noop, escapeRegExp,
 } from 'koishi-utils';
 import { Dialogue, DialogueTest } from './utils';
-
-function escapeRegExp(source: string) {
-    return source
-        .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-        .replace(/-/g, '\\x2d');
-}
 
 declare module 'koishi-core/dist/context' {
     interface EventMap {

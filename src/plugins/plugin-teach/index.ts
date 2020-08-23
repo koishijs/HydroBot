@@ -3,6 +3,7 @@
 /* eslint-disable no-irregular-whitespace */
 
 import { Context, ExecuteArgv } from 'koishi-core';
+import { escapeRegExp } from 'koishi-utils';
 import { Dialogue, parseTeachArgs } from './utils';
 import internal from './internal';
 import receiver from './receiver';
@@ -17,12 +18,6 @@ import successor from './plugins/successor';
 import time from './plugins/time';
 import writer from './plugins/writer';
 import database from './database';
-
-function escapeRegExp(source: string) {
-    return source
-        .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-        .replace(/-/g, '\\x2d');
-}
 
 export * from './database';
 export * from './utils';
