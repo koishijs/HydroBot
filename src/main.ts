@@ -3,6 +3,7 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import { App, Command } from 'koishi-core';
+import { Logger } from 'koishi-utils';
 import fs from 'fs-extra';
 import Koa from 'koa';
 import Router from 'koa-router';
@@ -42,7 +43,10 @@ export = class {
 
     app: App;
 
+    logger: Logger;
+
     constructor(item) {
+        this.logger = Logger.create('main');
         this.config = item.config;
         this.app = new App({
             type: 'cqhttp:ws',
@@ -64,7 +68,7 @@ export = class {
         this.app.on('connect', async () => {
             for (const admin of this.config.admin) {
                 this.app.database.getUser(admin, 5);
-                console.log(`Opped ${admin}`);
+                this.logger.info(`Opped ${admin}`);
             }
         });
         this.app.prependMiddleware(async (session, next) => {
@@ -89,7 +93,7 @@ export = class {
                     this.app.plugin(require(plugin[0]).apply, plugin[1]);
                 }
             } catch (e) {
-                console.error('Failed to load ', plugin, e);
+                this.logger.error('Failed to load ', plugin, e);
             }
         }
     }

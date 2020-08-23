@@ -252,7 +252,7 @@ export const apply = (app: App) => {
         const groupName = await getGroupName(session);
         const senderName = getSenderName(session);
         const message = await formatMessage(session);
-        logger.debug(`[${groupName}] ${senderName}: ${message}`);
+        logger.info(`[${groupName}] ${senderName}: ${message}`);
         if (!session.groupId) return;
         if (session.message === '>_.activate') {
             const user = await app.database.getUser(session.userId);
@@ -275,7 +275,7 @@ export const apply = (app: App) => {
 
     app.on('group-increase', async (session) => {
         const data = await session.$app.database.getGroup(session.groupId);
-        console.log('Event.Group_Increase', data);
+        logger.info('Event.Group_Increase', data);
         if (data.welcomeMsg) {
             await session.$send(data.welcomeMsg.replace(/%@/gmi, `[CQ:at,qq=${session.userId}`));
         }
@@ -301,6 +301,7 @@ export const apply = (app: App) => {
     });
 
     async function checkPerm() {
+        logger.info('正在检查权限');
         for (const bot of app.bots) {
             const groups = await bot.getGroupList();
             for (const group of groups) {

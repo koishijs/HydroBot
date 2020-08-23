@@ -58,7 +58,7 @@ extendDatabase<typeof MongoDatabase>('koishi-plugin-mongo', {
         const dialogues: Dialogue[] = (await this.db.collection('dialogue').find(query).toArray())
             .filter((dialogue) => !this.app.bail('dialogue/fetch', dialogue, test));
         dialogues.forEach((d) => defineProperty(d, '_backup', clone(d)));
-        if (!test.question && !test.regexp) return dialogues;
+        if (!test.question || !test.regexp) return dialogues;
         return dialogues.filter((value) => {
             if (value.flag & Dialogue.Flag.regexp) {
                 const regex = new RegExp(value.question);
