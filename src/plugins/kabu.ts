@@ -18,9 +18,17 @@ interface Stock {
     expire: Date,
 }
 
-const EXPIRE_DAYS = 7;
+interface Config {
+    expireDays: number,
+}
 
-export const apply = (app: App) => {
+const defaultConfig = {
+    expireDays: 7,
+};
+
+export const apply = (app: App, config: Config) => {
+    config = { ...defaultConfig, ...config };
+
     app.on('connect', () => {
         const priceColl: Collection<Price> = app.database.db.collection('kabu.price');
         priceColl.createIndex('expire', { expireAfterSeconds: 0 });
@@ -75,24 +83,23 @@ export const apply = (app: App) => {
             .action(async ({ session }, arg) => {
                 const price = await priceToday(session);
                 if (!session.$user.coin) session.$user.coin = 0;
-                if (!Number.isSafeInteger(session.$user.coin)) return '你已经有非常多硬币了，不需要购买大头菜了！';
-                const maxNumber = Math.floor(price / session.$user.coin);
+                const maxNumber = Math.floor(session.$user.coin / price);
                 const number = +(arg ?? maxNumber);
                 if (!Number.isInteger(number) || number <= 0 || number > maxNumber) {
                     return `购买数量需要是 1~${maxNumber} 之间的正整数。`;
                 }
-                const expire = new Date();
-                expire.setDate(expire.getDate() + EXPIRE_DAYS);
+                const expire = moment();
+                expire.add(config.expireDays, 'days');
                 await stockColl.insertOne({
                     _id: new ObjectID(),
                     userId: session.userId,
                     number,
                     buyPrice: price,
-                    expire,
+                    expire: expire.toDate(),
                 });
                 session.$user.coin -= price * number;
                 return `你花了 ${price * number} 个硬币以 ${price} 每棵的价格购买了 ${number} 棵大头菜。
-要是你没有在 ${EXPIRE_DAYS} 天内把大头菜卖掉，它们就会全部烂掉，害你大亏本！一定要注意这一点喔。`;
+要是你没有在 ${config.expireDays} 天内把大头菜卖掉，它们就会全部烂掉，害你大亏本！一定要注意这一点喔。`;
             });
 
         app.command('kabu.sell [number]', '卖出最早购买（最先烂掉）的大头菜。若不指定数量则全部卖出。')
@@ -119,8 +126,6 @@ export const apply = (app: App) => {
                 const price = await priceToday(session);
                 if (!session.$user.coin) session.$user.coin = 0;
                 const gain = sum * price;
-                if (!Number.isSafeInteger(gain)) return '你卖出的大头菜数量太多了！';
-                if (!Number.isSafeInteger(session.$user.coin + gain)) return '你已经有非常多硬币了，不需要卖出大头菜了！';
                 session.$user.coin += gain;
                 await Promise.all([
                     stockColl.deleteMany({ _id: { $in: deleteIds } }),
