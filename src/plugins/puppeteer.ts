@@ -17,7 +17,7 @@ export const defaultConfig: Config = {
 
 const allowedProtocols = ['http', 'https'];
 
-const logger = Logger.create('puppeteer');
+const logger = new Logger('puppeteer');
 
 export function apply(app: App, config: Config) {
     config = { ...defaultConfig, ...config };

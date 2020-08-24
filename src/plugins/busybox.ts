@@ -86,7 +86,7 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
 const checkEnv = (session: Session) => (session._redirected ? '不支持在插值中调用该命令。' : false);
 
 export const apply = (app: App) => {
-    const logger = Logger.create('busybox', true);
+    const logger = new Logger('busybox', true);
     Logger.levels.message = 3;
 
     app.command('help', { authority: 1, hidden: true });

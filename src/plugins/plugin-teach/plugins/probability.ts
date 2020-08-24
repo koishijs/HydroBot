@@ -21,7 +21,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         .option('probabilityStrict', '-p <prob>  设置问题的触发权重', { validate: isZeroToOne })
         .option('probabilityAppellative', '-P <prob>  设置被称呼时问题的触发权重', { validate: isZeroToOne });
 
-    ctx.before('dialogue/modify', ({ options, target, appellative }, data) => {
+    ctx.on('dialogue/modify', ({ options, target, appellative }, data) => {
         if (!target && appellative) {
             data.probS = options.probabilityStrict ?? 0;
             data.probA = options.probabilityAppellative ?? 1;
@@ -39,7 +39,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         state.activated = {};
     });
 
-    ctx.before('dialogue/prepare', ({
+    ctx.on('dialogue/prepare', ({
         test, userId, dialogues, activated,
     }) => {
         const hasNormal = dialogues.some((d) => !(d.flag & Dialogue.Flag.regexp));

@@ -41,7 +41,7 @@ export default function apply(ctx: Context) {
         .option('target', '<ids>  查看或修改已有问题', { type: 'string', validate: RE_DIALOGUES })
         .option('remove', '-r  彻底删除问答', { authority: 2 });
 
-    ctx.before('dialogue/execute', (argv) => {
+    ctx.on('dialogue/execute', (argv) => {
         const { remove, revert, target } = argv.options;
         if (!target) return;
         argv.target = deduplicate(split(target));
@@ -54,7 +54,7 @@ export default function apply(ctx: Context) {
         }
     });
 
-    ctx.before('dialogue/execute', (argv) => {
+    ctx.on('dialogue/execute', (argv) => {
         const { options, session } = argv;
         const { includeLast, excludeLast } = options;
         if (!options.review && !options.revert) return;

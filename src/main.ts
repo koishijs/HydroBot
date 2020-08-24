@@ -46,7 +46,7 @@ export = class {
     logger: Logger;
 
     constructor(item) {
-        this.logger = Logger.create('main');
+        this.logger = new Logger('main');
         this.config = item.config;
         this.app = new App({
             type: 'cqhttp:ws',
