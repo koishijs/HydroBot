@@ -142,7 +142,7 @@ export const apply = (app: App, config: any) => {
                         resp = `${body.sender.login} ${body.action} Issue:${body.repository.full_name}#${body.issue.number}`;
                     } else if (body.action === 'labled') {
                         resp = `${body.sender.login} labled ${body.repository.full_name}#${body.issue.number} ${body.lable.name}`;
-                    } else resp = `Unknwon issue action: ${body.action}`;
+                    } else resp = `Unknown issue action: ${body.action}`;
                     return [
                         resp,
                         {
@@ -220,7 +220,7 @@ export const apply = (app: App, config: any) => {
                         resp = '';
                     } else if (body.action === 'ready_for_review') {
                         resp = `${body.repository.full_name}#${body.pull_request.number} is ready for review.`;
-                    } else resp = `Unknwon pull request action: ${body.action}`;
+                    } else resp = `Unknown pull request action: ${body.action}`;
                     return [
                         resp,
                         {
@@ -243,7 +243,7 @@ export const apply = (app: App, config: any) => {
                             .set('User-Agent', 'HydroBot')
                             .send({ commit_title: commitMsg });
                     } else {
-                        await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/comments`)
+                        await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
                             .set('Authorization', `token ${token}`)
                             .send({ body: message });
                     }
@@ -278,7 +278,7 @@ export const apply = (app: App, config: any) => {
                 async interact(message, session, event, getToken) {
                     if (message.includes('!!link')) return [event.link];
                     const token = await getToken();
-                    await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/comments`)
+                    await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
                         .set('Authorization', `token ${token}`)
                         .send({ body: message });
                     return [];
@@ -451,8 +451,8 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
 
         app.command('github.list', 'List repos')
             .action(async ({ session }) => {
-                const docs = await coll.find({ target: { $elemMatch: { $eq: get(session) } } }).toArray();
-                return docs.map((doc) => doc._id).join('\n');
+                const repos = await coll.find({ target: get(session) }).project({ _id: 1 }).toArray();
+                return repos.map((doc) => doc._id).join('\n');
             });
 
         app.command('github.cancel <repo>', '取消一个Repository的事件')
@@ -464,6 +464,4 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
                 return `Cancelled ${repo}.`;
             });
     });
-
-    app.command('github', 'Github').action(() => 'Use github -h for help.');
 };
