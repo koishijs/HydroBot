@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import child from 'child_process';
+import { inspect } from 'util';
 import {
     App, Group, getTargetId, Session, User,
 } from 'koishi-core';
@@ -34,7 +35,6 @@ async function getGroupName(session: Session) {
 }
 
 function getSenderName({ anonymous, sender, userId }: Session) {
-    // eslint-disable-next-line no-return-assign
     return anonymous ? anonymous.name : (userMap[userId] = [sender.nickname, Date.now()])[0];
 }
 
@@ -56,7 +56,6 @@ async function formatMessage(session: Session) {
                         .then((d) => d.nickname, () => `${id}`);
                     userMap[id] = [promise, timestamp];
                 }
-                // eslint-disable-next-line no-await-in-loop
                 output += `@${await userMap[id][0]}`;
             }
         } else if (code.type === 'face') {
@@ -94,16 +93,35 @@ export const apply = (app: App) => {
     app.command('tex', { authority: 1 });
     app.command('_', '管理工具');
 
-    app.command('_.eval <expression...>', { authority: 5 })
+    app.command('_.eval <expr...>', { authority: 5 })
         .before(checkEnv)
-        .action(async ({ session }, args) => {
-            // eslint-disable-next-line no-eval
-            let res = eval(args);
-            if (res instanceof Promise) res = await res;
-            if (typeof res === 'string' || res instanceof Array) return await session.$send(res.toString());
-            if (typeof res === 'undefined') return session.$send('undefined');
-            if (res instanceof Object) return session.$send(JSON.stringify(res));
-            return session.$send(res.toString());
+        .action(async (_, args) => {
+            let res: any;
+            try {
+                // eslint-disable-next-line no-eval
+                eval(args);
+            } catch (e) {
+                res = e;
+            }
+            if (res instanceof Promise) {
+                try {
+                    res = await res;
+                } catch (e) {
+                    res = e;
+                }
+            }
+            if (typeof res === 'string' || res instanceof String) return res.toString();
+            if (typeof res === 'undefined') return 'undefined';
+            if (res instanceof Object) {
+                let result: string;
+                try {
+                    result = JSON.stringify(res, null, 1);
+                } catch {
+                    result = inspect(result, false, 3);
+                }
+                return result;
+            }
+            return res.toString ? res.toString() : res;
         });
 
     app.command('_.sh <command...>', '执行shell命令', { authority: 5 })
@@ -124,13 +142,13 @@ export const apply = (app: App) => {
             return `[CQ:image,file=base64://${img}]`;
         });
 
-    app.command('_.shutdown', '关闭机器人', { authority: 5 })
+    app.command('_.shutdown [exitCode]', '关闭机器人', { authority: 5 })
         .before(checkEnv)
-        .action(() => {
+        .action((_, exitCode) => {
             setTimeout(() => {
                 child.exec('pm2 stop robot');
                 setTimeout(() => {
-                    global.process.exit();
+                    global.process.exit(parseInt(exitCode, 10) || 0);
                 }, 1000);
             }, 3000);
             return 'Exiting in 3 secs...';
@@ -153,7 +171,7 @@ export const apply = (app: App) => {
 
     app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5 })
         .before(checkEnv)
-        .action(async ({ session }, userId: string, authority: string) => {
+        .action(async ({ session }, userId, authority) => {
             if (authority === 'null') {
                 await app.database.setUser(getTargetId(userId), { flag: 1 });
                 authority = '0';
@@ -327,7 +345,7 @@ export const apply = (app: App) => {
 
     app.on('group-increase', async (session) => {
         const data = await session.$app.database.getGroup(session.groupId);
-        logger.info('Event.Group_Increase', data);
+        logger.info('Event.Group_Increase', session, data);
         if (data.welcomeMsg) {
             await session.$send(data.welcomeMsg.replace(/%@/gmi, `[CQ:at,qq=${session.userId}`));
         }
@@ -335,7 +353,9 @@ export const apply = (app: App) => {
 
     app.on('group-decrease', async (session) => {
         const udoc = await app.database.getUser(session.userId);
+        logger.info('Event.Group_Decrease', session, udoc);
         if (udoc?.authority === 5) {
+            logger.info('已退出 %d(%s)：无授权者', session.groupId);
             session.$send('未检测到有效的授权。即将自动退出。');
             setTimeout(() => {
                 session.$bot.setGroupLeave(session.groupId);
@@ -355,8 +375,10 @@ export const apply = (app: App) => {
     app.on('request/group/invite', async (session) => {
         const udoc = await app.database.getUser(session.userId);
         if (udoc?.authority === 5) {
+            logger.info('Approve Invite Request', session, udoc);
             session.$bot.setGroupAddRequest('Approved', session.subType, true);
         } else {
+            logger.info('Denied Invite Request', session, udoc);
             session.$bot.setGroupAddRequest('Please contact admin.', session.subType, false);
         }
     });
