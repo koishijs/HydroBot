@@ -102,7 +102,7 @@ ${stockList}`;
             .userFields(['coin'])
             .action(async ({ session }, arg) => {
                 const sellNumber = +(arg ?? Infinity);
-                if (!Number.isInteger(sellNumber) || sellNumber <= 0) return '卖出的数量需要是一个正整数';
+                if (sellNumber !== Infinity && (!Number.isInteger(sellNumber) || sellNumber <= 0)) return '卖出的数量需要是一个正整数';
                 const res = await stockColl.find({ userId: session.userId }).sort('expire', 1).toArray();
                 let sum = 0;
                 let update = null;
