@@ -112,7 +112,7 @@ ${stockList}`;
                         sum += item.number;
                         deleteIds.push(item._id);
                     } else if (sum < sellNumber) {
-                        update = { _id: item._id, newNumber: item.number - sellNumber - sum };
+                        update = { _id: item._id, newNumber: item.number - (sellNumber - sum) };
                         sum = sellNumber;
                         break;
                     }
