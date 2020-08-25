@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "debug": "node --async-stack-traces --enable-source-maps --experimental-vm-modules --expose-gc --inspect --trace-deprecation --trace-warnings bin/robot.js",
+    "debug": "node dist/hack && node --async-stack-traces --enable-source-maps --experimental-vm-modules --expose-gc --inspect --trace-deprecation --trace-warnings bin/robot.js",
     "lint": "eslint bin src --ext ts,js --fix"
   },
   "repository": {

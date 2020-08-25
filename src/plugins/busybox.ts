@@ -142,25 +142,24 @@ export const apply = (app: App) => {
             return `[CQ:image,file=base64://${img}]`;
         });
 
-    app.command('_.shutdown [exitCode]', '关闭机器人', { authority: 5 })
+    app.command('_.shutdown', '关闭机器人', { authority: 5 })
         .before(checkEnv)
-        .action((_, exitCode) => {
+        .action(() => {
             setTimeout(() => {
-                child.exec('pm2 stop robot');
-                setTimeout(() => {
-                    global.process.exit(parseInt(exitCode, 10) || 0);
-                }, 1000);
+                if (process.env.pm_id) child.exec(`pm2 stop ${process.env.pm_id}`);
+                else process.exit(0);
             }, 3000);
             return 'Exiting in 3 secs...';
         });
 
     app.command('_.restart', '重启机器人', { authority: 5 })
         .before(checkEnv)
-        .action(({ session }) => {
+        .action(() => {
+            if (!process.env.pm_id) return 'Cannot restart: not pm2 environment';
             setTimeout(() => {
-                child.exec('pm2 restart robot');
+                child.exec(`pm2 restart ${process.env.pm_id}`);
             }, 3000);
-            return session.$send('Restarting in 3 secs...');
+            return 'Restarting in 3 secs...';
         });
 
     app.command('_.leave', '退出该群')
