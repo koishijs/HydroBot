@@ -148,9 +148,9 @@ export function sendResult(argv: Dialogue.Argv, prefix?: string, suffix?: string
     return session.$send(output.join('\n'));
 }
 
-export function split(source: string) {
+export function split(source: string | number) {
     if (!source) return [];
-    return source.split(',').flatMap((value) => {
+    return source.toString().split(',').flatMap((value) => {
         if (!value.includes('..')) return +value;
         const capture = value.split('..');
         const start = +capture[0]; const
