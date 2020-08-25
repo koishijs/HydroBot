@@ -25,8 +25,8 @@ export const apply = (app: App) => {
                 : udoc.ccfLevel;
             return `${udoc.name}
 关注: ${udoc.followingCount}
-粉丝: ${udoc.followerCount}
-ACs/Submits: ${udoc.passedProblemCount}/${udoc.submittedProblemCount}
+粉丝: ${udoc.followerCount}${udoc.passedProblemCount ? `
+ACs/Submits: ${udoc.passedProblemCount}/${udoc.submittedProblemCount}` : ''}
 颜色: ${udoc.color}
 CCF评级:${level}`;
         });

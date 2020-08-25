@@ -32,7 +32,7 @@ export function apply(app: App, config: Config) {
             let url = message.trim();
             if (!url) return '请输入网址。';
             const t = options.viewport.split('x');
-            if (t.length !== 2) return session.$send('Invalid vieport');
+            if (t.length !== 2) return 'Invalid viewport';
             const scheme = /^(\w+):\/\//.exec(url);
             if (!scheme) url = `http://${url}`;
             else if (!allowedProtocols.includes(scheme[1])) return '请输入正确的网址。';

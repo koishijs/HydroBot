@@ -69,7 +69,7 @@ export const apply = (app: App, config: Config) => {
                 let sum = 0;
                 for (const { number, buyPrice, expire } of res) {
                     sum += number;
-                    text += `你有 ${number} 棵以 ${buyPrice} 个硬币每棵买入的大头菜，它们会在 ${moment(expire).toNow()} 烂掉。\n`;
+                    text += `你有 ${number} 棵以 ${buyPrice} 个硬币每棵买入的大头菜，它们会在 ${moment(expire).toNow().replace('前', '后')} 烂掉。\n`;
                 }
                 if (count > res.length) text += `隐藏了 ${count - res.length} 个条目。`;
                 if (!session.$user.coin) session.$user.coin = 0;

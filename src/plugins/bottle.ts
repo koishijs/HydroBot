@@ -46,5 +46,5 @@ export const apply = (app: App) => {
             });
     });
 
-    app.command('bottle', '漂流瓶').action(() => 'Use bottle -h for help.');
+    app.command('bottle', '漂流瓶');
 };

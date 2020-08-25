@@ -186,7 +186,7 @@ export const apply = (app: App) => {
 
     app.command('_.boardcast <message...>', '全服广播', { authority: 5 })
         .before(checkEnv)
-        .option('forced', '-f 无视 silent 标签进行广播', { value: false })
+        .option('forced', '-f 无视 silent 标签进行广播')
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
             let groups = await app.database.getAllGroups(['id', 'flag'], [session.selfId]);
@@ -304,7 +304,6 @@ export const apply = (app: App) => {
         .userFields(['authority'])
         .before(checkGroupAdmin)
         .before(checkEnv)
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
 
@@ -354,13 +353,7 @@ export const apply = (app: App) => {
     app.on('group-decrease', async (session) => {
         const udoc = await app.database.getUser(session.userId);
         logger.info('Event.Group_Decrease', session, udoc);
-        if (udoc?.authority === 5) {
-            logger.info('已退出 %d(%s)：无授权者', session.groupId);
-            session.$send('未检测到有效的授权。即将自动退出。');
-            setTimeout(() => {
-                session.$bot.setGroupLeave(session.groupId);
-            }, 5000);
-        }
+        session.$send(`${session.$username} (${session.userId}) 退出了群聊。`);
     });
 
     app.on('before-command', (argv) => {

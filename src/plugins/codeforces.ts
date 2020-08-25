@@ -11,7 +11,7 @@ export function apply(app: App) {
             if (!res) return 'CF 挂了！';
             if (res.body.status === 'FAILED') return '没这个人!';
             const result = res.body.result[0];
-            return `${result.handle} ${result.firstName} ${result.lastName} ${result.organization}
+            return `${result.handle} ${result.firstName || ''} ${result.lastName || ''} ${result.organization || ''}
 [CQ:image,file=https:${result.avatar}]
 Rating: ${result.rating}
 Rank: ${result.rank}
