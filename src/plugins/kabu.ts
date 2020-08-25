@@ -49,14 +49,7 @@ export const apply = (app: App, config: Config) => {
             return price;
         }
 
-        app.command('kabu.price', '查询今日大头菜价格')
-            .shortcut('今日大头菜价格', { prefix: false })
-            .action(async ({ session }) => {
-                const price = await priceToday(session);
-                return `现在的大头菜价格是每棵 ${price} 硬币！`;
-            });
-
-        app.command('kabu.query', '查询自己手上还没烂掉的大头菜')
+        app.command('kabu.query', '查询自己的库存以及今日大头菜价格')
             .shortcut('查询大头菜', { prefix: false })
             .userFields(['coin'])
             .action(async ({ session }) => {
@@ -64,17 +57,19 @@ export const apply = (app: App, config: Config) => {
                     stockColl.find({ userId: session.userId }).sort('expire', 1).limit(10).toArray(),
                     stockColl.find({ userId: session.userId }).count(),
                 ]);
-                if (res.length === 0) return '你现在手上还没有大头菜，要来买点吗？';
-                let text = '';
+                let stockList = '';
                 let sum = 0;
                 for (const { number, buyPrice, expire } of res) {
                     sum += number;
-                    text += `你有 ${number} 棵以 ${buyPrice} 个硬币每棵买入的大头菜，它们会在 ${moment(expire).toNow().replace('前', '后')} 烂掉。\n`;
+                    stockList += `你有 ${number} 棵以 ${buyPrice} 个硬币每棵买入的大头菜，它们会在 ${moment(expire).fromNow()} 烂掉。\n`;
                 }
-                if (count > res.length) text += `隐藏了 ${count - res.length} 个条目。`;
+                if (count === 0) stockList = '你现在手上还没有大头菜，要来买点吗？';
+                else if (count > res.length) stockList += `隐藏了 ${count - res.length} 个条目。`;
                 if (!session.$user.coin) session.$user.coin = 0;
-                text = `你现在共有 ${sum} 棵大头菜和 ${session.$user.coin} 个硬币。\n${text}`;
-                return text;
+                const price = await priceToday(session);
+                return `你现在共有 ${sum} 棵大头菜和 ${session.$user.coin} 个硬币。
+今天卖给 ${session.$username} 的大头菜价格是每棵 ${price} 硬币。
+${stockList}`;
             });
 
         app.command('kabu.buy [number]', '购买大头菜。若不指定数量则尽量多地购买。')
@@ -128,7 +123,7 @@ export const apply = (app: App, config: Config) => {
                 const gain = sum * price;
                 session.$user.coin += gain;
                 if (deleteIds.length) await stockColl.deleteMany({ _id: { $in: deleteIds } });
-                if (update) await stockColl.updateOne(update._id, { $set: { number: update.newNumber } });
+                if (update) await stockColl.updateOne({ _id: update._id }, { $set: { number: update.newNumber } });
                 return `你已成功卖出 ${sum} 棵大头菜，获得了 ${gain} 个硬币！`;
             });
     });
