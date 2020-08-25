@@ -108,7 +108,7 @@ export const apply = (app: App, config: Config) => {
             .action(async ({ session }, arg) => {
                 const sellNumber = +(arg ?? Infinity);
                 if (!Number.isInteger(sellNumber) || sellNumber <= 0) return '卖出的数量需要是一个正整数';
-                const res = await stockColl.find({ userId: session.userId }).sort({ expire: 1 }).toArray();
+                const res = await stockColl.find({ userId: session.userId }).sort('expire', 1).toArray();
                 let sum = 0;
                 let update = null;
                 const deleteIds = [];
@@ -127,10 +127,8 @@ export const apply = (app: App, config: Config) => {
                 if (!session.$user.coin) session.$user.coin = 0;
                 const gain = sum * price;
                 session.$user.coin += gain;
-                await Promise.all([
-                    stockColl.deleteMany({ _id: { $in: deleteIds } }),
-                    stockColl.updateOne(update._id, { $set: { number: update.newNumber } }),
-                ]);
+                if (deleteIds.length) await stockColl.deleteMany({ _id: { $in: deleteIds } });
+                if (update) await stockColl.updateOne(update._id, { $set: { number: update.newNumber } });
                 return `你已成功卖出 ${sum} 棵大头菜，获得了 ${gain} 个硬币！`;
             });
     });
