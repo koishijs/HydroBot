@@ -60,7 +60,7 @@ function beautifyContent(content: string) {
         const result = rule.regex.exec(content);
         if (result) return rule.process(result, content);
     }
-    return content.replace(/(\r?\n *)*/gmi, '\n');
+    return content.replace(/(\r?\n *)+/gmi, '\n');
 }
 
 // IsGroup? group/userId assignee
