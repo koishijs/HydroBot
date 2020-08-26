@@ -20,27 +20,13 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-plugin-mongo', 1,
+        'koishi-plugin-mongo', 2,
         [
-            'replace', `if ($set.timers) {
-            for (const key in $set.timers) {
-                if (key === '$date')
-                    $set['timers._date'] = $set.timers.$date;
-                else
-                    $set[\`timers.\${key.replace(/\\./gmi, '_')}\`] = $set.timers[key];
-            }
-        }
-        if ($set.usage) {
-            for (const key in $set.usage) {
-                if (key === '$date')
-                    $set['usage._date'] = $set.usage.$date;
-                else
-                    $set[\`usage.\${key.replace(/\\./gmi, '_')}\`] = $set.usage[key];
-            }
-        }
-        delete $set.timers;
-        delete $set.usage;
-            `, `\
+            'replaceBetween',
+            'async setUser(userId, data) {',
+            'async getGroup(groupId, ...args) {',
+            `\
+        const $set = { ...data };
         delete $set.timers;
         delete $set.usage;
         if (data.timers) {
@@ -56,7 +42,9 @@ const tasks: [string, number, ...string[][]][] = [
                 if (key === '$date') $set.usage._date = data.usage.$date;
                 else $set.usage[key.replace(/\\./gmi, '_')] = data.usage[key];
             }
-        }`,
+        }
+        await this.user.updateOne({ _id: userId }, { $set }, { upsert: true });
+    },`,
         ],
     ],
 ];
@@ -69,9 +57,13 @@ async function hack() {
         const first = content.split('\n')[0];
         const ver = parseInt(first.split('// Hacked v')[1], 10);
         if (ver >= version) continue;
-        for (const [type, arg0, arg1] of changes) {
+        for (const [type, arg0, arg1, arg2] of changes) {
             if (type === 'replace') {
                 content = content.replace(arg0, arg1);
+            } else if (type === 'replaceBetween') {
+                const [before, mid] = content.split(arg0);
+                const [, after] = mid.split(arg1);
+                content = before + arg0 + arg2 + arg1 + after;
             } else if (type === 'append') {
                 content = content.replace(arg0, arg0 + arg1);
             } else if (type === 'remove') {
