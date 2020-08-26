@@ -360,7 +360,7 @@ export const apply = (app: App) => {
     app.on('group-decrease', async (session) => {
         const udoc = await app.database.getUser(session.userId);
         logger.info('Event.Group_Decrease', session, udoc);
-        session.$send(`${session.$username} (${session.userId}) 退出了群聊。`);
+        session.$send(`${session.$username} 退出了群聊。`);
     });
 
     app.on('before-command', ({ session, command }) => {
@@ -369,6 +369,12 @@ export const apply = (app: App) => {
         const cost = command.getConfig('cost', session);
         // @ts-ignore
         if (session.$user.coin < cost) return '你没有足够的硬币执行该命令。';
+    });
+
+    app.on('command', ({ session, command }) => {
+        const cost = command.getConfig('cost', session);
+        // @ts-ignore
+        if (cost) session.$user.coin -= cost;
     });
 
     app.on('before-attach-group', (session, fields) => {

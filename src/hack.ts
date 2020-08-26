@@ -13,13 +13,6 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-core/dist/command', 2,
-        [
-            'append', "await this.app.serial(session, 'command', argv);",
-            "if (this.getConfig('cost')) session.$user.coin -= this.getConfig('cost');",
-        ],
-    ],
-    [
         'koishi-plugin-mongo', 2,
         [
             'replaceBetween',

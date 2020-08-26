@@ -1,6 +1,6 @@
 /* eslint-disable global-require */
 import path from 'path';
-import axios from 'axios';
+import superagent from 'superagent';
 import { writeFile } from 'fs-extra';
 import { App } from 'koishi-core';
 
@@ -32,16 +32,16 @@ async function _card({ session }, id) {
     if (!url) return await session.$send('请输入要查看的Card ID/Name');
     if (!Object.keys(db).length) {
         // Load CN
-        const res = await axios.get('https://api.hearthstonejson.com/v1/53261/zhCN/cards.collectible.json');
-        await writeFile(path.resolve(__dirname, '..', '..', '.cache', 'hs_card_zhCN.json'), JSON.stringify(res.data));
-        for (const card of res.data) {
+        const res = await superagent.get('https://api.hearthstonejson.com/v1/53261/zhCN/cards.collectible.json');
+        await writeFile(path.resolve(__dirname, '..', '..', '.cache', 'hs_card_zhCN.json'), JSON.stringify(res.body));
+        for (const card of res.body) {
             db[card.id] = card.id;
             db[card.name] = card.id;
         }
         // Load EN
-        const re = await axios.get('https://api.hearthstonejson.com/v1/53261/enUS/cards.collectible.json');
-        await writeFile(path.resolve(__dirname, '..', '..', '.cache', 'hs_card_enUS.json'), JSON.stringify(re.data));
-        for (const card of re.data) {
+        const re = await superagent.get('https://api.hearthstonejson.com/v1/53261/enUS/cards.collectible.json');
+        await writeFile(path.resolve(__dirname, '..', '..', '.cache', 'hs_card_enUS.json'), JSON.stringify(re.body));
+        for (const card of re.body) {
             db[card.name] = card.id;
         }
     }
