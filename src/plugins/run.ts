@@ -48,18 +48,6 @@ const LANGS = {
         code_file: 'foo.php',
         execute: ['/usr/bin/php', 'foo.php'],
     },
-    rs: {
-        type: 'compiler',
-        compile: ['/usr/bin/rustc', '-O', '-o', '/w/foo', '/w/foo.rs'],
-        code_file: 'foo.rs',
-        execute: ['/w/foo'],
-    },
-    hs: {
-        type: 'compiler',
-        compile: ['/usr/bin/ghc', '-O', '-outputdir', '/tmp', '-o', 'foo', 'foo.hs'],
-        code_file: 'foo.hs',
-        execute: ['/w/foo'],
-    },
     js: {
         type: 'interpreter',
         code_file: 'foo.js',
@@ -70,11 +58,6 @@ const LANGS = {
         compile: ['/usr/bin/go', 'build', '-o', 'foo', 'foo.go'],
         code_file: 'foo.go',
         execute: ['/w/foo'],
-    },
-    rb: {
-        type: 'interpreter',
-        code_file: 'foo.rb',
-        execute: ['/usr/bin/ruby', 'foo.rb'],
     },
     sh: {
         type: 'interpreter',
@@ -148,7 +131,7 @@ async function _run(code: string, lang: string, input: string) {
         return {
             status: 'SystemError',
             stdout: '不支持的语言',
-            stderr: '目前支持sh,c,cc,pas,py2,py3,js,cs,hs,rs,rb,go,php,java',
+            stderr: '目前支持sh,c,cc,pas,py2,py3,js,cs,go,php,java',
         };
     }
     copyIn[info.code_file] = { content: code };

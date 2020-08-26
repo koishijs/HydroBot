@@ -5,7 +5,6 @@
     "logmode": "msg_only",
     "api_port": 6701,
     "enabledplugins": [
-        "./plugins/anime",
         "./plugins/jrrp",
         "./plugins/hearthstone",
         "./plugins/puppeteer",
@@ -25,7 +24,6 @@
         "./plugins/repeater",
         "./plugins/rss",
         "./plugins/luogu",
-        "koishi-plugin-image-search",
         [
             "koishi-plugin-eval",
             {
@@ -37,9 +35,14 @@
                 }
             }
         ],
+        [
+            "koishi-plugin-eval-addons",
+            {
+                "moduleRoot": "/root/addons"
+            }
+        ],
         "./plugins/oier",
         "./plugins/httpcat",
-        "./plugins/about",
         "./plugins/codeforces",
         "./plugins/tools",
         "./plugins/bottle"
