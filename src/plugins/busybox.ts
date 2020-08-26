@@ -13,6 +13,13 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
+declare module 'koishi-core/dist/command' {
+    interface CommandConfig {
+        /** Cost */
+        cost?: number;
+    }
+}
+
 Group.extend(() => ({
     disallowedCommands: [],
 }));
@@ -91,6 +98,7 @@ export const apply = (app: App) => {
 
     app.command('help', { authority: 1, hidden: true });
     app.command('tex', { authority: 1 });
+    app.command('eval', { authority: 1 });
     app.command('_', '管理工具');
 
     app.command('_.eval <expr...>', { authority: 5 })
@@ -310,7 +318,7 @@ export const apply = (app: App) => {
         .shortcut('签到', { prefix: true })
         .userFields(['coin'])
         .action(async ({ session }) => {
-            const add = Math.floor(Math.random() * 10);
+            const add = 20 + Math.floor(Math.random() * 10);
             if (!session.$user.coin) session.$user.coin = 0;
             session.$user.coin += add;
             return `签到成功，获得${add}个硬币（共有${session.$user.coin}个）`;
@@ -355,13 +363,20 @@ export const apply = (app: App) => {
         session.$send(`${session.$username} (${session.userId}) 退出了群聊。`);
     });
 
-    app.on('before-command', (argv) => {
+    app.on('before-command', ({ session, command }) => {
         // @ts-ignore
-        if ((argv.session.$group.disallowedCommands || []).includes(argv.command.name)) return '';
+        if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
+        const cost = command.getConfig('cost', session);
+        // @ts-ignore
+        if (session.$user.coin < cost) return '你没有足够的硬币执行该命令。';
     });
 
     app.on('before-attach-group', (session, fields) => {
         fields.add('disallowedCommands');
+    });
+
+    app.on('before-attach-user', (session, fields) => {
+        fields.add('coin');
     });
 
     app.on('request/group/invite', async (session) => {
