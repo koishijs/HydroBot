@@ -98,7 +98,7 @@ export const apply = (app: App) => {
 
     app.command('help', { authority: 1, hidden: true });
     app.command('tex', { authority: 1 });
-    app.command('eval', { authority: 1 });
+    app.command('evaluate', { authority: 1 });
     app.command('_', '管理工具');
 
     app.command('_.eval <expr...>', { authority: 5 })

@@ -13,6 +13,14 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
+        'koishi-core/dist/plugins/help', 2,
+        [
+            'append',
+            "output += '  ' + config.description;",
+            "if (config.cost) output += ' 花费：' + config.cost;",
+        ],
+    ],
+    [
         'koishi-plugin-mongo', 2,
         [
             'replaceBetween',
