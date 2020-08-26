@@ -46,8 +46,12 @@ const rules: BeautifyRule[] = [
     {
         // Codecov
         // eslint-disable-next-line max-len
-        regex: /^# \[Codecov\][\s\S]*Merging [\s\S] will (.*)\n> The diff coverage is `(.*)`.\n\n\[!\[Impacted file tree graph\]\((.*)\)\]\((.*)\)/gmi,
+        regex: /^# \[Codecov\][^\n]+\n> Merging [\s\S]+ will (.*)\n> The diff coverage is `(.*)`.\n\n\[!\[Impacted file tree graph\]\((.*)\)\]\((.*)\)/gmi,
         process: (result) => `Merging will ${result[1].replace(/\*\*/gmi, '')}\nThe diff coverage is ${result[3]}\n${result[5]}`,
+    },
+    {
+        regex: /\[ImgBot\] Optimize images (#[0-9]+)\n*([\s\S]+)\nSigned-off-by/gmi,
+        process: (result) => `[ImgBot]\n${result[2]}`,
     },
 ];
 
@@ -56,7 +60,7 @@ function beautifyContent(content: string) {
         const result = rule.regex.exec(content);
         if (result) return rule.process(result, content);
     }
-    return content;
+    return content.replace(/(\r?\n *)*/gmi, '\n');
 }
 
 // IsGroup? group/userId assignee

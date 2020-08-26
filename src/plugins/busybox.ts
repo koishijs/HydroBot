@@ -349,6 +349,11 @@ export const apply = (app: App) => {
         }
     });
 
+    app.on('group-ban', (session) => {
+        // TODO handle auto-leave?
+        if (session.userId === session.selfId) console.log(session);
+    });
+
     app.on('group-increase', async (session) => {
         const data = await session.$app.database.getGroup(session.groupId);
         logger.info('Event.Group_Increase', session, data);
