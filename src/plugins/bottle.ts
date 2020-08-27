@@ -13,8 +13,7 @@ export const apply = (app: App) => {
     app.on('connect', async () => {
         const coll: Collection<Bottle> = app.database.db.collection('bottle');
 
-        app.command('bottle.throw <content...>', 'Throw a bottle', { cost: 1 })
-            .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
+        app.command('bottle.throw <content...>', 'Throw a bottle', { cost: 1, noRedirect: true })
             .action(async ({ session }, content) => {
                 const res = await coll.insertOne({
                     isFromGroup: !!session.groupId,

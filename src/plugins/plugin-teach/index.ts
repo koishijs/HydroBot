@@ -151,9 +151,8 @@ export function apply(ctx: Context, config: Dialogue.Config = {}) {
     registerPrefix(ctx, config.prefix);
 
     ctx.command('teach', '添加教学对话', {
-        authority: 1, checkUnknown: true, hideOptions: true, hidden: true,
+        authority: 1, checkUnknown: true, hideOptions: true, hidden: true, noRedirect: true,
     })
-        .before((session) => (session._redirected ? '不支持在插值中调用该命令。' : false))
         .userFields(['authority', 'id'])
         .usage(({ $user }) => cheatSheet(config.prefix, $user.authority))
         .action(async ({ options, session, args }) => {

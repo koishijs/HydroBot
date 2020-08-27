@@ -15,8 +15,8 @@ declare module 'koishi-core/dist/database' {
 
 declare module 'koishi-core/dist/command' {
     interface CommandConfig {
-        /** Cost */
-        cost?: number;
+        cost?: number,
+        noRedirect?: boolean,
     }
 }
 
@@ -90,7 +90,6 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
         ? false
         : '仅管理员可执行该操作。'
 );
-const checkEnv = (session: Session) => (session._redirected ? '不支持在插值中调用该命令。' : false);
 
 export const apply = (app: App) => {
     const logger = new Logger('busybox', true);
@@ -101,8 +100,7 @@ export const apply = (app: App) => {
     app.command('evaluate', { authority: 1 });
     app.command('_', '管理工具');
 
-    app.command('_.eval <expr...>', { authority: 5 })
-        .before(checkEnv)
+    app.command('_.eval <expr...>', { authority: 5, noRedirect: true })
         .action(async (_, args) => {
             let res: any;
             try {
@@ -132,8 +130,7 @@ export const apply = (app: App) => {
             return res.toString ? res.toString() : res;
         });
 
-    app.command('_.sh <command...>', '执行shell命令', { authority: 5 })
-        .before(checkEnv)
+    app.command('_.sh <command...>', '执行shell命令', { authority: 5, noRedirect: true })
         .option('i', 'Output as image')
         .action(async ({ options }, cmd) => {
             let p: string;
@@ -150,8 +147,7 @@ export const apply = (app: App) => {
             return `[CQ:image,file=base64://${img}]`;
         });
 
-    app.command('_.shutdown', '关闭机器人', { authority: 5 })
-        .before(checkEnv)
+    app.command('_.shutdown', '关闭机器人', { authority: 5, noRedirect: true })
         .action(() => {
             setTimeout(() => {
                 if (process.env.pm_id) child.exec(`pm2 stop ${process.env.pm_id}`);
@@ -160,8 +156,7 @@ export const apply = (app: App) => {
             return 'Exiting in 3 secs...';
         });
 
-    app.command('_.restart', '重启机器人', { authority: 5 })
-        .before(checkEnv)
+    app.command('_.restart', '重启机器人', { authority: 5, noRedirect: true })
         .action(() => {
             if (!process.env.pm_id) return 'Cannot restart: not pm2 environment';
             setTimeout(() => {
@@ -170,14 +165,12 @@ export const apply = (app: App) => {
             return 'Restarting in 3 secs...';
         });
 
-    app.command('_.leave', '退出该群')
+    app.command('_.leave', '退出该群', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
-        .before(checkEnv)
         .action(({ session }) => session.$bot.setGroupLeave(session.groupId));
 
-    app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5 })
-        .before(checkEnv)
+    app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5, noRedirect: true })
         .action(async ({ session }, userId, authority) => {
             if (authority === 'null') {
                 await app.database.setUser(getTargetId(userId), { flag: 1 });
@@ -191,8 +184,7 @@ export const apply = (app: App) => {
             return `Set ${userId} to ${authority}`;
         });
 
-    app.command('_.boardcast <message...>', '全服广播', { authority: 5 })
-        .before(checkEnv)
+    app.command('_.boardcast <message...>', '全服广播', { authority: 5, noRedirect: true })
         .option('forced', '-f 无视 silent 标签进行广播')
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
@@ -205,8 +197,7 @@ export const apply = (app: App) => {
             });
         });
 
-    app.command('contextify <message...>', '在特定上下文中触发指令', { authority: 3 })
-        .before(checkEnv)
+    app.command('contextify <message...>', '在特定上下文中触发指令', { authority: 3, noRedirect: true })
         .alias('ctxf')
         .userFields(['authority'])
         .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
@@ -260,41 +251,37 @@ export const apply = (app: App) => {
             return newSession.$execute(message);
         });
 
-    app.command('_.deactivate', '在群内禁用')
+    app.command('_.deactivate', '在群内禁用', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
-        .before(checkEnv)
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag |= Group.Flag.ignore;
             return 'Deactivated';
         });
 
-    app.command('_.activate', '在群内启用')
+    app.command('_.activate', '在群内启用', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
-        .before(checkEnv)
         .groupFields(['flag'])
         .action(({ session }) => {
             session.$group.flag &= ~Group.Flag.ignore;
             return 'Activated';
         });
 
-    app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息')
+    app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
-        .before(checkEnv)
         .groupFields(['welcomeMsg'])
         .action(({ session }, welcomeMsg) => {
             session.$group.welcomeMsg = welcomeMsg;
             return 'Updated.';
         });
 
-    app.command('_.switch <command>', '启用/停用命令')
+    app.command('_.switch <command>', '启用/停用命令', { noRedirect: true })
         .userFields(['authority'])
         .groupFields(['disallowedCommands'])
         .before(checkGroupAdmin)
-        .before(checkEnv)
         .action(({ session }, command) => {
             session.$group.disallowedCommands = session.$group.disallowedCommands || [];
             if (session.$group.disallowedCommands.includes(command)) {
@@ -307,10 +294,9 @@ export const apply = (app: App) => {
             return `${command} 命令为禁用状态。`;
         });
 
-    app.command('_.mute <user> <periodSecs>', '禁言用户')
+    app.command('_.mute <user> <periodSecs>', '禁言用户', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
-        .before(checkEnv)
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
 
@@ -372,7 +358,9 @@ export const apply = (app: App) => {
         // @ts-ignore
         if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
         const cost = command.getConfig('cost', session);
+        const noRedirect = command.getConfig('noRedirect', session);
         // @ts-ignore
+        if (noRedirect && session._redirected) return '不支持在插值中调用该命令。';
         if (session.$user.coin < cost) return '你没有足够的硬币执行该命令。';
     });
 
