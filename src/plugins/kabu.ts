@@ -74,7 +74,7 @@ export const apply = (app: App, config: Config) => {
 ${stockList}`;
             });
 
-        app.command('kabu.buy [number]', `购买大头菜。若不指定数量则尽量多地购买。手续费 ${config.serviceFee * 100}%。`)
+        app.command('kabu.buy [number]', `购买大头菜。若不指定数量则尽量多地购买。手续费 ${config.serviceFee * 100}%。`, { noRedirect: true })
             .shortcut('购买大头菜', { prefix: false, fuzzy: true })
             .userFields(['coin'])
             .action(async ({ session }, arg) => {
@@ -100,7 +100,7 @@ ${stockList}`;
 要是你没有在 ${config.expireDays} 天内把大头菜卖掉，它们就会全部烂掉，害你大亏本！一定要注意这一点喔。`;
             });
 
-        app.command('kabu.sell [number]', `卖出最早购买（最先烂掉）的大头菜。若不指定数量则全部卖出。手续费 ${config.serviceFee * 100}%。`)
+        app.command('kabu.sell [number]', `卖出最早购买（最先烂掉）的大头菜。若不指定数量则全部卖出。手续费 ${config.serviceFee * 100}%。`, { noRedirect: true })
             .shortcut('卖出大头菜', { prefix: false, fuzzy: true })
             .userFields(['coin'])
             .action(async ({ session }, arg) => {
