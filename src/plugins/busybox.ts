@@ -359,8 +359,8 @@ export const apply = (app: App) => {
         if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
         const cost = command.getConfig('cost', session);
         const noRedirect = command.getConfig('noRedirect', session);
-        // @ts-ignore
         if (noRedirect && session._redirected) return '不支持在插值中调用该命令。';
+        // @ts-ignore
         if (session.$user.coin < cost) return '你没有足够的硬币执行该命令。';
     });
 
