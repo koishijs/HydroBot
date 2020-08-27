@@ -10,6 +10,11 @@
 - Write config file: rename `config.sample.json` to `config.json` and make some change.
 - Run bot: `yarn debug`
 
+### Contact us
+
+- QQ: 3402182471
+- Email: masnn0@outlook.com
+
 ### Donate (Alipay)
 
 ![alipay](./alipay.png)  

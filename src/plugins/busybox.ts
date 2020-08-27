@@ -197,7 +197,7 @@ export const apply = (app: App) => {
             });
         });
 
-    app.command('contextify <message...>', '在特定上下文中触发指令', { authority: 3, noRedirect: true })
+    app.command('contextify <command...>', '在特定上下文中触发指令', { authority: 4, noRedirect: true })
         .alias('ctxf')
         .userFields(['authority'])
         .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
@@ -318,12 +318,12 @@ export const apply = (app: App) => {
         if (!session.groupId) return;
         if (session.message === '>_.activate') {
             const user = await app.database.getUser(session.userId);
-            if (user.authority >= 4) {
+            if (user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role)) {
                 const group = await app.database.getGroup(session.groupId);
                 const flag = group.flag & (~Group.Flag.ignore);
                 await app.database.setGroup(session.groupId, { flag });
                 await session.$send('Activated');
-            }
+            } else await session.$send('您没有权限执行该操作');
         }
         if (!session.message.includes('[CQ:reply,id=')) return;
         const res = RE_REPLY.exec(session.message);
