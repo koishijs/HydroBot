@@ -80,7 +80,7 @@ ${stockList}`;
             .action(async ({ session }, arg) => {
                 const price = await priceToday(session);
                 if (!session.$user.coin) session.$user.coin = 0;
-                const maxNumber = Math.floor(session.$user.coin / price);
+                const maxNumber = Math.floor(session.$user.coin / price / (1 + config.serviceFee));
                 const number = +(arg ?? maxNumber);
                 if (!Number.isInteger(number) || number <= 0 || number > maxNumber) {
                     return `购买数量需要是 1~${maxNumber} 之间的正整数。`;
