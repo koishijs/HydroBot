@@ -1,15 +1,7 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable no-shadow */
 import { Context } from 'koishi-core';
-import { Random } from 'koishi-utils';
-import { createHmac } from 'crypto';
-import { resolve } from 'path';
-import {
-    existsSync, writeFile, readdirSync, stat,
-} from 'fs-extra';
 import axios from 'axios';
 import { Binary, Collection } from 'mongodb';
-import { Dialogue } from '../utils';
 
 declare module 'koishi-core/dist/app' {
     interface App {

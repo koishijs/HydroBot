@@ -3,6 +3,7 @@ import child from 'child_process';
 import superagent from 'superagent';
 import axios from 'axios';
 import sharp from 'sharp';
+import { SVG } from 'koishi-plugin-puppeteer';
 import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
 
@@ -14,7 +15,8 @@ export const apply = (app: App) => {
             const text = svg.match(/>([^<]+)<\/text>/);
             if (text) return session.$send(text[1]);
             const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);
-            if (viewBox) svg = svg.replace('\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`);
+            // eslint-disable-next-line max-len
+            if (viewBox) svg = svg.replace('\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`); // lgtm [js/incomplete-sanitization]
             const png = await sharp(Buffer.from(svg)).png().toBuffer();
             return session.$send(`[CQ:image,file=base64://${png.toString('base64')}]`);
         });
@@ -47,7 +49,7 @@ export const apply = (app: App) => {
         .example('calc Solve[x^2+1==0,{x}]')
         .example('calc FactorInteger[233333]')
         .action(async ({ session }, expr) => {
-            expr = expr.decode().replace(/'/gmi, '\\\'').replace(/"/gmi, '\\"');
+            expr = expr.decode().replace(/\\/gmi, '\\').replace(/'/gmi, '\\\'').replace(/"/gmi, '\\"');
             console.log(`Calculating ${expr}`);
             let svg: string;
             try {
@@ -59,7 +61,8 @@ export const apply = (app: App) => {
             }
             if (!svg.startsWith('<?xml')) return session.$send(svg);
             const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);
-            if (viewBox) svg = svg.replace('\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`);
+            // eslint-disable-next-line max-len
+            if (viewBox) svg = svg.replace('\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`); // lgtm [js/incomplete-sanitization]
             return session.$send(`[CQ:image,file=base64://${(await sharp(Buffer.from(svg)).png().toBuffer()).toString('base64')}]`);
         });
 };
