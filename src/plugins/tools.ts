@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import child from 'child_process';
 import superagent from 'superagent';
+import axios from 'axios';
 import sharp from 'sharp';
 import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
@@ -9,7 +10,7 @@ export const apply = (app: App) => {
     app.command('tools/tex <code...>', 'KaTeX 渲染')
         .alias('katex <code...>')
         .action(async ({ session }, tex) => {
-            let { body: svg } = await superagent.get(`https://www.zhihu.com/equation?tex=${encodeURIComponent(tex)}`);
+            let { data: svg } = await axios.get(`https://www.zhihu.com/equation?tex=${encodeURIComponent(tex)}`);
             const text = svg.match(/>([^<]+)<\/text>/);
             if (text) return session.$send(text[1]);
             const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);
