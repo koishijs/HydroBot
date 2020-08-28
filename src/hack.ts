@@ -20,34 +20,6 @@ const tasks: [string, number, ...string[][]][] = [
             "if (config.cost) output += ' 花费：' + config.cost;",
         ],
     ],
-    [
-        'koishi-plugin-mongo', 2,
-        [
-            'replaceBetween',
-            'async setUser(userId, data) {',
-            'async getGroup(groupId, ...args) {',
-            `\
-        const $set = { ...data };
-        delete $set.timers;
-        delete $set.usage;
-        if (data.timers) {
-            $set.timers = {};
-            for (const key in data.timers) {
-                if (key === '$date') $set.timer._date = data.timers.$date;
-                else $set.timer[key.replace(/\\./gmi, '_')] = data.timers[key];
-            }
-        }
-        if (data.usage) {
-            $set.usage = {};
-            for (const key in data.usage) {
-                if (key === '$date') $set.usage._date = data.usage.$date;
-                else $set.usage[key.replace(/\\./gmi, '_')] = data.usage[key];
-            }
-        }
-        await this.user.updateOne({ _id: userId }, { $set }, { upsert: true });
-    },`,
-        ],
-    ],
 ];
 
 async function hack() {

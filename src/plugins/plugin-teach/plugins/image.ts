@@ -8,6 +8,7 @@ import {
     existsSync, writeFile, readdirSync, stat,
 } from 'fs-extra';
 import axios from 'axios';
+import { Binary, Collection } from 'mongodb';
 import { Dialogue } from '../utils';
 
 declare module 'koishi-core/dist/app' {
@@ -33,77 +34,49 @@ interface ImageServerStatus {
     totalCount: number
 }
 
+interface ImageDoc {
+    _id: string,
+    data: Binary
+}
+
 const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;
+const REimage = /\[CQ:image,file=image:\/\/([^,]+)\]/;
 
-export default function apply(ctx: Context, config: Dialogue.Config) {
+export default function apply(ctx: Context) {
     const logger = ctx.logger('teach');
-    const {
-        uploadKey, imagePath, imageServer, uploadPath, uploadServer,
-    } = config;
 
-    let downloadFile: (file: string, url: string) => Promise<void>;
+    ctx.on('connect', () => {
+        const coll: Collection<ImageDoc> = ctx.app.database.db.collection('image');
 
-    if (uploadServer) {
-        downloadFile = async (file, url) => {
-            const params = { url, file } as any;
-            if (uploadKey) {
-                params.salt = Random.uuid();
-                params.sign = createHmac('sha1', uploadKey).update(file + params.salt).digest('hex');
-            }
-            await axios.get(uploadServer, { params });
+        const downloadFile = async (file: string, url: string) => {
+            const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
+            const buf = Buffer.alloc(data.byteLength);
+            const view = new Uint8Array(data);
+            for (let i = 0; i < buf.length; ++i) buf[i] = view[i];
+            await coll.insertOne({ _id: file, data: new Binary(buf) });
         };
 
-        ctx.app.getImageServerStatus = async () => {
-            const { data } = await axios.get(uploadServer);
-            return data;
-        };
-    }
-
-    if (imagePath && uploadPath) {
-        const fileList = readdirSync(imagePath);
-        let totalCount = fileList.length;
-        let totalSize = 0;
-
-        downloadFile = async (file, url) => {
-            const path = resolve(imagePath, file);
-            if (!existsSync(path)) {
-                const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
-                await writeFile(path, data);
-                totalCount += 1;
-                totalSize += data.byteLength;
-            }
-        };
-
-        const statPromise = Promise.all(fileList.map(async (file) => {
-            const { size } = await stat(resolve(imagePath, file));
-            totalSize += size;
-        }));
-
-        const getStatus = ctx.app.getImageServerStatus = async () => {
-            await statPromise;
-            return { totalCount, totalSize };
-        };
-
-        ctx.on('connect', () => {
-            ctx.router.get(uploadPath, async (ctx) => {
-                const {
-                    salt, sign, url, file,
-                } = ctx.query;
-                if (!file) return ctx.body = await getStatus();
-
-                if (uploadKey) {
-                    if (!salt || !sign) return ctx.status = 400;
-                    const hash = createHmac('sha1', uploadKey).update(file + salt).digest('hex');
-                    if (hash !== sign) return ctx.status = 403;
+        ctx.on('dialogue/before-send', async (state) => {
+            let { answer } = state;
+            if (!answer) return;
+            try {
+                let output = '';
+                let capture: RegExpExecArray;
+                // eslint-disable-next-line no-cond-assign
+                while (capture = REimage.exec(answer)) {
+                    const [text, file] = capture;
+                    output += answer.slice(0, capture.index);
+                    answer = answer.slice(capture.index + text.length);
+                    const res = await coll.findOne({ _id: file });
+                    output += `[CQ:image,file=base64://${res.data.buffer.toString('base64')}]`;
                 }
-
-                await downloadFile(file, url);
-                return ctx.status = 200;
-            });
+                state.answer = output + answer;
+            } catch (error) {
+                logger.warn(error.message);
+                throw new Error('下载图片时发生错误。');
+            }
         });
-    }
 
-    if (imageServer && downloadFile) {
         ctx.on('dialogue/before-modify', async ({ options }) => {
             let { answer } = options;
             if (!answer) return;
@@ -116,7 +89,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
                     output += answer.slice(0, capture.index);
                     answer = answer.slice(capture.index + text.length);
                     await downloadFile(file, url);
-                    output += `[CQ:image,file=${imageServer}/${file}]`;
+                    output += `[CQ:image,file=image://${file}]`;
                 }
                 options.answer = output + answer;
             } catch (error) {
@@ -124,5 +97,5 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
                 return '上传图片时发生错误。';
             }
         });
-    }
+    });
 }

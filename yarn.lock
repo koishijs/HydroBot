@@ -211,10 +211,15 @@
     "@types/bson" "*"
     "@types/node" "*"
 
-"@types/node@*", "@types/node@^14.0.27":
+"@types/node@*":
   version "14.6.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.6.0.tgz#7d4411bf5157339337d7cff864d9ff45f177b499"
   integrity sha512-mikldZQitV94akrc4sCcSjtJfsTKt4p+e/s0AGscVA6XArQ9kFclP+ZiYUMnq987rc6QlYxXv/EivqlfSLxpKA==
+
+"@types/node@^14.6.1":
+  version "14.6.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.6.1.tgz#fdf6f6c6c73d3d8eee9c98a9a0485bc524b048d7"
+  integrity sha512-HnYlg/BRF8uC1FyKRFZwRaCPTPYKa+6I8QiUZFLredaGOou481cgFS4wKRFyKvQtX8xudqkSdBczJHIYSQYKrQ==
 
 "@types/pngjs@^3.4.2":
   version "3.4.2"
@@ -269,7 +274,7 @@
   dependencies:
     "@types/superagent" "*"
 
-"@types/superagent@*", "@types/superagent@^4.1.8":
+"@types/superagent@*", "@types/superagent@4.1.9":
   version "4.1.9"
   resolved "https://registry.yarnpkg.com/@types/superagent/-/superagent-4.1.9.tgz#d899d3bc90b17eb298cac18b7aa22f7c3ec88c13"
   integrity sha512-gpIC0p49YHT4VYDbdl0fKjOMWBurJFfYtKUIxOHzOwBtu5VT29FyldFI2vbmZ1K2iH2vS6MVcJZMjHM+652l4Q==
@@ -1944,6 +1949,13 @@ json5@^1.0.1:
   dependencies:
     minimist "^1.2.0"
 
+json5@^2.1.3:
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/json5/-/json5-2.1.3.tgz#c9b0f7fa9233bfe5807fe66fcf3a5617ed597d43"
+  integrity sha512-KXPvOm8K9IJKFM0bmdn8QXh7udDh1g/giieX0NLCaMnb4hEiVFqnop2ImTXCc5e0/oHz3LTqmHGtExn5hfMkOA==
+  dependencies:
+    minimist "^1.2.5"
+
 jsonfile@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-6.0.1.tgz#98966cba214378c8c84b82e085907b40bf614179"
@@ -2047,7 +2059,7 @@ koa@^2.13.0:
     type-is "^1.6.16"
     vary "^1.1.2"
 
-koishi-adapter-cqhttp@^1.0.0:
+koishi-adapter-cqhttp@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/koishi-adapter-cqhttp/-/koishi-adapter-cqhttp-1.0.0.tgz#6df69c84e7b97aa29857eaf5e83b0e6758441d8f"
   integrity sha512-lGYxWKsB6zBTBSxHlGRBn5tvZNb5Q0X6lOo90XEtP46+rAhiSIcyOF9hc2oTRpWG6n9rrEPlFljsecwoag5zhQ==
@@ -2057,17 +2069,17 @@ koishi-adapter-cqhttp@^1.0.0:
     ms "^2.1.2"
     ws "^7.3.1"
 
-koishi-core@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.0.tgz#95ad69bcc48505f1a92d44c8181641faa0161802"
-  integrity sha512-IpGGk3vSV4TDQ9RbRcxT4+6AXOpRNObJy0ORonp8NZxhkd+qeRS4rEAN7zUL86sDDr0zwk7XAruxJNnBWs9APg==
+koishi-core@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.1.tgz#5fcb47433eea293360584f8b2e8bd78c75b9025f"
+  integrity sha512-ngFjKyUuh2H1G+pkirn+/mTFUp2kz6HJI7qQlRi2U/bbrHa5XvDosw0bXddDTOcgQ3xw+5dN5nLMl3bpXylf2A==
   dependencies:
     "@types/koa-bodyparser" "^4.3.0"
     "@types/koa-router" "^7.4.1"
     koa "^2.13.0"
     koa-bodyparser "^4.3.0"
     koa-router "^9.4.0"
-    koishi-utils "^3.1.0"
+    koishi-utils "^3.1.1"
     leven "^3.1.0"
     lru-cache "^6.0.0"
 
@@ -2078,27 +2090,28 @@ koishi-plugin-chess@^2.0.0-beta.9:
   dependencies:
     koishi-utils "^3.1.0"
 
-koishi-plugin-eval-addons@^1.0.0-beta.7:
-  version "1.0.0-beta.7"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval-addons/-/koishi-plugin-eval-addons-1.0.0-beta.7.tgz#13279f0d7170f82243413435c1e1a02c247076ff"
-  integrity sha512-my8MJ9FytfhZGQnO2Xic6bywnfdkXxQYoxrohoJmWTqzh2mY1A+08vj84rGqI0a5VIeh1GWxHEm9JiTvNjlplw==
+koishi-plugin-eval-addons@^1.0.0-beta.8:
+  version "1.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval-addons/-/koishi-plugin-eval-addons-1.0.0-beta.8.tgz#c3cf623496626cefcb849d20b07891f9bbc8a2d1"
+  integrity sha512-kTsm6OTUOl0wGbYVZJ4jZwcqa68dEXDwabZGiWdvwelzXQGOXyXD7/i2IJjybgokEmvw2wC0EwkJ2XoCqZseeg==
   dependencies:
     js-yaml "^3.14.0"
-    koishi-utils "^3.1.0"
+    json5 "^2.1.3"
+    koishi-utils "^3.1.1"
     simple-git "^2.20.1"
     typescript "^4.0.2"
 
-koishi-plugin-eval@^2.0.0-beta.16:
-  version "2.0.0-beta.16"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.16.tgz#6baff82f59d0b122c4878d55b7c3227de0f32d72"
-  integrity sha512-oV2Wdnman5RdGreUtAYN1DtHnLm6AMUS+haS8WxaAHWUabJB4EXQV7joTazAN433YUaC+k+XqicjLNguKbAnUA==
+koishi-plugin-eval@^2.0.0-beta.17:
+  version "2.0.0-beta.17"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.17.tgz#e75a03e5f72bf4c348d311036d6c9c8af77b9608"
+  integrity sha512-Y9qEoDmiPGh08oAfsTexuIR4qGOHNZN7YzW6n5SqyVC0jXpS07WPQbrhMMRYlYvAJETp6D4GxPCpVQIctzNxQw==
   dependencies:
-    koishi-utils "^3.1.0"
+    koishi-utils "^3.1.1"
 
-koishi-plugin-mongo@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.0.tgz#09bd965effb448e3d46c45f20596724658e96a92"
-  integrity sha512-55r6qE9OmBZ4FCBadBaWNVZe8fEflu58KL/j8hpRD3E6zzYGdHDcwhsWw+wn8C+imQvf9KDF2j7sULoYjrTJCA==
+koishi-plugin-mongo@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.1.tgz#454c8196c9c9db7fbbd6ff231587a9fba2fdf583"
+  integrity sha512-IY8s86XZ7YASqlA/rWF3gljjzLf71AxAXd+wEmcbGWSdd2v6hpiON+wg/rXkE+VIPvHTPGiIfuSpJd02xzG5gg==
   dependencies:
     mongodb "^3.6.0"
 
@@ -2142,6 +2155,13 @@ koishi-utils@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/koishi-utils/-/koishi-utils-3.1.0.tgz#17a3ec8443139b4be25bc8a47abfcbc1d98da218"
   integrity sha512-b9s1rLSvPKyjwqIef8idZgZTvzNbhLDPGKERBwY4N4IFc6vNgv9mQQjYp54a8TaPsMn4hXijIJcRGBMNt3wTEQ==
+  dependencies:
+    supports-color "^7.1.0"
+
+koishi-utils@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/koishi-utils/-/koishi-utils-3.1.1.tgz#3d99a5eda543955f30a05df1e666f98c39dabed3"
+  integrity sha512-qKrgi0Femzgv4ooTwzVSAsYPqUe5FNyyKUx/TNNF/i3n3pZ5dLuwujICsMowbsK/3XhlhtmESh8bn+sMNxAjPw==
   dependencies:
     supports-color "^7.1.0"
 
