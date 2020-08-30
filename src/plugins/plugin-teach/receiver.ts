@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-escape */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-use-before-define */
 /* eslint-disable func-names */
@@ -6,7 +5,7 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-cond-assign */
 import {
-    Context, User, Session, NextFunction, Command,
+    Context, User, Session, NextFunction, Command, Group,
 } from 'koishi-core';
 import {
     CQCode, simplify, noop, escapeRegExp,
@@ -178,6 +177,14 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     state.next = next;
     state.test = {};
 
+    // @ts-ignore
+    if (session.$user.authority < 1
+        // @ts-ignore
+        || session.$group.flag & Group.Flag.silent
+        // @ts-ignore
+        || (session.$group.disabledCommands || []).includes('teach/dialogue')
+    ) return next();
+
     if (ctx.bail('dialogue/receive', state)) return next();
     const logger = ctx.logger('dialogue');
     logger.debug('[receive]', session.messageId, session.message);
@@ -304,7 +311,7 @@ export default function (ctx: Context, config: Dialogue.Config) {
         }
     });
 
-    ctx.group().command('teach/dialogue <message...>', '触发教学对话')
+    ctx.group().command('teach/dialogue <message...>', '触发教学对话', { authority: 1 })
         .action(async ({ session, next }, message = '') => {
             if (session._redirected > maxRedirections) return next();
             session.message = message;
@@ -329,8 +336,8 @@ function prepareSource(source: string) {
             .replace(/】/g, ']')
             .replace(/～/g, '~')
             .replace(/…/g, '...');
-        if (index === 0) message = message.replace(/^[()\[\]]*/, '');
-        if (index === arr.length - 1) message = message.replace(/[\.,?!()\[\]~]*$/, '');
+        if (index === 0) message = message.replace(/^[()[\]]*/, '');
+        if (index === arr.length - 1) message = message.replace(/[.,?!()[\]~]*$/, '');
         return message;
     }));
 }

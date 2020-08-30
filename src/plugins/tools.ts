@@ -3,7 +3,6 @@ import child from 'child_process';
 import superagent from 'superagent';
 import axios from 'axios';
 import sharp from 'sharp';
-import { SVG } from 'koishi-plugin-puppeteer';
 import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
 
