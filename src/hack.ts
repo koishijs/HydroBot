@@ -20,6 +20,19 @@ const tasks: [string, number, ...string[][]][] = [
             "if (config.cost) output += ' 花费：' + config.cost;",
         ],
     ],
+    [
+        'koishi-plugin-mongo/dist/index', 1,
+        [
+            'replace',
+            '$set.timer._date = data.timers.$date;',
+            '$set.timers._date = data.timers.$date;',
+        ],
+        [
+            'replace',
+            "$set.timer[key.replace(/\\./gmi, '_')] = data.timers[key];",
+            "$set.timers[key.replace(/\\./gmi, '_')] = data.timers[key];",
+        ],
+    ],
 ];
 
 async function hack() {
