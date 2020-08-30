@@ -21,9 +21,20 @@ function decode(source: string) {
     return result > 0 && result < 1e9 ? result : null;
 }
 
-const RE_BVID: [RegExp, number, boolean][] = [
-    [/(BV[0-9a-zA-Z]{10})/gmi, 1, true],
-    [/av([0-9]+)/gmi, 1, false],
+const RE_BVID: [RegExp, processer: (result: RegExpExecArray) => Promise<number> | number][] = [
+    [/(BV[0-9a-zA-Z]{10})/gmi, (result) => decode(result[1])],
+    [/av([0-9]+)/gmi, (result) => parseInt(result[1], 10)],
+    [/b23\.tv\/([a-zA-Z0-9]+)/gmi, async (result) => {
+        const url = `https://b23.tv/${result[1]}`;
+        const redirect: string = await new Promise((resolve) => {
+            superagent.get(url)
+                .buffer(false)
+                .end((err, res) => {
+                    resolve(res.redirects.length ? res.redirects.pop() : url);
+                });
+        });
+        return decode(redirect.split('video/')[1].split('?')[0]);
+    }],
 ];
 
 export const apply = (app: App) => {
@@ -33,8 +44,10 @@ export const apply = (app: App) => {
         for (const RE of RE_BVID) {
             const result = RE[0].exec(session.message);
             if (result) {
-                if (RE[2]) av = decode(result[RE[1]]);
-                else av = parseInt(result[RE[1]], 10);
+                const res = RE[1](result);
+                // eslint-disable-next-line no-await-in-loop
+                if (res instanceof Promise) av = await res;
+                else av = res;
                 break;
             }
         }
