@@ -100,6 +100,9 @@ export const apply = (app: App) => {
     app.command('evaluate', { authority: 1 });
     app.command('_', '管理工具');
 
+    app.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })
+        .action((_, msg) => msg.decode());
+
     app.command('_.eval <expr...>', { authority: 5, noRedirect: true })
         .action(async (_, args) => {
             let res: any;
