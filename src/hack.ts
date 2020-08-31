@@ -34,7 +34,7 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-plugin-schedule/dist/database', 2,
+        'koishi-plugin-schedule/dist/database', 3,
         [
             'replaceBetween',
             "koishi_core_1.extendDatabase('koishi-plugin-mongo', {",
@@ -46,7 +46,7 @@ async createSchedule(time, interval, command, session) {
         .toArray();
     if (latest) _id = latest._id + 1;
     const result = await this.db.collection('schedule').insertOne({
-        _id, time, assignee: session.selfId, interval, command, session:JSON.stringify(session) 
+        _id, time, assignee: session.selfId, interval, command, session: JSON.stringify(session) 
     });
     return { time, assignee: session.selfId, interval, command, session, id: result.insertedId };
 },
@@ -64,7 +64,7 @@ async getSchedule(_id) {
 async getAllSchedules(assignees) {
     const $in = assignees || await this.app.getSelfIds();
     return await this.db.collection('schedule')
-        .find({ assignee: { $in } }).map(doc => ({ ...doc, id: doc._id,session:JSON.parse(session) })).toArray();
+        .find({ assignee: { $in } }).map(doc => ({ ...doc, id: doc._id, session:JSON.parse(doc.session) })).toArray();
 },
 });`,
         ],
