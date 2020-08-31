@@ -34,15 +34,19 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-plugin-schedule', 1,
+        'koishi-plugin-schedule/dist/database', 2,
         [
             'replaceBetween',
             "koishi_core_1.extendDatabase('koishi-plugin-mongo', {",
             '//# sourceMappingURL=database.js.map',
             `\
 async createSchedule(time, interval, command, session) {
+    let _id = 1;
+    const [latest] = await this.db.collection('schedule').find().sort('_id', -1).limit(1)
+        .toArray();
+    if (latest) _id = latest._id + 1;
     const result = await this.db.collection('schedule').insertOne({
-        time, assignee: session.selfId, interval, command, session:JSON.stringify(session) 
+        _id, time, assignee: session.selfId, interval, command, session:JSON.stringify(session) 
     });
     return { time, assignee: session.selfId, interval, command, session, id: result.insertedId };
 },
