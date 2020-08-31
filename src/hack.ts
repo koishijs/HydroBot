@@ -33,6 +33,38 @@ const tasks: [string, number, ...string[][]][] = [
             "$set.timers[key.replace(/\\./gmi, '_')] = data.timers[key];",
         ],
     ],
+    [
+        'koishi-plugin-schedule', 1,
+        [
+            'replaceBetween',
+            "koishi_core_1.extendDatabase('koishi-plugin-mongo', {",
+            '//# sourceMappingURL=database.js.map',
+            `\
+async createSchedule(time, interval, command, session) {
+    const result = await this.db.collection('schedule').insertOne({
+        time, assignee: session.selfId, interval, command, session:JSON.stringify(session) 
+    });
+    return { time, assignee: session.selfId, interval, command, session, id: result.insertedId };
+},
+removeSchedule(_id) {
+    return this.db.collection('schedule').deleteOne({ _id });
+},
+async getSchedule(_id) {
+    const res = await this.db.collection('schedule').findOne({ _id });
+    if (res){
+        res.id = res._id;
+        res.session=JSON.parse(res.session);
+    }
+    return res;
+},
+async getAllSchedules(assignees) {
+    const $in = assignees || await this.app.getSelfIds();
+    return await this.db.collection('schedule')
+        .find({ assignee: { $in } }).map(doc => ({ ...doc, id: doc._id,session:JSON.parse(session) })).toArray();
+},
+});`,
+        ],
+    ],
 ];
 
 async function hack() {

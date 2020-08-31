@@ -138,7 +138,12 @@ export const apply = (app: App) => {
         .action(async ({ options }, cmd) => {
             let p: string;
             try {
-                p = child.execSync(cmd.decode()).toString();
+                p = await new Promise((resolve, reject) => {
+                    child.exec(cmd.decode(), (err, stdout, stderr) => {
+                        if (err) reject(err);
+                        resolve(stdout + stderr);
+                    });
+                });
             } catch (e) {
                 return `Error executing command: ${e}`;
             }
