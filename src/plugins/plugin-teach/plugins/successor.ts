@@ -227,7 +227,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
 
         for (const dialogue of successors) {
             for (const id of dialogue.predecessors) {
-        dMap[id]?._successors.push(dialogue);
+                dMap[id]?._successors.push(dialogue);
             }
         }
 

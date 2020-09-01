@@ -21,17 +21,8 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-plugin-mongo/dist/index', 1,
-        [
-            'replace',
-            '$set.timer._date = data.timers.$date;',
-            '$set.timers._date = data.timers.$date;',
-        ],
-        [
-            'replace',
-            "$set.timer[key.replace(/\\./gmi, '_')] = data.timers[key];",
-            "$set.timers[key.replace(/\\./gmi, '_')] = data.timers[key];",
-        ],
+        'koishi-core/dist/app', 2,
+        ['replace', '[CQ:reply,id=(\\d+)', '[CQ:reply,id=(-?\\d+)'],
     ],
     [
         'koishi-plugin-schedule/dist/database', 3,

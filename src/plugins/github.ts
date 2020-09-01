@@ -20,8 +20,6 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
-const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
-
 interface BeautifyRule {
     regex: RegExp,
     process: (result: string[], content: string) => string,
@@ -378,18 +376,14 @@ export const apply = (app: App, config: any) => {
         });
 
         app.on('message', async (session) => {
-            if (!session.message.includes('[CQ:reply,id=')) return;
-            const res = RE_REPLY.exec(session.message);
-            if (!res) return;
-            const [, id, msg] = res;
-            const parsedMsg = msg.replace(/\[CQ:at,qq=[0-9]+\]/gmi, '');
-            const replyTo = parseInt(id, 10);
+            const replyTo = session.$reply;
+            const parsedMsg = session.$parsed;
+            if (!replyTo || !parsedMsg) return;
             const [relativeEvent, user] = await Promise.all([
                 collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } }),
                 app.database.getUser(session.userId, ['GithubToken']),
             ]);
-            if (!relativeEvent) return;
-            if (!events[relativeEvent.type].interact) return;
+            if (!relativeEvent || !events[relativeEvent.type].interact) return;
             try {
                 async function getToken() {
                     if (!user.GithubToken?.access_token) throw new InvalidTokenError();

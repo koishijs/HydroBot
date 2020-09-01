@@ -23,6 +23,16 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@eslint/eslintrc@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-0.1.0.tgz#3d1f19fb797d42fb1c85458c1c73541eeb1d9e76"
+  integrity sha512-bfL5365QSCmH6cPeFT7Ywclj8C7LiF7sO6mUGzZhtAMV7iID1Euq6740u/SRi4C80NOnVz/CEfK8/HO+nCAPJg==
+  dependencies:
+    ajv "^6.12.4"
+    debug "^4.1.1"
+    import-fresh "^3.2.1"
+    strip-json-comments "^3.1.1"
+
 "@kwsites/file-exists@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@kwsites/file-exists/-/file-exists-1.1.1.tgz#ad1efcac13e1987d8dbaf235ef3be5b0d96faa99"
@@ -362,7 +372,7 @@ acorn-jsx@^5.2.0:
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.2.0.tgz#4c66069173d6fdd68ed85239fc256226182b2ebe"
   integrity sha512-HiUX/+K2YpkpJ+SzBffkM/AQ2YE03S0U1kjTLVpoJdhZMOWy8qvXVN9JdLqv2QsaQ6MPYQIuNmwD8zOiYUofLQ==
 
-acorn@^7.3.1:
+acorn@^7.4.0:
   version "7.4.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.0.tgz#e1ad486e6c54501634c6c397c5c121daa383607c"
   integrity sha512-+G7P8jJmCHr+S+cLfQxygbWhXy+8YTVGzAkpEbcLo2mLoL7tij/VG41QSHACSf5QgYRhMZYHuNc6drJaO0Da+w==
@@ -391,7 +401,7 @@ agent-base@~4.2.1:
   dependencies:
     es6-promisify "^5.0.0"
 
-ajv@^6.10.0, ajv@^6.10.2:
+ajv@^6.10.0, ajv@^6.10.2, ajv@^6.12.4:
   version "6.12.4"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.4.tgz#0614facc4522127fa713445c6bfd3ebd376e2234"
   integrity sha512-eienB2c9qVQs2KWexhkrdMLVDoIQCz5KSeLxwg9Lzk4DOfBtIK9PQwwufcsn1jjGuf9WZmqPMbGxOzfcuphJCQ==
@@ -1207,10 +1217,10 @@ eslint-import-resolver-node@^0.3.3:
     debug "^2.6.9"
     resolve "^1.13.1"
 
-eslint-import-resolver-typescript@^2.2.0:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/eslint-import-resolver-typescript/-/eslint-import-resolver-typescript-2.2.1.tgz#4b9bdfb51af7e14947ebc40ffdd6c32d5924b905"
-  integrity sha512-wxlVdwuWY6R5+CoesIy6n8EZX4k9lEeZGWTVBoX9g//8Xma8JMtL/p3AGnG43rRyXmIrX+/0IN8lpOPzrw1fSw==
+eslint-import-resolver-typescript@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/eslint-import-resolver-typescript/-/eslint-import-resolver-typescript-2.3.0.tgz#0870988098bc6c6419c87705e6b42bee89425445"
+  integrity sha512-MHSXvmj5e0SGOOBhBbt7C+fWj1bJbtSYFAD85Xeg8nvUtuooTod2HQb8bfhE9f5QyyNxEfgzqOYFCvmdDIcCuw==
   dependencies:
     debug "^4.1.1"
     glob "^7.1.6"
@@ -1265,12 +1275,13 @@ eslint-visitor-keys@^1.1.0, eslint-visitor-keys@^1.3.0:
   resolved "https://registry.yarnpkg.com/eslint-visitor-keys/-/eslint-visitor-keys-1.3.0.tgz#30ebd1ef7c2fdff01c3a4f151044af25fab0523e"
   integrity sha512-6J72N8UNa462wa/KFODt/PJ3IU60SDpC3QXC1Hjc1BXXpfL2C9R5+AU7jhe0F6GREqVMh4Juu+NY7xn+6dipUQ==
 
-eslint@^7.5.0:
-  version "7.7.0"
-  resolved "https://registry.yarnpkg.com/eslint/-/eslint-7.7.0.tgz#18beba51411927c4b64da0a8ceadefe4030d6073"
-  integrity sha512-1KUxLzos0ZVsyL81PnRN335nDtQ8/vZUD6uMtWbF+5zDtjKcsklIi78XoE0MVL93QvWTu+E5y44VyyCsOMBrIg==
+eslint@^7.8.0:
+  version "7.8.0"
+  resolved "https://registry.yarnpkg.com/eslint/-/eslint-7.8.0.tgz#9a3e2e6e4d0a3f8c42686073c25ebf2e91443e8a"
+  integrity sha512-qgtVyLZqKd2ZXWnLQA4NtVbOyH56zivOAdBFWE54RFkSZjokzNrcP4Z0eVWsZ+84ByXv+jL9k/wE1ENYe8xRFw==
   dependencies:
     "@babel/code-frame" "^7.0.0"
+    "@eslint/eslintrc" "^0.1.0"
     ajv "^6.10.0"
     chalk "^4.0.0"
     cross-spawn "^7.0.2"
@@ -1280,7 +1291,7 @@ eslint@^7.5.0:
     eslint-scope "^5.1.0"
     eslint-utils "^2.1.0"
     eslint-visitor-keys "^1.3.0"
-    espree "^7.2.0"
+    espree "^7.3.0"
     esquery "^1.2.0"
     esutils "^2.0.2"
     file-entry-cache "^5.0.1"
@@ -1307,12 +1318,12 @@ eslint@^7.5.0:
     text-table "^0.2.0"
     v8-compile-cache "^2.0.3"
 
-espree@^7.2.0:
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/espree/-/espree-7.2.0.tgz#1c263d5b513dbad0ac30c4991b93ac354e948d69"
-  integrity sha512-H+cQ3+3JYRMEIOl87e7QdHX70ocly5iW4+dttuR8iYSPr/hXKFb+7dBsZ7+u1adC4VrnPlTkv0+OwuPnDop19g==
+espree@^7.3.0:
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/espree/-/espree-7.3.0.tgz#dc30437cf67947cf576121ebd780f15eeac72348"
+  integrity sha512-dksIWsvKCixn1yrEXO8UosNSxaDoSYpq9reEjZSbHLpT5hpaCAKTLBwq0RHtLrIr+c0ByiYzWT8KTMRzoRCNlw==
   dependencies:
-    acorn "^7.3.1"
+    acorn "^7.4.0"
     acorn-jsx "^5.2.0"
     eslint-visitor-keys "^1.3.0"
 
@@ -1765,7 +1776,7 @@ ignore@^4.0.6:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-4.0.6.tgz#750e3db5862087b4737ebac8207ffd1ef27b25fc"
   integrity sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
 
-import-fresh@^3.0.0:
+import-fresh@^3.0.0, import-fresh@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/import-fresh/-/import-fresh-3.2.1.tgz#633ff618506e793af5ac91bf48b72677e15cbe66"
   integrity sha512-6e1q1cnWP2RXD9/keSkxHScg508CdXqXWgWBaETNhyuBFz+kUZlKboh+ISK+bU++DmbHimVBrOz/zzPe0sZ3sQ==
@@ -2059,59 +2070,59 @@ koa@^2.13.0:
     type-is "^1.6.16"
     vary "^1.1.2"
 
-koishi-adapter-cqhttp@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/koishi-adapter-cqhttp/-/koishi-adapter-cqhttp-1.0.0.tgz#6df69c84e7b97aa29857eaf5e83b0e6758441d8f"
-  integrity sha512-lGYxWKsB6zBTBSxHlGRBn5tvZNb5Q0X6lOo90XEtP46+rAhiSIcyOF9hc2oTRpWG6n9rrEPlFljsecwoag5zhQ==
+koishi-adapter-cqhttp@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/koishi-adapter-cqhttp/-/koishi-adapter-cqhttp-1.0.1.tgz#a8be32af45ec3a3c17361fbfe1bbcc8ded6c2d15"
+  integrity sha512-106Q8NmN/828xlV32K5QGv4A+YI2R/AIitRknhkUC2EZ74P8GG/JohwYF7LPN1cWl+0bdsf28PXXT3Wy0caPvQ==
   dependencies:
     axios "^0.20.0"
-    koishi-utils "^3.1.0"
+    koishi-utils "^3.1.1"
     ms "^2.1.2"
     ws "^7.3.1"
 
-koishi-core@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.0.1.tgz#5fcb47433eea293360584f8b2e8bd78c75b9025f"
-  integrity sha512-ngFjKyUuh2H1G+pkirn+/mTFUp2kz6HJI7qQlRi2U/bbrHa5XvDosw0bXddDTOcgQ3xw+5dN5nLMl3bpXylf2A==
+koishi-core@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/koishi-core/-/koishi-core-2.1.0.tgz#9e9bd31ba14c343a841c205581d792883304fabe"
+  integrity sha512-AE8xeBnXtlVHXnIby0ij4QfPpK1scV0sDM5R3uw+9V+ffS0iFxoQ7ry41wf9p2n+0OXw9oadqxktUKHZgbC0jA==
   dependencies:
     "@types/koa-bodyparser" "^4.3.0"
     "@types/koa-router" "^7.4.1"
     koa "^2.13.0"
     koa-bodyparser "^4.3.0"
     koa-router "^9.4.0"
-    koishi-utils "^3.1.1"
+    koishi-utils "^3.1.3"
     leven "^3.1.0"
     lru-cache "^6.0.0"
 
-koishi-plugin-chess@^2.0.0-beta.9:
-  version "2.0.0-beta.9"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-chess/-/koishi-plugin-chess-2.0.0-beta.9.tgz#d85d952122303ef5a573e78204415e72c672e484"
-  integrity sha512-MVlevYDLn0460UfZ7d5Woh9HNjFOOK8xksdNgI3sxcLmhod+T4e77ElgBZZ2vFbYuemwld6hvN8Q9DB/m7fDcQ==
+koishi-plugin-chess@^2.0.0-beta.10:
+  version "2.0.0-beta.10"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-chess/-/koishi-plugin-chess-2.0.0-beta.10.tgz#b3fec75f6dab1478e80ce34b885041e435a14454"
+  integrity sha512-I3/11l9ia3gBtyMIbRkBgOsCdTKFRrUkygFU/TyRtVfEey9GgkLaxCcSGcYlrGg6D6V9gh3WGrCf5B04Dmsy+A==
   dependencies:
-    koishi-utils "^3.1.0"
+    koishi-utils "^3.1.2"
 
-koishi-plugin-eval-addons@^1.0.0-beta.8:
-  version "1.0.0-beta.8"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval-addons/-/koishi-plugin-eval-addons-1.0.0-beta.8.tgz#c3cf623496626cefcb849d20b07891f9bbc8a2d1"
-  integrity sha512-kTsm6OTUOl0wGbYVZJ4jZwcqa68dEXDwabZGiWdvwelzXQGOXyXD7/i2IJjybgokEmvw2wC0EwkJ2XoCqZseeg==
+koishi-plugin-eval-addons@^1.0.0-beta.10:
+  version "1.0.0-beta.10"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval-addons/-/koishi-plugin-eval-addons-1.0.0-beta.10.tgz#cd52b86e36d497e9adac949c7e07a6b4dfb487e6"
+  integrity sha512-43/JXy8N8t5rQSQzMmzwTQ3NipDZlsoOmTUDDYtip0paLnwsdyOsfphE2px+yno5MLy5MFhgfm8BOb4DsnYLBA==
   dependencies:
     js-yaml "^3.14.0"
     json5 "^2.1.3"
-    koishi-utils "^3.1.1"
+    koishi-utils "^3.1.3"
     simple-git "^2.20.1"
     typescript "^4.0.2"
 
-koishi-plugin-eval@^2.0.0-beta.17:
-  version "2.0.0-beta.17"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0-beta.17.tgz#e75a03e5f72bf4c348d311036d6c9c8af77b9608"
-  integrity sha512-Y9qEoDmiPGh08oAfsTexuIR4qGOHNZN7YzW6n5SqyVC0jXpS07WPQbrhMMRYlYvAJETp6D4GxPCpVQIctzNxQw==
+koishi-plugin-eval@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval/-/koishi-plugin-eval-2.0.0.tgz#b851c3966ce956294749b8ba1a122e562006f7d5"
+  integrity sha512-1I9WKCxtONbT2/a1ukSJo4JQpImYvNGw2Tjiua4uVXdmJex1fvLRomF6Or2TOiIDOSGcG6A3pwo4MaUE+FcITA==
   dependencies:
-    koishi-utils "^3.1.1"
+    koishi-utils "^3.1.2"
 
-koishi-plugin-mongo@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.1.tgz#454c8196c9c9db7fbbd6ff231587a9fba2fdf583"
-  integrity sha512-IY8s86XZ7YASqlA/rWF3gljjzLf71AxAXd+wEmcbGWSdd2v6hpiON+wg/rXkE+VIPvHTPGiIfuSpJd02xzG5gg==
+koishi-plugin-mongo@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-mongo/-/koishi-plugin-mongo-1.0.2.tgz#669d2693c5dcac7b5dbe299e41cd456fefcd17b9"
+  integrity sha512-Iqe8rzuu6OsNKy3QWsJOZP65fu/UGVC6lOeo1GuMrqV9JiYXjU6TSEvcUpWFcjxerxGg2uNu+KdDzz4YxGredQ==
   dependencies:
     mongodb "^3.6.0"
 
@@ -2165,12 +2176,12 @@ koishi-utils@^3.1.0:
   dependencies:
     supports-color "^7.1.0"
 
-koishi-utils@^3.1.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/koishi-utils/-/koishi-utils-3.1.1.tgz#3d99a5eda543955f30a05df1e666f98c39dabed3"
-  integrity sha512-qKrgi0Femzgv4ooTwzVSAsYPqUe5FNyyKUx/TNNF/i3n3pZ5dLuwujICsMowbsK/3XhlhtmESh8bn+sMNxAjPw==
+koishi-utils@^3.1.1, koishi-utils@^3.1.3:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/koishi-utils/-/koishi-utils-3.1.3.tgz#04c66f8db9e3d6107e8bf0004ab6d0a563156595"
+  integrity sha512-wUfDyf5ppMw0NItTv62L5cjGUOIEQJTkRQUEISMzYmDCvoIwYWmPfYnPptERSCBFfpvx7i5wed+x0FwVOxuiKg==
   dependencies:
-    supports-color "^7.1.0"
+    supports-color "^7.2.0"
 
 koishi-utils@^3.1.2:
   version "3.1.2"
@@ -3280,7 +3291,7 @@ strip-bom@^3.0.0:
   resolved "https://registry.yarnpkg.com/strip-bom/-/strip-bom-3.0.0.tgz#2334c18e9c759f7bdd56fdef7e9ae3d588e68ed3"
   integrity sha1-IzTBjpx1n3vdVv3vfprj1YjmjtM=
 
-strip-json-comments@^3.1.0:
+strip-json-comments@^3.1.0, strip-json-comments@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-3.1.1.tgz#31f1281b3832630434831c310c01cccda8cbe006"
   integrity sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
@@ -3298,10 +3309,10 @@ superagent-proxy@^2.0.0:
     debug "^3.1.0"
     proxy-agent "3"
 
-superagent@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/superagent/-/superagent-6.0.0.tgz#882a73dcdf4ce2b9f5abaea01e9064585d5c7072"
-  integrity sha512-gBiyDSUR3zbYO8za+MudSNxMFSOhKcZfQ1Anya1DWzk9R32zl++cYUFHXzP3VnyvQO8h/1/uPPA9FUDDtE+qdA==
+superagent@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/superagent/-/superagent-6.1.0.tgz#09f08807bc41108ef164cfb4be293cebd480f4a6"
+  integrity sha512-OUDHEssirmplo3F+1HWKUrUjvnQuA+nZI6i/JJBdXb5eq9IyEQwPyPpqND+SSsxf6TygpBEkUjISVRN4/VOpeg==
   dependencies:
     component-emitter "^1.3.0"
     cookiejar "^2.1.2"
