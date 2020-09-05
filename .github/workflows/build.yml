@@ -1,9 +1,9 @@
-name: Build and Lint
+name: Build
 
 on: [push, pull_request]
 
 jobs:
-  build-and-lint:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -12,4 +12,3 @@ jobs:
           node-version: '14.x'
       - run: yarn
       - run: yarn build
-      - run: yarn lint
