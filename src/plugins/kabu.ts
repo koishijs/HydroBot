@@ -1,6 +1,7 @@
 import { App, Session } from 'koishi-core';
 import { Collection, ObjectID } from 'mongodb';
 import moment from 'moment';
+import { endOfToday } from '../lib/expire';
 
 moment.locale('zh-cn');
 
@@ -43,11 +44,7 @@ export const apply = (app: App, config: Config) => {
             const res = await priceColl.findOne({ _id: session.userId });
             if (res) return res.price;
             const price = Math.floor(Math.random() < 0.5 ? 10 + Math.sqrt(Math.random() * 400) : 50 - Math.sqrt(Math.random() * 400));
-            const expire = new Date();
-            expire.setHours(23);
-            expire.setMinutes(59);
-            expire.setSeconds(59);
-            await priceColl.insertOne({ _id: session.userId, price, expire });
+            await priceColl.insertOne({ _id: session.userId, price, expire: endOfToday() });
             return price;
         }
 
