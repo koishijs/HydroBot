@@ -5,6 +5,7 @@ import {
     App, Group, getTargetId, Session, User,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
+import { Collection, ObjectID } from 'mongodb';
 import { text2png } from '../lib/graph';
 
 declare module 'koishi-core/dist/database' {
@@ -20,9 +21,19 @@ declare module 'koishi-core/dist/command' {
     }
 }
 
+interface Message {
+    _id: ObjectID,
+    time: Date,
+    message: string,
+    sender: number,
+    group: number,
+}
+
 Group.extend(() => ({
     disallowedCommands: [],
 }));
+
+let sendCount = 0;
 
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
@@ -386,6 +397,10 @@ export const apply = (app: App) => {
         fields.add('coin');
     });
 
+    app.on('before-send', () => {
+        sendCount++;
+    });
+
     app.on('request/group/invite', async (session) => {
         const udoc = await app.database.getUser(session.userId);
         if (udoc?.authority === 5) {
@@ -416,6 +431,27 @@ export const apply = (app: App) => {
     }
 
     app.on('connect', () => {
+        const coll: Collection<Message> = app.database.db.collection('message');
+
+        app.command('_.stat', 'stat')
+            .action(async ({ session }) => {
+                const $gt = new Date(new Date().getTime() - 24 * 3600 * 1000);
+                const msgCount = await coll.find({ group: session.groupId, time: { $gt } }).count();
+                return `\
+自上次启动共发送消息${sendCount}条
+今日收到本群消息${msgCount}`;
+            });
+
+        app.on('message', (session) => {
+            if (!session.groupId) return;
+            coll.insertOne({
+                group: session.groupId,
+                message: session.message,
+                sender: session.userId,
+                time: new Date(),
+            });
+        });
+
         setTimeout(checkPerm, 10000);
         setInterval(checkPerm, 30 * 60 * 1000);
     });
