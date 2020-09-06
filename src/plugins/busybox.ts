@@ -33,8 +33,6 @@ Group.extend(() => ({
     disallowedCommands: [],
 }));
 
-let sendCount = 0;
-
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
 const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
@@ -397,10 +395,6 @@ export const apply = (app: App) => {
         fields.add('coin');
     });
 
-    app.on('before-send', () => {
-        sendCount++;
-    });
-
     app.on('request/group/invite', async (session) => {
         const udoc = await app.database.getUser(session.userId);
         if (udoc?.authority === 5) {
@@ -431,24 +425,37 @@ export const apply = (app: App) => {
     }
 
     app.on('connect', () => {
-        const coll: Collection<Message> = app.database.db.collection('message');
+        const c: Collection<Message> = app.database.db.collection('message');
 
         app.command('_.stat', 'stat')
             .action(async ({ session }) => {
-                const $gt = new Date(new Date().getTime() - 24 * 3600 * 1000);
-                const msgCount = await coll.find({ group: session.groupId, time: { $gt } }).count();
-                return `\
-自上次启动共发送消息${sendCount}条
-今日收到本群消息${msgCount}`;
+                const time = { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) };
+                const totalSendCount = await c.find({ time, sender: session.selfId }).count();
+                const groupSendCount = await c.find({ group: session.groupId, time, sender: session.selfId }).count();
+                const totalReceiveCount = await c.find({ time, sender: { $ne: session.selfId } }).count();
+                const groupReceiveCount = await c.find({ group: session.groupId, time, sender: { $ne: session.selfId } }).count();
+                return `统计信息（今日）
+发送消息${totalSendCount}条，本群${groupSendCount}条。
+收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
             });
 
         app.on('message', (session) => {
             if (!session.groupId) return;
-            coll.insertOne({
+            c.insertOne({
                 group: session.groupId,
                 message: session.message,
                 sender: session.userId,
                 time: new Date(),
+            });
+        });
+
+        app.on('before-send', (session) => {
+            if (!session.groupId) return;
+            c.insertOne({
+                time: new Date(),
+                sender: session.$bot.selfId,
+                group: session.groupId,
+                message: session.message,
             });
         });
 
