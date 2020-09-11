@@ -104,6 +104,8 @@ export const apply = (app: App) => {
     const logger = new Logger('busybox', true);
     Logger.levels.message = 3;
 
+    Time.setTimezoneOffset(-480); // UTC +8
+
     app.command('help', { authority: 1, hidden: true });
     app.command('tex', { authority: 1 });
     app.command('evaluate <command...>', { authority: 1 });
