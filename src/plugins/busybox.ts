@@ -16,7 +16,6 @@ declare module 'koishi-core/dist/database' {
 
 declare module 'koishi-core/dist/command' {
     interface CommandConfig {
-        cost?: number,
         noRedirect?: boolean,
     }
 }
@@ -86,9 +85,6 @@ async function formatMessage(session: Session) {
 }
 
 declare module 'koishi-core/dist/database' {
-    interface User {
-        coin: number,
-    }
     interface Group {
         welcomeMsg: string
     }
@@ -319,16 +315,6 @@ export const apply = (app: App) => {
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
 
-    app.command('checkin', '签到', { maxUsage: 1 })
-        .shortcut('签到', { prefix: true })
-        .userFields(['coin'])
-        .action(async ({ session }) => {
-            const add = 20 + Math.floor(Math.random() * 10);
-            if (!session.$user.coin) session.$user.coin = 0;
-            session.$user.coin += add;
-            return `签到成功，获得${add}个硬币（共有${session.$user.coin}个）`;
-        });
-
     app.on('message', async (session) => {
         const groupName = await getGroupName(session);
         const senderName = getSenderName(session);
@@ -376,25 +362,12 @@ export const apply = (app: App) => {
     app.on('before-command', ({ session, command }) => {
         // @ts-ignore
         if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
-        const cost = command.getConfig('cost', session);
         const noRedirect = command.getConfig('noRedirect', session);
         if (noRedirect && session._redirected) return '不支持在插值中调用该命令。';
-        // @ts-ignore
-        if (session.$user.coin < cost) return '你没有足够的硬币执行该命令。';
-    });
-
-    app.on('command', ({ session, command }) => {
-        const cost = command.getConfig('cost', session);
-        // @ts-ignore
-        if (cost) session.$user.coin -= cost;
     });
 
     app.on('before-attach-group', (session, fields) => {
         fields.add('disallowedCommands');
-    });
-
-    app.on('before-attach-user', (session, fields) => {
-        fields.add('coin');
     });
 
     app.on('request/group/invite', async (session) => {
@@ -430,13 +403,14 @@ export const apply = (app: App) => {
         const c: Collection<Message> = app.database.db.collection('message');
 
         app.command('_.stat', 'stat')
-            .action(async ({ session }) => {
-                const time = { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) };
+            .option('total', 'Total')
+            .action(async ({ session, options }) => {
+                const time = options.total ? { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } : { $lte: new Date() };
                 const totalSendCount = await c.find({ time, sender: session.selfId }).count();
                 const groupSendCount = await c.find({ group: session.groupId, time, sender: session.selfId }).count();
                 const totalReceiveCount = await c.find({ time, sender: { $ne: session.selfId } }).count();
                 const groupReceiveCount = await c.find({ group: session.groupId, time, sender: { $ne: session.selfId } }).count();
-                return `统计信息（今日）
+                return `统计信息${options.total ? '（总计）' : '（今日）'}
 发送消息${totalSendCount}条，本群${groupSendCount}条。
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
             });
