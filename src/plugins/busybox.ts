@@ -7,6 +7,8 @@ import {
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { Collection, ObjectID } from 'mongodb';
 import { text2png } from '../lib/graph';
+import { Dictionary } from 'lodash';
+import { GroupMemberInfo } from 'koishi-adapter-cqhttp';
 
 declare module 'koishi-core/dist/database' {
     interface Group {
@@ -405,14 +407,35 @@ export const apply = (app: App) => {
         app.command('_.stat', 'stat')
             .option('total', 'Total')
             .action(async ({ session, options }) => {
-                const time = options.total ? { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } : { $lte: new Date() };
-                const totalSendCount = await c.find({ time, sender: session.selfId }).count();
-                const groupSendCount = await c.find({ group: session.groupId, time, sender: session.selfId }).count();
-                const totalReceiveCount = await c.find({ time, sender: { $ne: session.selfId } }).count();
-                const groupReceiveCount = await c.find({ group: session.groupId, time, sender: { $ne: session.selfId } }).count();
+                const time = options.total ? { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } } : {};
+                const totalSendCount = await c.find({ ...time, sender: session.selfId }).count();
+                const groupSendCount = await c.find({ group: session.groupId, ...time, sender: session.selfId }).count();
+                const totalReceiveCount = await c.find({ ...time, sender: { $ne: session.selfId } }).count();
+                const groupReceiveCount = await c.find({ group: session.groupId, ...time, sender: { $ne: session.selfId } }).count();
                 return `统计信息${options.total ? '（总计）' : '（今日）'}
 发送消息${totalSendCount}条，本群${groupSendCount}条。
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
+            });
+
+        app.command('_.rank', 'rank')
+            .option('total', 'Total')
+            .action(async ({ session, options }) => {
+                const $match = options.total
+                    ? { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) }, group: session.groupId }
+                    : { group: session.groupId };
+                const result = await c.aggregate([
+                    { $match },
+                    { $group: { _id: '$sender', count: { $sum: 1 } } },
+                    { $sort: { count: -1 } },
+                    { $limit: 10 },
+                ]).toArray() as unknown as any;
+                const udict: Dictionary<GroupMemberInfo> = {};
+                for (const r of result) {
+                    udict[r._id] = await session.$bot.getGroupMemberInfo(session.groupId, r._id);
+                }
+                return `\
+群成员发言排行${options.total ? '（共计）' : '今日'}
+${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条`).join('\n')}`;
             });
 
         app.on('message', (session) => {

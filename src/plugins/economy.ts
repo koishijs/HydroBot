@@ -56,6 +56,7 @@ export function apply(app: App) {
             const user = await newSession.$observeUser(['coin']);
             session.$user.coin -= n;
             user.coin += n;
+            await newSession.$user._update();
             return '操作完成。';
         });
 }
