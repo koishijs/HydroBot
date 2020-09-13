@@ -6,9 +6,9 @@ import {
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { Collection, ObjectID } from 'mongodb';
-import { text2png } from '../lib/graph';
 import { Dictionary } from 'lodash';
 import { GroupMemberInfo } from 'koishi-adapter-cqhttp';
+import { text2png } from '../lib/graph';
 
 declare module 'koishi-core/dist/database' {
     interface Group {
@@ -407,7 +407,7 @@ export const apply = (app: App) => {
         app.command('_.stat', 'stat')
             .option('total', 'Total')
             .action(async ({ session, options }) => {
-                const time = options.total ? { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } } : {};
+                const time = options.total ? {} : { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } };
                 const totalSendCount = await c.find({ ...time, sender: session.selfId }).count();
                 const groupSendCount = await c.find({ group: session.groupId, ...time, sender: session.selfId }).count();
                 const totalReceiveCount = await c.find({ ...time, sender: { $ne: session.selfId } }).count();
@@ -421,8 +421,8 @@ export const apply = (app: App) => {
             .option('total', 'Total')
             .action(async ({ session, options }) => {
                 const $match = options.total
-                    ? { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) }, group: session.groupId }
-                    : { group: session.groupId };
+                    ? { group: session.groupId }
+                    : { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) }, group: session.groupId };
                 const result = await c.aggregate([
                     { $match },
                     { $group: { _id: '$sender', count: { $sum: 1 } } },
