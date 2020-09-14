@@ -13,6 +13,5 @@ RUN sudo apt-get update \
  && sudo rm -rf /var/lib/apt/lists/*
 RUN sudo mkdir -p /data/db \
  && sudo chown gitpod:gitpod -R /data/db
-
-# Install Node 14
-RUN nvm install 14 && nvm alias default 14
+ 
+RUN bash -c ". .nvm/nvm.sh && nvm install 14 && nvm alias default 14"
