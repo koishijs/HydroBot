@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full
+FROM gitpod/workspace-full-vnc
 
 # Install chromium
 RUN sudo apt-get update \
