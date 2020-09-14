@@ -1,7 +1,8 @@
 FROM gitpod/workspace-full
 
 # Install chromium
-RUN sudo apt-get install chromium -y
+RUN sudo apt-get update \
+ && sudo apt-get install chromium-browser -y
 
 # Install mongodb
 RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
