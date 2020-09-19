@@ -2,6 +2,8 @@ image:
   file: .gitpod.Dockerfile
 tasks:
   - init: |
+      nvm use 14
+      nvm alias default 14
       yarn
       yarn build
 vscode:

@@ -23,6 +23,7 @@
     "url": "https://github.com/masnn/qqbot/issues"
   },
   "dependencies": {
+    "@pipcook/boa": "^1.2.0",
     "ansi_up": "^4.0.4",
     "axios": "^0.20.0",
     "fs-extra": "^9.0.1",
