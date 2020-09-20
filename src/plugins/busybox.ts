@@ -117,7 +117,7 @@ export const apply = (app: App) => {
             let res: any;
             try {
                 // eslint-disable-next-line no-eval
-                eval(args);
+                res = eval(args);
             } catch (e) {
                 res = e;
             }
@@ -133,7 +133,7 @@ export const apply = (app: App) => {
             if (res instanceof Object) {
                 let result: string;
                 try {
-                    result = JSON.stringify(res, null, 1);
+                    result = JSON.stringify(res, null, 2);
                 } catch {
                     result = inspect(result, false, 3);
                 }

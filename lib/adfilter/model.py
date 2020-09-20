@@ -27,13 +27,7 @@ class AdPredictor:
             self.vectorizer = TfidfVectorizer(
                 token_pattern=r"(?u)\b\w+\b", binary=True, ngram_range=(1, 2))
             self.clf = MultinomialNB(alpha=1, fit_prior=True)
-
-        if stopWordsArray is None:
-            stopWordsText = open(r"./data/cn_stopwords.txt", 'r', encoding='utf-8').read() + open(
-                r"./data/hit_stopwords.txt", 'r', encoding='utf-8').read()
-            self.stopWordsArray = stopWordsText.split("\n")
-        else:
-            self.stopWordsArray = stopWordsArray
+        self.stopWordsArray = stopWordsArray
 
     def splitWords(self, text, cut_all=True):
         allTags = jieba.cut(text, cut_all=cut_all)

@@ -456,7 +456,7 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
         app.command('github.cancel <repo>', '取消一个Repository的事件')
             .action(async ({ session }, repo) => {
                 await coll.updateOne(
-                    { _id: repo },
+                    { _id: repo.toLowerCase() },
                     { $pull: { target: get(session) } },
                 );
                 return `Cancelled ${repo}.`;

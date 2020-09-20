@@ -5,3 +5,4 @@ __*
 tsconfig.tsbuildinfo
 .cache/
 dist/
+*.pkl
