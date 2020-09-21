@@ -433,7 +433,7 @@ export const apply = (app: App) => {
                     udict[r._id] = await session.$bot.getGroupMemberInfo(session.groupId, r._id);
                 }
                 return `\
-群成员发言排行${options.total ? '（共计）' : '今日'}
+群成员发言排行${options.total ? '（共计）' : '（今日）'}
 ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条`).join('\n')}`;
             });
 
@@ -449,7 +449,7 @@ ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条
             // eslint-disable-next-line no-cond-assign
             while (capture = imageRE.exec(session.message)) {
                 const [, , url] = capture;
-                const current = await image.updateOne({ _id: url }, { updateAt: new Date() }, { upsert: false });
+                const current = await image.updateOne({ _id: url }, { $set: { updateAt: new Date() } }, { upsert: false });
                 if (current.modifiedCount) continue;
                 const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
                 const buf = Buffer.alloc(data.byteLength);
