@@ -5,7 +5,8 @@ import {
     App, Group, getTargetId, Session, User,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
-import { Collection, ObjectID } from 'mongodb';
+import { Binary, Collection, ObjectID } from 'mongodb';
+import axios from 'axios';
 import { Dictionary } from 'lodash';
 import { GroupMemberInfo } from 'koishi-adapter-cqhttp';
 import { text2png } from '../lib/graph';
@@ -28,6 +29,12 @@ interface Message {
     message: string,
     sender: number,
     group: number,
+}
+
+interface ImageDoc {
+    _id: string,
+    data: Binary,
+    updateAt?: Date,
 }
 
 Group.extend(() => ({
@@ -98,6 +105,8 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
         : '仅管理员可执行该操作。'
 );
 
+const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;
+
 export const apply = (app: App) => {
     const logger = new Logger('busybox', true);
     Logger.levels.message = 3;
@@ -118,28 +127,11 @@ export const apply = (app: App) => {
             try {
                 // eslint-disable-next-line no-eval
                 res = eval(args);
+                if (res instanceof Promise) res = await res;
             } catch (e) {
                 res = e;
             }
-            if (res instanceof Promise) {
-                try {
-                    res = await res;
-                } catch (e) {
-                    res = e;
-                }
-            }
-            if (typeof res === 'string' || res instanceof String) return res.toString();
-            if (typeof res === 'undefined') return 'undefined';
-            if (res instanceof Object) {
-                let result: string;
-                try {
-                    result = JSON.stringify(res, null, 2);
-                } catch {
-                    result = inspect(result, false, 3);
-                }
-                return result;
-            }
-            return res.toString ? res.toString() : res;
+            return inspect(res, false, 3);
         });
 
     app.command('_.sh <command...>', '执行shell命令', { authority: 5, noRedirect: true })
@@ -401,17 +393,24 @@ export const apply = (app: App) => {
         }
     }
 
-    app.on('connect', () => {
+    app.on('connect', async () => {
         const c: Collection<Message> = app.database.db.collection('message');
+        const image: Collection<ImageDoc> = app.database.db.collection('image');
+
+        logger.info('Ensuring index...');
+        await c.createIndex({ time: -1, group: 1, user: 1 });
+        await image.createIndex({ data: 1 });
+        await image.createIndex({ updateAt: -1 }, { sparse: true });
+        logger.info('Done.');
 
         app.command('_.stat', 'stat')
             .option('total', 'Total')
             .action(async ({ session, options }) => {
                 const time = options.total ? {} : { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } };
                 const totalSendCount = await c.find({ ...time, sender: session.selfId }).count();
-                const groupSendCount = await c.find({ group: session.groupId, ...time, sender: session.selfId }).count();
+                const groupSendCount = await c.find({ ...time, group: session.groupId, sender: session.selfId }).count();
                 const totalReceiveCount = await c.find({ ...time, sender: { $ne: session.selfId } }).count();
-                const groupReceiveCount = await c.find({ group: session.groupId, ...time, sender: { $ne: session.selfId } }).count();
+                const groupReceiveCount = await c.find({ ...time, group: session.groupId, sender: { $ne: session.selfId } }).count();
                 return `统计信息${options.total ? '（总计）' : '（今日）'}
 发送消息${totalSendCount}条，本群${groupSendCount}条。
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
@@ -438,7 +437,7 @@ export const apply = (app: App) => {
 ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条`).join('\n')}`;
             });
 
-        app.on('message', (session) => {
+        app.on('message', async (session) => {
             if (!session.groupId) return;
             c.insertOne({
                 group: session.groupId,
@@ -446,6 +445,18 @@ ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条
                 sender: session.userId,
                 time: new Date(),
             });
+            let capture: RegExpExecArray;
+            // eslint-disable-next-line no-cond-assign
+            while (capture = imageRE.exec(session.message)) {
+                const [, , url] = capture;
+                const current = await image.updateOne({ _id: url }, { updateAt: new Date() }, { upsert: false });
+                if (current.modifiedCount) continue;
+                const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
+                const buf = Buffer.alloc(data.byteLength);
+                const view = new Uint8Array(data);
+                for (let i = 0; i < buf.length; ++i) buf[i] = view[i];
+                await image.insertOne({ _id: url, data: new Binary(buf), updateAt: new Date() });
+            }
         });
 
         app.on('before-send', (session) => {
