@@ -2,7 +2,7 @@
 import child from 'child_process';
 import { inspect } from 'util';
 import {
-    App, Group, getTargetId, Session, User,
+    Group, getTargetId, Session, User, Context,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { Binary, Collection, ObjectID } from 'mongodb';
@@ -107,34 +107,43 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
 
 const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;
 
-export const apply = (app: App) => {
+export const apply = (ctx: Context) => {
     const logger = new Logger('busybox', true);
     Logger.levels.message = 3;
 
     Time.setTimezoneOffset(-480); // UTC +8
 
-    app.command('help', { authority: 1, hidden: true });
-    app.command('tex', { authority: 1 });
-    app.command('evaluate <command...>', { authority: 1 });
-    app.command('_', '管理工具');
+    ctx.command('help', { authority: 1, hidden: true });
+    ctx.command('tex', { authority: 1 });
+    ctx.command('evaluate <command...>', { authority: 1 });
+    ctx.command('_', '管理工具');
 
-    app.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })
+    ctx.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })
         .action((_, msg) => msg.decode());
 
-    app.command('_.eval <expr...>', { authority: 5, noRedirect: true })
-        .action(async (_, args) => {
+    ctx.command('_.eval <expr...>', { authority: 5, noRedirect: true })
+        .option('i', 'Output as image')
+        .action(async ({ options }, input) => {
             let res: any;
+            const expr = `\
+(async function f(){
+    return ${input}
+})()`;
             try {
                 // eslint-disable-next-line no-eval
-                res = eval(args);
-                if (res instanceof Promise) res = await res;
+                res = await eval(expr);
             } catch (e) {
                 res = e;
             }
-            return inspect(res, false, 3);
+            const output = inspect(res, false, 3);
+            if (!options.i) return output;
+            const page = await ctx.app.browser.newPage();
+            const img = await text2png(page, output);
+            page.close();
+            return `[CQ:image,file=base64://${img}]`;
         });
 
-    app.command('_.sh <command...>', '执行shell命令', { authority: 5, noRedirect: true })
+    ctx.command('_.sh <command...>', '执行shell命令', { authority: 5, noRedirect: true })
         .option('i', 'Output as image')
         .action(async ({ options }, cmd) => {
             let p: string;
@@ -150,13 +159,13 @@ export const apply = (app: App) => {
             }
             if (!p.trim().length) return '(execute success)';
             if (!options.i) return p;
-            const page = await app.browser.newPage();
+            const page = await ctx.app.browser.newPage();
             const img = await text2png(page, p);
             page.close();
             return `[CQ:image,file=base64://${img}]`;
         });
 
-    app.command('_.shutdown', '关闭机器人', { authority: 5, noRedirect: true })
+    ctx.command('_.shutdown', '关闭机器人', { authority: 5, noRedirect: true })
         .action(() => {
             setTimeout(() => {
                 if (process.env.pm_id) child.exec(`pm2 stop ${process.env.pm_id}`);
@@ -165,7 +174,7 @@ export const apply = (app: App) => {
             return 'Exiting in 3 secs...';
         });
 
-    app.command('_.restart', '重启机器人', { authority: 5, noRedirect: true })
+    ctx.command('_.restart', '重启机器人', { authority: 5, noRedirect: true })
         .action(() => {
             if (!process.env.pm_id) return 'Cannot restart: not pm2 environment';
             setTimeout(() => {
@@ -174,18 +183,18 @@ export const apply = (app: App) => {
             return 'Restarting in 3 secs...';
         });
 
-    app.command('_.leave', '退出该群', { noRedirect: true })
+    ctx.command('_.leave', '退出该群', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
         .action(({ session }) => session.$bot.setGroupLeave(session.groupId));
 
-    app.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5, noRedirect: true })
+    ctx.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5, noRedirect: true })
         .action(async ({ session }, userId, authority) => {
             if (authority === 'null') {
-                await app.database.setUser(getTargetId(userId), { flag: 1 });
+                await ctx.database.setUser(getTargetId(userId), { flag: 1 });
                 authority = '0';
             } else {
-                await app.database.setUser(getTargetId(userId), { flag: 0 });
+                await ctx.database.setUser(getTargetId(userId), { flag: 0 });
             }
             await session.$app.database.setUser(
                 getTargetId(userId), { authority: parseInt(authority, 10) },
@@ -193,11 +202,11 @@ export const apply = (app: App) => {
             return `Set ${userId} to ${authority}`;
         });
 
-    app.command('_.boardcast <message...>', '全服广播', { authority: 5, noRedirect: true })
+    ctx.command('_.boardcast <message...>', '全服广播', { authority: 5, noRedirect: true })
         .option('forced', '-f 无视 silent 标签进行广播')
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
-            let groups = await app.database.getAllGroups(['id', 'flag'], [session.selfId]);
+            let groups = await ctx.database.getAllGroups(['id', 'flag'], [session.selfId]);
             if (!options.forced) {
                 groups = groups.filter((g) => !(g.flag & Group.Flag.silent));
             }
@@ -206,7 +215,7 @@ export const apply = (app: App) => {
             });
         });
 
-    app.command('contextify <command...>', '在特定上下文中触发指令', { authority: 4, noRedirect: true })
+    ctx.command('contextify <command...>', '在特定上下文中触发指令', { authority: 4, noRedirect: true })
         .alias('ctxf')
         .userFields(['authority'])
         .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
@@ -227,7 +236,7 @@ export const apply = (app: App) => {
                 options.user = options.member;
             }
             if (!options.user && !options.group) return '请提供新的上下文。';
-            const newSession = new Session(app, session);
+            const newSession = new Session(ctx.app, session);
             newSession.$send = session.$send.bind(session);
             newSession.$sendQueued = session.$sendQueued.bind(session);
             delete newSession.groupId;
@@ -260,7 +269,7 @@ export const apply = (app: App) => {
             return newSession.$execute(message);
         });
 
-    app.command('_.deactivate', '在群内禁用', { noRedirect: true })
+    ctx.command('_.deactivate', '在群内禁用', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
         .groupFields(['flag'])
@@ -269,7 +278,7 @@ export const apply = (app: App) => {
             return 'Deactivated';
         });
 
-    app.command('_.activate', '在群内启用', { noRedirect: true })
+    ctx.command('_.activate', '在群内启用', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
         .groupFields(['flag'])
@@ -278,7 +287,7 @@ export const apply = (app: App) => {
             return 'Activated';
         });
 
-    app.command('_.setWelcomeMsg <...msg>', '设置欢迎信息', { noRedirect: true })
+    ctx.command('_.setWelcomeMsg <...msg>', '设置欢迎信息', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
         .groupFields(['welcomeMsg'])
@@ -287,7 +296,7 @@ export const apply = (app: App) => {
             return 'Updated.';
         });
 
-    app.command('_.switch <command>', '启用/停用命令', { noRedirect: true })
+    ctx.command('_.switch <command>', '启用/停用命令', { noRedirect: true })
         .userFields(['authority'])
         .groupFields(['disallowedCommands'])
         .before(checkGroupAdmin)
@@ -303,24 +312,24 @@ export const apply = (app: App) => {
             return `${command} 命令为禁用状态。`;
         });
 
-    app.command('_.mute <user> <periodSecs>', '禁言用户', { noRedirect: true })
+    ctx.command('_.mute <user> <periodSecs>', '禁言用户', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
         .action(({ session }, user, secs = '600000') =>
             session.$bot.setGroupBan(session.groupId, getTargetId(user), parseInt(secs, 10)));
 
-    app.on('message', async (session) => {
+    ctx.on('message', async (session) => {
         const groupName = await getGroupName(session);
         const senderName = getSenderName(session);
         const message = await formatMessage(session);
         logger.info(`[${groupName}] ${senderName}: ${message}`);
         if (!session.groupId) return;
         if (session.message === '>_.activate') {
-            const user = await app.database.getUser(session.userId);
+            const user = await ctx.database.getUser(session.userId);
             if (user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role)) {
-                const group = await app.database.getGroup(session.groupId);
+                const group = await ctx.database.getGroup(session.groupId);
                 const flag = group.flag & (~Group.Flag.ignore);
-                await app.database.setGroup(session.groupId, { flag });
+                await ctx.database.setGroup(session.groupId, { flag });
                 await session.$send('Activated');
             } else await session.$send('您没有权限执行该操作');
         }
@@ -329,17 +338,17 @@ export const apply = (app: App) => {
         if (!res) return;
         const [, id, msg] = res;
         if (msg.includes('!!recall')) {
-            const user = await app.database.getUser(session.userId, ['authority']);
+            const user = await ctx.database.getUser(session.userId, ['authority']);
             if (user.authority >= 4) return session.$bot.deleteMsg(parseInt(id, 10));
         }
     });
 
-    app.on('group-ban', (session) => {
+    ctx.on('group-ban', (session) => {
         // TODO handle auto-leave?
         if (session.userId === session.selfId) console.log(session);
     });
 
-    app.on('group-increase', async (session) => {
+    ctx.on('group-increase', async (session) => {
         const data = await session.$app.database.getGroup(session.groupId);
         logger.info('Event.Group_Increase', session, data);
         if (data.welcomeMsg) {
@@ -347,25 +356,25 @@ export const apply = (app: App) => {
         }
     });
 
-    app.on('group-decrease', async (session) => {
-        const udoc = await app.database.getUser(session.userId);
+    ctx.on('group-decrease', async (session) => {
+        const udoc = await ctx.database.getUser(session.userId);
         logger.info('Event.Group_Decrease', session, udoc);
         session.$send(`${session.$username} 退出了群聊。`);
     });
 
-    app.on('before-command', ({ session, command }) => {
+    ctx.on('before-command', ({ session, command }) => {
         // @ts-ignore
         if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
         const noRedirect = command.getConfig('noRedirect', session);
         if (noRedirect && session._redirected) return '不支持在插值中调用该命令。';
     });
 
-    app.on('before-attach-group', (session, fields) => {
+    ctx.on('before-attach-group', (session, fields) => {
         fields.add('disallowedCommands');
     });
 
-    app.on('request/group/invite', async (session) => {
-        const udoc = await app.database.getUser(session.userId);
+    ctx.on('request/group/invite', async (session) => {
+        const udoc = await ctx.database.getUser(session.userId);
         if (udoc?.authority === 5) {
             logger.info('Approve Invite Request', session, udoc);
             session.$bot.setGroupAddRequest('Approved', session.subType, true);
@@ -377,11 +386,11 @@ export const apply = (app: App) => {
 
     async function checkPerm() {
         logger.info('正在检查权限');
-        for (const bot of app.bots) {
+        for (const bot of ctx.bots) {
             const groups = await bot.getGroupList();
             for (const group of groups) {
                 const users = await bot.getGroupMemberList(group.groupId);
-                const udocs = await app.database.getUsers(users.map((user) => user.userId));
+                const udocs = await ctx.database.getUsers(users.map((user) => user.userId));
                 if (!udocs.some((user) => user.authority === 5)) {
                     logger.info('已退出 %d(%s)：无授权者', group.groupId, group.groupName);
                     bot.sendGroupMsg(group.groupId, '未检测到有效的授权。即将自动退出。');
@@ -393,9 +402,9 @@ export const apply = (app: App) => {
         }
     }
 
-    app.on('connect', async () => {
-        const c: Collection<Message> = app.database.db.collection('message');
-        const image: Collection<ImageDoc> = app.database.db.collection('image');
+    ctx.on('connect', async () => {
+        const c: Collection<Message> = ctx.database.db.collection('message');
+        const image: Collection<ImageDoc> = ctx.database.db.collection('image');
 
         logger.info('Ensuring index...');
         await c.createIndex({ time: -1, group: 1, user: 1 });
@@ -403,7 +412,7 @@ export const apply = (app: App) => {
         await image.createIndex({ updateAt: -1 }, { sparse: true });
         logger.info('Done.');
 
-        app.command('_.stat', 'stat')
+        ctx.command('_.stat', 'stat')
             .option('total', 'Total')
             .action(async ({ session, options }) => {
                 const time = options.total ? {} : { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } };
@@ -416,7 +425,7 @@ export const apply = (app: App) => {
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
             });
 
-        app.command('_.rank', 'rank')
+        ctx.command('_.rank', 'rank')
             .option('total', 'Total')
             .action(async ({ session, options }) => {
                 const $match = options.total
@@ -437,7 +446,7 @@ export const apply = (app: App) => {
 ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条`).join('\n')}`;
             });
 
-        app.on('message', async (session) => {
+        ctx.on('message', async (session) => {
             if (!session.groupId) return;
             c.insertOne({
                 group: session.groupId,
@@ -455,11 +464,11 @@ ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条
                 const buf = Buffer.alloc(data.byteLength);
                 const view = new Uint8Array(data);
                 for (let i = 0; i < buf.length; ++i) buf[i] = view[i];
-                await image.insertOne({ _id: url, data: new Binary(buf), updateAt: new Date() });
+                await image.updateOne({ _id: url }, { $set: { data: new Binary(buf), updateAt: new Date() } }, { upsert: true });
             }
         });
 
-        app.on('before-send', (session) => {
+        ctx.on('before-send', (session) => {
             if (!session.groupId) return;
             c.insertOne({
                 time: new Date(),
