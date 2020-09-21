@@ -3,9 +3,11 @@ import crypto from 'crypto';
 import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import { App, Session } from 'koishi-core';
+import { Logger } from 'koishi-utils';
 import { Collection } from 'mongodb';
 
 proxy(superagent);
+const logger = new Logger('github');
 
 class InvalidTokenError extends Error { }
 
@@ -375,15 +377,17 @@ export const apply = (app: App, config: any) => {
             }
         });
 
-        app.on('message', async (session) => {
+        app.middleware(async (session, next) => {
             const replyTo = session.$reply;
-            const parsedMsg = session.$parsed;
-            if (!replyTo || !parsedMsg) return;
+            const parsedMsg = session.$parsed.replace(/\[CQ:at,qq=\d+\]/, '').trim();
+            if (!replyTo || !parsedMsg) return next();
             const [relativeEvent, user] = await Promise.all([
                 collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } }),
                 app.database.getUser(session.userId, ['GithubToken']),
             ]);
             if (!relativeEvent || !events[relativeEvent.type].interact) return;
+            logger.info(replyTo, parsedMsg);
+            logger.info('Reply: %s', relativeEvent);
             try {
                 async function getToken() {
                     if (!user.GithubToken?.access_token) throw new InvalidTokenError();
@@ -427,6 +431,7 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
                 if (message) await session.$send(message);
                 if ($set) await collData.updateOne({ _id: relativeEvent._id }, { $set });
             } catch (e) { session.$send(e.message); }
+            return next();
         });
 
         app.command('github.listen <repo>', '监听一个Repository的事件')
