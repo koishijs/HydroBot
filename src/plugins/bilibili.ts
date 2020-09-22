@@ -21,7 +21,7 @@ function decode(source: string) {
     return result > 0 && result < 1e9 ? result : null;
 }
 
-const RE_BVID: [RegExp, processer: (result: RegExpExecArray) => Promise<number> | number][] = [
+const RE_BVID: [reg: RegExp, processer: (result: RegExpExecArray) => Promise<number> | number][] = [
     [/(BV[0-9a-zA-Z]{10})/gmi, (result) => decode(result[1])],
     [/av([0-9]+)/gmi, (result) => parseInt(result[1], 10)],
     [/b23\.tv\/([a-zA-Z0-9]+)/gmi, async (result) => {

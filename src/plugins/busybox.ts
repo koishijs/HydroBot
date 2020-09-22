@@ -408,7 +408,7 @@ export const apply = (ctx: Context) => {
 
         logger.info('Ensuring index...');
         await c.createIndex({ time: -1, group: 1, user: 1 });
-        await image.createIndex({ data: 1 });
+        await image.createIndex({ md5: 1 }, { sparse: true });
         await image.createIndex({ updateAt: -1 }, { sparse: true });
         logger.info('Done.');
 
