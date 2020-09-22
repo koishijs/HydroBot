@@ -22,18 +22,23 @@ export function apply(app: App) {
             .option('in', '-i, --in')
             .option('out', '-o, --out')
             .action(async ({ session, options }, target) => {
-                const i = await c.findOne({ from: session.groupId, to: target });
+                let _target;
+                if (!Number.isNaN(+target)) _target = +target;
+                else _target = target;
+                const i = await c.findOne({ from: session.groupId, to: _target });
                 if (i) {
                     await c.updateOne(
-                        { from: session.groupId, to: target },
+                        { from: session.groupId, to: _target },
                         { $set: { in: !!options.out, out: !!options.in } },
                     );
+                } else {
+                    await c.updateOne(
+                        { from: _target, to: session.groupId },
+                        { $set: { in: !!options.in, out: !!options.out } },
+                        { upsert: true },
+                    );
                 }
-                await c.updateOne(
-                    { from: target, to: session.groupId },
-                    { $set: { in: !!options.in, out: !!options.out } },
-                    { upsert: true },
-                );
+                return 'Done.';
             });
     });
 }
