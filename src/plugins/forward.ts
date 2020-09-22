@@ -26,12 +26,12 @@ export function apply(app: App) {
                 if (i) {
                     await c.updateOne(
                         { from: session.groupId, to: target },
-                        { in: !!options.in, out: !!options },
+                        { $set: { in: !!options.out, out: !!options.in } },
                     );
                 }
                 await c.updateOne(
                     { from: target, to: session.groupId },
-                    { in: !!options.out, out: !!options.in },
+                    { $set: { in: !!options.in, out: !!options.out } },
                     { upsert: true },
                 );
             });
