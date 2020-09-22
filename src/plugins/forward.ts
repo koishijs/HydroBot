@@ -9,7 +9,7 @@ export function apply(app: App) {
         app.on('message', async (session) => {
             const targets = await c.find({
                 $or: [
-                    { from: session.groupId, out: true }, { to: session.groupId, in: true },
+                    { from: session.groupId, in: true }, { to: session.groupId, out: true },
                 ],
             }).toArray();
             for (const target of targets) {
