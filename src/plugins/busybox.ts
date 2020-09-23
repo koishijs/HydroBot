@@ -183,7 +183,9 @@ export const apply = (ctx: Context, config: Config = {}) => {
     ctx.command('_.leave', '退出该群', { noRedirect: true })
         .userFields(['authority'])
         .before(checkGroupAdmin)
-        .action(({ session }) => session.$bot.setGroupLeave(session.groupId));
+        .action(async ({ session }) => {
+            await session.$bot.setGroupLeave(session.groupId);
+        });
 
     ctx.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5, noRedirect: true })
         .action(async ({ session }, userId, authority) => {
@@ -360,6 +362,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
     });
 
     ctx.on('before-command', ({ session, command }) => {
+        if (!session.$group) return;
         // @ts-ignore
         if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
         const noRedirect = command.getConfig('noRedirect', session);

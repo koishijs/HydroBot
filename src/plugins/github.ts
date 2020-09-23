@@ -312,7 +312,7 @@ export const apply = (app: App, config: any) => {
             label: {},
         };
 
-        app.api.post('/github', async (ctx) => {
+        app.router.post('/github', async (ctx) => {
             try {
                 const event = ctx.request.headers['x-github-event'];
                 let body;
@@ -356,7 +356,7 @@ export const apply = (app: App, config: any) => {
             }
         });
 
-        app.api.get('/github/authorize', async (ctx) => {
+        app.router.get('/github/authorize', async (ctx) => {
             const targetId = parseInt(ctx.query.state, 10);
             if (Number.isNaN(targetId)) throw new Error('Invalid targetId');
             const code = ctx.query.code;
