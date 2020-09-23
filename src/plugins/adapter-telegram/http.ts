@@ -1,4 +1,6 @@
-import { App, Bot, Meta, Server } from 'koishi-core';
+import {
+    App, Bot, Meta, Server,
+} from 'koishi-core';
 import {
     Logger, defineProperty, snakeCase, assertProperty,
 } from 'koishi-utils';

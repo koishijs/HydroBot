@@ -280,7 +280,7 @@ declare namespace Telegram {
         foursquare_type?: string;
     }
 
-    type PollType = "regular" | "quiz";
+    type PollType = 'regular' | 'quiz';
 
     interface PollAnswer {
         poll_id: string;

@@ -14,12 +14,3 @@ jobs:
       - run: yarn lint
       - name: Check diff
         run: git diff --exit-code HEAD
-      - name: Create Pull Request
-        if: failure()
-        uses: peter-evans/create-pull-request@v2
-        with:
-          commit-message: "style: format codes"
-          title: "style: format codes for ${{ github.ref }}"
-          assignees: "${{ github.actor }}"
-          reviewers: "${{ github.actor }}"
-          branch: "lint/${{ github.ref }}"

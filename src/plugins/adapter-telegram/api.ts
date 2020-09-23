@@ -1,10 +1,7 @@
 import {
     camelCase, Logger, snakeCase, CQCode,
 } from 'koishi-utils';
-import {
-    Bot, AccountInfo, BotStatusCode,
-} from 'koishi-core';
-import Telegram from './interface';
+import { Bot, AccountInfo, BotStatusCode } from 'koishi-core';
 
 const logger = new Logger('bot');
 
