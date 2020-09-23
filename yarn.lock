@@ -2120,10 +2120,10 @@ koishi-plugin-chess@^2.0.0-beta.10:
   dependencies:
     koishi-utils "^3.1.2"
 
-koishi-plugin-eval-addons@^1.0.0-beta.10:
-  version "1.0.0-beta.10"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-eval-addons/-/koishi-plugin-eval-addons-1.0.0-beta.10.tgz#cd52b86e36d497e9adac949c7e07a6b4dfb487e6"
-  integrity sha512-43/JXy8N8t5rQSQzMmzwTQ3NipDZlsoOmTUDDYtip0paLnwsdyOsfphE2px+yno5MLy5MFhgfm8BOb4DsnYLBA==
+koishi-plugin-eval-addons@^1.0.0-beta.11:
+  version "1.0.0-beta.11"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-eval-addons/-/koishi-plugin-eval-addons-1.0.0-beta.11.tgz#1659599b4eff6ce53d4d8d2c90e9951caf8faacd"
+  integrity sha512-RjCwuZZ+9C+io53TuXHqcy71J05OxyQic8PCptFs047oK4eTmhIXBEgNy8OdLpti3wLbpGI2/WdIaCm9TNYrPg==
   dependencies:
     js-yaml "^3.14.0"
     json5 "^2.1.3"
@@ -2169,13 +2169,13 @@ koishi-plugin-schedule@^2.0.2:
   dependencies:
     koishi-utils "^3.1.4"
 
-koishi-plugin-status@^2.0.0-beta.14:
-  version "2.0.0-beta.14"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-status/-/koishi-plugin-status-2.0.0-beta.14.tgz#1a09a2ea8e08040720585b4d7462c1b224168521"
-  integrity sha512-s1xTCTOUTN6TKrUNU740GFwIRfAywj/hYAw+LIBNav0mydYS2MaD2MVcoxcAI1caZ97XlSrA+CLCCNj0DTtOsA==
+koishi-plugin-status@^2.0.0-beta.15:
+  version "2.0.0-beta.15"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-status/-/koishi-plugin-status-2.0.0-beta.15.tgz#20e757a44f7d65b141ed198d3075cdae503329d0"
+  integrity sha512-trmDsHKGMG5XQPlGbJDP2cFJdUL0mYLcaCs2FPgcLM4GvhLTW7+32qDlWoq50HgG1CIGk++NWXdYqDqn0XMHwA==
   dependencies:
     cross-spawn "^7.0.3"
-    koishi-utils "^3.1.3"
+    koishi-utils "^3.1.5"
 
 koishi-plugin-tools@^1.0.1:
   version "1.0.1"

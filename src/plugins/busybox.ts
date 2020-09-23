@@ -5,8 +5,7 @@ import {
     Group, getTargetId, Session, User, Context,
 } from 'koishi-core';
 import { Logger, CQCode, Time } from 'koishi-utils';
-import { Binary, Collection, ObjectID } from 'mongodb';
-import axios from 'axios';
+import { Collection, ObjectID } from 'mongodb';
 import { Dictionary } from 'lodash';
 import { GroupMemberInfo } from 'koishi-adapter-cqhttp';
 import { text2png } from '../lib/graph';
@@ -29,12 +28,6 @@ interface Message {
     message: string,
     sender: number,
     group: number,
-}
-
-interface ImageDoc {
-    _id: string,
-    data: Binary,
-    updateAt?: Date,
 }
 
 Group.extend(() => ({
@@ -105,13 +98,17 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
         : '仅管理员可执行该操作。'
 );
 
-const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;
+interface Config {
+    recordMessage?: boolean,
+    timezoneOffset?: number,
+}
 
-export const apply = (ctx: Context) => {
+export const apply = (ctx: Context, config: Config = {}) => {
     const logger = new Logger('busybox', true);
     Logger.levels.message = 3;
 
-    Time.setTimezoneOffset(-480); // UTC +8
+    Time.setTimezoneOffset(config.timezoneOffset ?? -480); // UTC +8
+    config.recordMessage = config.recordMessage ?? true;
 
     ctx.command('help', { authority: 1, hidden: true });
     ctx.command('tex', { authority: 1 });
@@ -404,12 +401,9 @@ export const apply = (ctx: Context) => {
 
     ctx.on('connect', async () => {
         const c: Collection<Message> = ctx.database.db.collection('message');
-        const image: Collection<ImageDoc> = ctx.database.db.collection('image');
 
         logger.info('Ensuring index...');
         await c.createIndex({ time: -1, group: 1, user: 1 });
-        await image.createIndex({ md5: 1 }, { sparse: true });
-        await image.createIndex({ updateAt: -1 }, { sparse: true });
         logger.info('Done.');
 
         ctx.command('_.stat', 'stat')
@@ -446,37 +440,27 @@ export const apply = (ctx: Context) => {
 ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条`).join('\n')}`;
             });
 
-        ctx.on('message', async (session) => {
-            if (!session.groupId) return;
-            c.insertOne({
-                group: session.groupId,
-                message: session.message,
-                sender: session.userId,
-                time: new Date(),
+        if (config.recordMessage) {
+            ctx.on('message', async (session) => {
+                if (!session.groupId) return;
+                c.insertOne({
+                    group: session.groupId,
+                    message: session.message,
+                    sender: session.userId,
+                    time: new Date(),
+                });
             });
-            let capture: RegExpExecArray;
-            // eslint-disable-next-line no-cond-assign
-            while (capture = imageRE.exec(session.message)) {
-                const [, , url] = capture;
-                const current = await image.updateOne({ _id: url }, { $set: { updateAt: new Date() } }, { upsert: false });
-                if (current.modifiedCount) continue;
-                const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
-                const buf = Buffer.alloc(data.byteLength);
-                const view = new Uint8Array(data);
-                for (let i = 0; i < buf.length; ++i) buf[i] = view[i];
-                await image.updateOne({ _id: url }, { $set: { data: new Binary(buf), updateAt: new Date() } }, { upsert: true });
-            }
-        });
 
-        ctx.on('before-send', (session) => {
-            if (!session.groupId) return;
-            c.insertOne({
-                time: new Date(),
-                sender: session.$bot.selfId,
-                group: session.groupId,
-                message: session.message,
+            ctx.on('before-send', (session) => {
+                if (!session.groupId) return;
+                c.insertOne({
+                    time: new Date(),
+                    sender: session.$bot.selfId,
+                    group: session.groupId,
+                    message: session.message,
+                });
             });
-        });
+        }
 
         setTimeout(checkPerm, 10000);
         setInterval(checkPerm, 30 * 60 * 1000);
