@@ -436,7 +436,11 @@ export const apply = (ctx: Context, config: Config = {}) => {
                 ]).toArray() as unknown as any;
                 const udict: Dictionary<GroupMemberInfo> = {};
                 for (const r of result) {
-                    udict[r._id] = await session.$bot.getGroupMemberInfo(session.groupId, r._id);
+                    try {
+                        udict[r._id] = await session.$bot.getGroupMemberInfo(session.groupId, r._id);
+                    } catch (e) {
+                        udict[r._id] = { card: r._id, nickname: '' } as unknown as GroupMemberInfo;
+                    }
                 }
                 return `\
 群成员发言排行${options.total ? '（共计）' : '（今日）'}

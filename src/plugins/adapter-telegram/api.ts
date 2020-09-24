@@ -39,8 +39,8 @@ declare module 'koishi-core/dist/server' {
         sendMsg(chatId: string | number, message: string): Promise<number>
         deleteMsg(messageId: number): Promise<void>
         getLoginInfo(): Promise<AccountInfo>
-        getFriendList(): Promise<never[]>
-        getGroupList(): Promise<NavigatorUserMediaErrorCallback[]>
+        getFriendList(): Promise<any[]>
+        getGroupList(): Promise<any[]>
         setGroupLeave(chatId: string | number): Promise<boolean>
         getGroupInfo(groupId: number): Promise<any>
         getGroupMemberInfo(groupId: number, userId: number): Promise<any>
