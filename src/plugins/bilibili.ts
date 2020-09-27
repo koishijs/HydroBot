@@ -38,6 +38,13 @@ const RE_BVID: [reg: RegExp, processer: (result: RegExpExecArray) => Promise<num
 ];
 
 export const apply = (app: App) => {
+    app.command('bilibili <avid>', { hidden: true })
+        .action(async ({ session }, av) => {
+            const info = await superagent.get(`http://api.bilibili.com/x/web-interface/view?aid=${av}`);
+            if (info.body.code !== 0) return;
+            await session.$send(`bilibili.com/video/av${av}\n${info.body.data.title}\n[CQ:image,file=${info.body.data.pic}]`);
+        })
+
     app.middleware(async (session, next) => {
         await next();
         let av: number;
@@ -51,10 +58,6 @@ export const apply = (app: App) => {
                 break;
             }
         }
-        if (av) {
-            const info = await superagent.get(`http://api.bilibili.com/x/web-interface/view?aid=${av}`);
-            if (info.body.code !== 0) return;
-            await session.$send(`bilibili.com/video/av${av}\n${info.body.data.title}\n[CQ:image,file=${info.body.data.pic}]`);
-        }
+        if (av) await session.$execute('bilibili ' + av);
     });
 };

@@ -3,9 +3,10 @@ import superagent from 'superagent';
 import { filter } from 'lodash';
 
 export function apply(app: App) {
-    app.command('cf', 'Codeforces');
+    app.command('oi', 'OI related');
+    app.command('oi/cf', 'Codeforces');
 
-    app.command('cf.user <name>', 'Codeforces User')
+    app.command('oi/cf.user <name>', 'Codeforces User')
         .action(async (_, name) => {
             const res = await superagent.get(`https://codeforces.com/api/user.info?handles=${name}`).catch(() => { });
             if (!res) return 'CF 挂了！';
@@ -19,7 +20,7 @@ MaxRating: ${result.maxRating}
 MaxRank: ${result.maxRank}`;
         });
 
-    app.command('cf.contest', 'Codeforces Contest')
+    app.command('oi/cf.contest', 'Codeforces Contest')
         .action(async () => {
             const res = await superagent.get('https://codeforces.com/api/contest.list').catch(() => { });
             if (!res || res.body.status !== 'OK') return 'CF 挂了！';
