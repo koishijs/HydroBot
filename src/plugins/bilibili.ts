@@ -43,7 +43,7 @@ export const apply = (app: App) => {
             const info = await superagent.get(`http://api.bilibili.com/x/web-interface/view?aid=${av}`);
             if (info.body.code !== 0) return;
             await session.$send(`bilibili.com/video/av${av}\n${info.body.data.title}\n[CQ:image,file=${info.body.data.pic}]`);
-        })
+        });
 
     app.middleware(async (session, next) => {
         await next();
@@ -58,6 +58,6 @@ export const apply = (app: App) => {
                 break;
             }
         }
-        if (av) await session.$execute('bilibili ' + av);
+        if (av) await session.$execute(`bilibili ${av}`);
     });
 };

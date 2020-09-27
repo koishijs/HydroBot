@@ -3,7 +3,7 @@ import { CQCode } from 'koishi-utils';
 import superagent from 'superagent';
 
 export function apply(app: App) {
-    app.command('tools', '实用工具')
+    app.command('tools', '实用工具');
 
     app.command('tools/ocr [image]', { minInterval: 3000 })
         .action(async ({ session }, image) => {
