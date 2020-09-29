@@ -7,7 +7,7 @@ import { Logger } from 'koishi-utils';
 import fs from 'fs-extra';
 import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
 import 'koishi-adapter-cqhttp';
-import './plugins/adapter-telegram/index';
+// import './plugins/adapter-telegram/index';
 
 process.on('unhandledRejection', (_, p) => {
     console.log('Unhandled Rejection:', p);
