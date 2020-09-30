@@ -49,24 +49,6 @@ export const apply = async (ctx: Context) => {
     };
     const names = require(resolve(process.cwd(), 'database', 'class_names_6000.json'));
 
-    ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
-        .userFields(['authority'])
-        .before(checkGroupAdmin)
-        .groupFields(['enableAutoTag'])
-        .action(({ session }) => {
-            session.$group.enableAutoTag = false;
-            return 'Disabled';
-        });
-
-    ctx.command('tag.enable', '在群内启用', { noRedirect: true })
-        .userFields(['authority'])
-        .before(checkGroupAdmin)
-        .groupFields(['enableAutoTag'])
-        .action(({ session }) => {
-            session.$group.enableAutoTag = true;
-            return 'enabled';
-        });
-
     ctx.on('before-attach-group', (session, fields) => {
         fields.add('enableAutoTag');
     });
@@ -103,5 +85,23 @@ export const apply = async (ctx: Context) => {
             for (const i of list(l(inds, tmp))) txt += `${trans[names[tensorInt(i)]] || names[tensorInt(i)]}: ${Math.floor(g(probs, i) * 100)}% \n`;
             await session.$send(txt);
             await unlink(fp);
+        });
+
+    ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
+        .userFields(['authority'])
+        .before(checkGroupAdmin)
+        .groupFields(['enableAutoTag'])
+        .action(({ session }) => {
+            session.$group.enableAutoTag = false;
+            return 'Disabled';
+        });
+
+    ctx.command('tag.enable', '在群内启用', { noRedirect: true })
+        .userFields(['authority'])
+        .before(checkGroupAdmin)
+        .groupFields(['enableAutoTag'])
+        .action(({ session }) => {
+            session.$group.enableAutoTag = true;
+            return 'enabled';
         });
 };
