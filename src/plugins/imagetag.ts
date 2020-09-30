@@ -26,7 +26,7 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
-export const apply = async (ctx: Context) => {
+export const apply = async (ctx: Context, config: any = {}) => {
     const transfile = await readFile(resolve(process.cwd(), 'database', 'image.tags.translation.yaml'));
     const trans = yaml.safeLoad(transfile.toString());
     const model = torch.hub.load('RF5/danbooru-pretrained', 'resnet50');
@@ -78,7 +78,19 @@ else preprocess(Image.open(fp)).unsqueeze(0))[0])");
             let txt = '';
             const l = py.eval('lambda a, b: a[0: len(b)]');
             const g = py.eval('lambda a, b: a[b].detach().numpy()');
-            for (const i of list(l(inds, tmp))) txt += `${trans[names[tensorInt(i)]] || names[tensorInt(i)]}: ${Math.floor(g(probs, i) * 100)}% \n`;
+            const tags = [];
+            for (const i of list(l(inds, tmp))) {
+                tags.push(names[tensorInt(i)]);
+                txt += `${trans[names[tensorInt(i)]] || names[tensorInt(i)]}:${Math.floor(g(probs, i) * 100)}%    `;
+            }
+            if (config.url && config.tags) {
+                for (const tag of tags) {
+                    if (config.tags.includes(tag)) {
+                        axios.get(`${config.url}&source=${encodeURIComponent(file.data.url)}&format=json`);
+                        break;
+                    }
+                }
+            }
             await session.$send(txt);
             await unlink(fp);
         });
