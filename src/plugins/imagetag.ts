@@ -70,29 +70,33 @@ else preprocess(Image.open(fp)).unsqueeze(0))[0])");
             const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
             await writeFile(fp, data);
             logger.info('downloaded');
-            const probs = getProbs(Image, preprocess, fp, torch.cuda.is_available(), torch, model);
-            logger.info('model');
-            console.log(probs);
-            const tmp = filter(probs);
-            const inds = probs.argsort(py.kwargs({ descending: true }));
-            let txt = '';
-            const l = py.eval('lambda a, b: a[0: len(b)]');
-            const g = py.eval('lambda a, b: a[b].detach().numpy()');
-            const tags = [];
-            for (const i of list(l(inds, tmp))) {
-                tags.push(names[tensorInt(i)]);
-                txt += `${trans[names[tensorInt(i)]] || names[tensorInt(i)]}:${Math.floor(g(probs, i) * 100)}%    `;
-            }
-            if (config.url && config.tags) {
-                for (const tag of tags) {
-                    if (config.tags.includes(tag)) {
-                        axios.get(`${config.url}&source=${encodeURIComponent(file.data.url)}&format=json`);
-                        break;
+            try {
+                const probs = getProbs(Image, preprocess, fp, torch.cuda.is_available(), torch, model);
+                logger.info('model');
+                console.log(probs);
+                const tmp = filter(probs);
+                const inds = probs.argsort(py.kwargs({ descending: true }));
+                let txt = '';
+                const l = py.eval('lambda a, b: a[0: len(b)]');
+                const g = py.eval('lambda a, b: a[b].detach().numpy()');
+                const tags = [];
+                for (const i of list(l(inds, tmp))) {
+                    tags.push(names[tensorInt(i)]);
+                    txt += `${trans[names[tensorInt(i)]] || names[tensorInt(i)]}:${Math.floor(g(probs, i) * 100)}%    `;
+                }
+                if (config.url && config.tags) {
+                    for (const tag of tags) {
+                        if (config.tags.includes(tag)) {
+                            axios.get(`${config.url}&source=${encodeURIComponent(file.data.url)}&format=json`);
+                            break;
+                        }
                     }
                 }
+                await session.$send(txt);
+                await unlink(fp);
+            } catch (e) {
+                return e.toString.split('\n')[0];
             }
-            await session.$send(txt);
-            await unlink(fp);
         });
 
     ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
