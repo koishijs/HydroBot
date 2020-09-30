@@ -1,6 +1,7 @@
+/* eslint-disable import/no-dynamic-require */
 import { resolve } from 'path';
 import { tmpdir } from 'os';
-import { Context } from 'koishi-core';
+import { Context, Session } from 'koishi-core';
 import { CQCode, Logger } from 'koishi-utils';
 import yaml from 'js-yaml';
 import py from '@pipcook/boa';
@@ -13,10 +14,21 @@ const Image = py.import('PIL.Image');
 const { transforms } = py.import('torchvision');
 const logger = new Logger('imagetag');
 const imageRE = /(\[CQ:image,file=[^,]+,url=[^\]]+\])/;
+const checkGroupAdmin = (session: Session<'authority'>) => (
+    (session.$user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role))
+        ? false
+        : '仅管理员可执行该操作。'
+);
 
-export const apply = async (ctx: Context, config: any) => {
-    const file = await readFile(resolve(process.cwd(), 'database', 'image.tags.translation.yaml'))
-    const trans = yaml.safeLoad(file.toString());
+declare module 'koishi-core/dist/database' {
+    interface Group {
+        enableAutoTag?: boolean,
+    }
+}
+
+export const apply = async (ctx: Context) => {
+    const transfile = await readFile(resolve(process.cwd(), 'database', 'image.tags.translation.yaml'));
+    const trans = yaml.safeLoad(transfile.toString());
     const model = torch.hub.load('RF5/danbooru-pretrained', 'resnet50');
     model.eval();
     if (torch.cuda.is_available()) {
@@ -35,7 +47,37 @@ export const apply = async (ctx: Context, config: any) => {
         const str = tensorStr(t);
         return +str.split('(')[1].split(')')[0];
     };
-    const { data: names } = await axios.get('https://raw.githubusercontent.com/RF5/danbooru-pretrained/master/config/class_names_6000.json');
+    const names = require(resolve(process.cwd(), 'database', 'class_names_6000.json'));
+
+    ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
+        .userFields(['authority'])
+        .before(checkGroupAdmin)
+        .groupFields(['enableAutoTag'])
+        .action(({ session }) => {
+            session.$group.enableAutoTag = false;
+            return 'Disabled';
+        });
+
+    ctx.command('tag.enable', '在群内启用', { noRedirect: true })
+        .userFields(['authority'])
+        .before(checkGroupAdmin)
+        .groupFields(['enableAutoTag'])
+        .action(({ session }) => {
+            session.$group.enableAutoTag = true;
+            return 'enabled';
+        });
+
+    ctx.on('before-attach-group', (session, fields) => {
+        fields.add('enableAutoTag');
+    });
+
+    ctx.middleware(async (session, next) => {
+        // @ts-ignore
+        if (!session.$group.enableAutoTag) return next();
+        const capture = imageRE.exec(session.message);
+        if (capture) session.$execute(`tag ${capture[1]}`);
+        return next();
+    });
 
     ctx.command('tag <image>', 'Get image tag', { hidden: true })
         .action(async ({ session }, image) => {
@@ -62,12 +104,4 @@ export const apply = async (ctx: Context, config: any) => {
             await session.$send(txt);
             await unlink(fp);
         });
-
-    if (config.auto) {
-        ctx.middleware(async (session, next) => {
-            const capture = imageRE.exec(session.message);
-            if (capture) session.$execute(`tag ${capture[1]}`);
-            return next();
-        });
-    }
 };
