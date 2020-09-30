@@ -31,6 +31,7 @@ module.exports = {
         'no-extend-native': 'off',
         'no-inner-declarations': 'off',
         'no-multi-assign': 'off',
+        'no-multi-str': 'off',
         'no-nested-ternary': 'off',
         'no-param-reassign': 'off',
         'no-plusplus': 'off',

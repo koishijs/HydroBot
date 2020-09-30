@@ -40,9 +40,11 @@ export const apply = async (ctx: Context) => {
         transforms.ToTensor(),
         transforms.Normalize(py.kwargs({ mean: [0.7137, 0.6628, 0.6519], std: [0.2970, 0.3017, 0.2979] })),
     ]);
-    const indexer = py.eval('lambda a: a[0]');
     const filter = py.eval('lambda a: a[a > 0.5]');
     const tensorStr = py.eval('lambda a: str(a)');
+    const getProbs = py.eval("lambda Image, preprocess, fp, cuda, torch, model: torch.sigmoid(model(\
+preprocess(Image.open(fp)).unsqueeze(0).to('cuda') if cuda \
+else preprocess(Image.open(fp)).unsqueeze(0))[0])");
     const tensorInt = (t) => {
         const str = tensorStr(t);
         return +str.split('(')[1].split(')')[0];
@@ -68,14 +70,8 @@ export const apply = async (ctx: Context) => {
             const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
             await writeFile(fp, data);
             logger.info('downloaded');
-            const input_image = Image.open(fp);
-            const input_tensor = preprocess(input_image);
-            logger.info('preprocess');
-            let input_batch = input_tensor.unsqueeze(0);
-            if (torch.cuda.is_available()) input_batch = input_batch.to('cuda');
-            const output = model(input_batch);
+            const probs = getProbs(Image, preprocess, fp, torch.cuda.is_available(), torch, model);
             logger.info('model');
-            const probs = torch.sigmoid(indexer(output));
             console.log(probs);
             const tmp = filter(probs);
             const inds = probs.argsort(py.kwargs({ descending: true }));
