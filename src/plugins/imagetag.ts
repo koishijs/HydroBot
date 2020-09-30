@@ -95,7 +95,7 @@ else preprocess(Image.open(fp)).unsqueeze(0))[0])");
                 await session.$send(txt);
                 await unlink(fp);
             } catch (e) {
-                return e.toString.split('\n')[0];
+                return e.toString().split('\n')[0];
             }
         });
 
