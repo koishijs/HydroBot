@@ -2,9 +2,10 @@ import { resolve } from 'path';
 import { tmpdir } from 'os';
 import { Context } from 'koishi-core';
 import { CQCode, Logger } from 'koishi-utils';
+import yaml from 'js-yaml';
 import py from '@pipcook/boa';
 import axios from 'axios';
-import { unlink, writeFile } from 'fs-extra';
+import { unlink, writeFile, readFile } from 'fs-extra';
 
 const { list } = py.builtins();
 const torch = py.import('torch');
@@ -14,6 +15,8 @@ const logger = new Logger('imagetag');
 const imageRE = /(\[CQ:image,file=[^,]+,url=[^\]]+\])/;
 
 export const apply = async (ctx: Context, config: any) => {
+    const file = await readFile(resolve(process.cwd(), 'database', 'image.tags.translation.yaml'))
+    const trans = yaml.safeLoad(file.toString());
     const model = torch.hub.load('RF5/danbooru-pretrained', 'resnet50');
     model.eval();
     if (torch.cuda.is_available()) {
@@ -32,7 +35,7 @@ export const apply = async (ctx: Context, config: any) => {
         const str = tensorStr(t);
         return +str.split('(')[1].split(')')[0];
     };
-    const { data: class_names } = await axios.get('https://raw.githubusercontent.com/RF5/danbooru-pretrained/master/config/class_names_6000.json');
+    const { data: names } = await axios.get('https://raw.githubusercontent.com/RF5/danbooru-pretrained/master/config/class_names_6000.json');
 
     ctx.command('tag <image>', 'Get image tag', { hidden: true })
         .action(async ({ session }, image) => {
@@ -55,7 +58,7 @@ export const apply = async (ctx: Context, config: any) => {
             let txt = '';
             const l = py.eval('lambda a, b: a[0: len(b)]');
             const g = py.eval('lambda a, b: a[b].detach().numpy()');
-            for (const i of list(l(inds, tmp))) txt += `${class_names[tensorInt(i)]}: ${Math.floor(g(probs, i) * 100)}% \n`;
+            for (const i of list(l(inds, tmp))) txt += `${trans[names[tensorInt(i)]] || names[tensorInt(i)]}: ${Math.floor(g(probs, i) * 100)}% \n`;
             await session.$send(txt);
             await unlink(fp);
         });
