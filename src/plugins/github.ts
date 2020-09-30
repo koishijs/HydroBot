@@ -388,6 +388,7 @@ export const apply = (app: App, config: any) => {
             if (!relativeEvent || !events[relativeEvent.type].interact) return;
             logger.info(replyTo, parsedMsg);
             logger.info('Reply: %s', relativeEvent);
+            if (parsedMsg.startsWith('//')) return next();
             try {
                 async function getToken() {
                     if (!user.GithubToken?.access_token) throw new InvalidTokenError();
