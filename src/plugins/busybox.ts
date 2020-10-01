@@ -112,7 +112,6 @@ export const apply = (ctx: Context, config: Config = {}) => {
 
     ctx.command('help', { authority: 1, hidden: true });
     ctx.command('tex', { authority: 1 });
-    ctx.command('evaluate <command...>', { authority: 1 });
     ctx.command('_', '管理工具');
 
     ctx.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })

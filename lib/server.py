@@ -24,18 +24,23 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length)
         ipt = json.loads(body)
         print(ipt)
-        image = Image.open(ipt['path'])
-        input_tensor = preprocess(image)
-        input_batch = input_tensor.unsqueeze(0)
-        if torch.cuda.is_available():
-            input_batch = input_batch.to('cuda')
-        output = model(input_batch)
-        probs = torch.sigmoid(output[0])
-        tmp = probs[probs > 0.5]
-        inds = probs.argsort(descending=True)
-        tags = list()
-        for i in inds[0: len(tmp)]:
-            tags.append([int(re.sub("\D", "", str(i))), float(probs[i].detach().numpy())])
+        try:
+            image = Image.open(ipt['path'])
+            input_tensor = preprocess(image)
+            input_batch = input_tensor.unsqueeze(0)
+            if torch.cuda.is_available():
+                input_batch = input_batch.to('cuda')
+            output = model(input_batch)
+            probs = torch.sigmoid(output[0])
+            tmp = probs[probs > 0.5]
+            inds = probs.argsort(descending=True)
+            tags = list()
+            for i in inds[0: len(tmp)]:
+                tags.append([int(re.sub("\D", "", str(i))), float(probs[i].detach().numpy())])
+        except Exception as e:
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(str.encode(str(e)))
         self.send_response(200)
         self.end_headers()
         self.wfile.write(str.encode(json.dumps(tags)))

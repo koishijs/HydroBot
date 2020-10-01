@@ -21,8 +21,6 @@ declare module 'koishi-core/dist/database' {
     }
 }
 
-const p = {};
-
 export const apply = async (ctx: Context, config: any = {}) => {
     const transfile = await readFile(resolve(process.cwd(), 'database', 'image.tags.translation.yaml'));
     const trans = yaml.safeLoad(transfile.toString());
@@ -52,6 +50,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                 await writeFile(fp, data);
                 logger.info('downloaded');
                 const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
+                if (typeof probs === 'string') throw new Error(probs);
                 console.log(probs);
                 const tags = [];
                 let txt = '';
