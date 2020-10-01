@@ -15,7 +15,6 @@ export function apply(app: App) {
             }).toArray();
             const username = session.sender.card || session.sender.nickname;
             const message = `${username}: ${session.message}`;
-            console.log(targets);
             for (const target of targets) {
                 // eslint-disable-next-line prefer-const
                 let [assignee, chatId] = (target.from === currentSession ? target.to : target.from).split('/');
