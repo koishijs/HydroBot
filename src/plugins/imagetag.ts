@@ -33,21 +33,24 @@ export const apply = async (ctx: Context, config: any = {}) => {
     });
 
     ctx.middleware(async (session, next) => {
-        // @ts-ignore
-        if (!session.$group.enableAutoTag) return next();
         const capture = imageRE.exec(session.message);
-        if (capture) session.$execute(`tag ${capture[1]}`);
+        if (capture) {
+            // @ts-ignore
+            if (!session.$group.enableAutoTag) session.$execute(`tag -s ${capture[1]}`);
+            else session.$execute(`tag ${capture[1]}`);
+        }
         return next();
     });
 
     ctx.command('tag <image>', 'Get image tag', { hidden: true })
-        .action(async ({ session }, image) => {
-            const file = CQCode.parse(image);
-            const { data } = await axios.get<ArrayBuffer>(file.data.url, { responseType: 'arraybuffer' });
-            const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
-            await writeFile(fp, data);
-            logger.info('downloaded');
+        .option('silent', '-s')
+        .action(async ({ session, options }, image) => {
             try {
+                const file = CQCode.parse(image);
+                const { data } = await axios.get<ArrayBuffer>(file.data.url, { responseType: 'arraybuffer' });
+                const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
+                await writeFile(fp, data);
+                logger.info('downloaded');
                 const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
                 console.log(probs);
                 const tags = [];
@@ -64,9 +67,10 @@ export const apply = async (ctx: Context, config: any = {}) => {
                         }
                     }
                 }
-                await session.$send(txt);
+                if (!options.silent) await session.$send(txt);
                 await unlink(fp);
             } catch (e) {
+                if (options.silent) return logger.error(e);
                 return e.toString().split('\n')[0];
             }
         });
