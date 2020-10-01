@@ -7,6 +7,8 @@ import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
 
 export const apply = (app: App) => {
+    app.command('tools', '实用工具');
+
     app.command('tools/tex <code...>', 'KaTeX 渲染')
         .alias('katex <code...>')
         .action(async ({ session }, tex) => {

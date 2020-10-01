@@ -9,7 +9,9 @@ const GENDER = {
 };
 
 export function apply(app: App) {
-    app.command('oier <query>', '查询oier', { minInterval: 30000 })
+    app.command('oi', 'OI Related');
+
+    app.command('oi/oier <query>', '查询oier', { minInterval: 30000 })
         .action(async (_, query) => {
             const res = await superagent.get(`https://bytew.net/OIer/search.php?method=normal&q=${encodeURIComponent(query)}`);
             const { result: results } = JSON.parse(res.text);
