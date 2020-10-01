@@ -15,12 +15,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/masnn/qqbot.git"
+    "url": "git+https://github.com/hydro-dev/HydroBot.git"
   },
   "author": "masnn",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/masnn/qqbot/issues"
+    "url": "https://github.com/hydro-dev/HydroBot/issues"
   },
   "dependencies": {
     "@pipcook/boa": "^1.2.0",

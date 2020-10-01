@@ -3,7 +3,7 @@
 ## How to use:  
 
 - Requirements:  [NodeJS 13.10+](nodejs.org) & [Yarn](yarnpkg.com) & [MongoDB](mongodb.com)
-- Clone: `git clone https://github.com/masnn/qqbot.git`
+- Clone: `git clone https://github.com/hydro-dev/HydroBot.git`
 - Install dep: `yarn`
 - Build: `yarn build`
 - Run CQHTTP: [go-cqhttp](https://github.com/mrs4s/go-cqhttp) is required, and it should run under websocket mode.

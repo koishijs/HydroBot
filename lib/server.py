@@ -42,4 +42,3 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 httpd = HTTPServer(('127.0.0.1', 10377), SimpleHTTPRequestHandler)
 httpd.serve_forever()
-
