@@ -2,8 +2,9 @@
 import child from 'child_process';
 import { inspect } from 'util';
 import {
-    Group, getTargetId, Session, User, Context,
+    Group, getTargetId, User, Context,
 } from 'koishi-core';
+import { Session } from 'koishi-core/dist/session';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { Collection, ObjectID } from 'mongodb';
 import { Dictionary } from 'lodash';
@@ -123,7 +124,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             let res: any;
             const expr = `\
 (async function f(){
-    return ${input}
+    return ${input.decode()}
 })()`;
             try {
                 // eslint-disable-next-line no-eval

@@ -24,7 +24,7 @@ export const apply = (app: App) => {
                 return `已丢出。(${res.insertedId})`;
             });
 
-        app.command('bottle.pick', 'Pick a bottle')
+        app.command('bottle.pick', 'Pick a bottle', { cost: 1 })
             .action(async () => {
                 const cnt = await coll.find({}).count();
                 if (!cnt) return '没有捡到';

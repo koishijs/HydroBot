@@ -40,7 +40,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
         return next();
     });
 
-    ctx.command('tag <image>', 'Get image tag', { hidden: true })
+    ctx.command('tag <image>', 'Get image tag', { hidden: true, cost: 3 })
         .option('silent', '-s')
         .action(async ({ session, options }, image) => {
             try {

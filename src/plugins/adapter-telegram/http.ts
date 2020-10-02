@@ -4,7 +4,6 @@ import {
 import {
     Logger, defineProperty, snakeCase, assertProperty,
 } from 'koishi-utils';
-import { } from 'koa-bodyparser';
 import Axios, { AxiosInstance } from 'axios';
 import Telegram from './interface';
 
@@ -34,7 +33,7 @@ export default class TelegramHTTPServer extends Server {
 
     constructor(app: App) {
         assertProperty(app.options, 'port');
-        const bot = app.options.bots.find((bot) => bot.server);
+        const bot = app.options.bots.find((_bot) => _bot.server);
         if (!bot.type) logger.info('infer type as telegram');
         super(app);
     }
@@ -78,6 +77,7 @@ export default class TelegramHTTPServer extends Server {
                 // use defineProperty to avoid meta duplication
                 defineProperty(meta, '$response', (data: any) => {
                     meta._response = null;
+                    // eslint-disable-next-line no-use-before-define
                     clearTimeout(timer);
                     ctx.res.write(JSON.stringify(snakeCase(data)));
                     ctx.res.end();

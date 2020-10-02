@@ -40,7 +40,7 @@ export const apply = (app: App) => {
             }
         });
 
-        app.command('rss.subscribe <url>', 'Subscribe a rss url')
+        app.command('rss.subscribe <url>', 'Subscribe a rss url', { cost: 5 })
             .alias('rss.add')
             .action(async ({ session }, url) => {
                 url = url.toLowerCase();

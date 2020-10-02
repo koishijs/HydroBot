@@ -5,7 +5,7 @@ import superagent from 'superagent';
 export function apply(app: App) {
     app.command('tools', '实用工具');
 
-    app.command('tools/ocr [image]', { minInterval: 3000 })
+    app.command('tools/ocr [image]', { minInterval: 3000, cost: 3 })
         .action(async ({ session }, image) => {
             if (!image) {
                 await session.$sendQueued('请发送图片。');

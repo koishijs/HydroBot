@@ -13,11 +13,24 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-core/dist/plugins/help', 2,
+        'koishi-core/dist/plugins/help', 1,
         [
             'append',
             "output += '  ' + config.description;",
-            "if (config.cost) output += ' 花费：' + config.cost;",
+            "if (config.cost) output += ' (' + config.cost+')';",
+        ],
+        [
+            'append',
+            `if (command.config.authority > 1) {
+            output.push(\`最低权限：\${command.config.authority} 级。\`);
+        }`,
+            // eslint-disable-next-line no-template-curly-in-string
+            'if (command.config.cost) output.push(`命令花费：${command.config.cost}`)',
+        ],
+        [
+            'replace',
+            "'可用的子指令有'",
+            "'可用的子指令有（括号内为命令花费）'",
         ],
     ],
     [

@@ -9,7 +9,7 @@ import { take, filter } from 'lodash';
 export const apply = (app: App) => {
     app.command('tools', '实用工具');
 
-    app.command('tools/tex <code...>', 'KaTeX 渲染')
+    app.command('tools/tex <code...>', 'KaTeX 渲染', { cost: 1 })
         .alias('katex <code...>')
         .action(async ({ session }, tex) => {
             let { data: svg } = await axios.get(`https://www.zhihu.com/equation?tex=${encodeURIComponent(tex)}`);
@@ -22,13 +22,14 @@ export const apply = (app: App) => {
             return session.$send(`[CQ:image,file=base64://${png.toString('base64')}]`);
         });
 
-    app.command('tools/ip <ip>', '查询ip').action(async (_, args) => {
-        const url = `http://freeapi.ipip.net/${args}`;
-        const res = await superagent.get(url);
-        return res.body.join(' ');
-    });
+    app.command('tools/ip <ip>', '查询ip', { cost: 3 })
+        .action(async (_, args) => {
+            const url = `http://freeapi.ipip.net/${args}`;
+            const res = await superagent.get(url);
+            return res.body.join(' ');
+        });
 
-    app.command('tools/oeis <sequence>', '使用 OEIS 进行数列查询', { maxUsage: 10, cost: 3 })
+    app.command('tools/oeis <sequence>', '使用 OEIS 进行数列查询', { maxUsage: 10, cost: 5 })
         .option('start', '-s <start> 设置起始页码', { fallback: 0 })
         .usage('输入用逗号隔开的数作为要查询的数列的前几项，或者直接输入以 id:A 打头的数列编号。')
         .example('oeis 1,2,3,6,11,23,47,106,235')
@@ -45,7 +46,7 @@ export const apply = (app: App) => {
             }
         });
 
-    app.command('tools/calc <expression...>', '计算表达式', { minInterval: 10000 })
+    app.command('tools/calc <expression...>', '计算表达式', { minInterval: 10000, cost: 3 })
         .example('calc 1+1')
         .example('calc Solve[x^2+1==0,{x}]')
         .example('calc FactorInteger[233333]')

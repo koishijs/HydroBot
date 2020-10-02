@@ -2,8 +2,11 @@
 /* eslint-disable global-require */
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import { App, Command } from 'koishi-core';
-import { Logger } from 'koishi-utils';
+import {
+    App, Command, ExecuteArgv, NextFunction,
+} from 'koishi-core';
+import { Session } from 'koishi-core/dist/session';
+import { Logger, noop } from 'koishi-utils';
 import fs from 'fs-extra';
 import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
 import 'koishi-adapter-cqhttp';
@@ -21,12 +24,25 @@ declare global {
         encode: () => string,
     }
 }
+declare module 'koishi-core' {
+    interface Session {
+        _silent: boolean,
+        $executeSilent(argv: ExecuteArgv): Promise<void>,
+        $executeSilent(message: string, next?: NextFunction): Promise<void>,
+    }
+}
 
 String.prototype.decode = function decode() {
     return this.replace(/&#91;/gm, '[').replace(/&#93;/gm, ']').replace(/&amp;/gm, '&');
 };
 String.prototype.encode = function encode() {
     return this.replace(/&/gm, '&amp;').replace(/\[/gm, '&#91;').replace(/\]/gm, '&#93;');
+};
+Session.prototype.$executeSilent = function $executeSilent(this: Session, arg0: any, arg1?: any) {
+    this._silent = true;
+    this.$send = noop;
+    this.$sendQueued = noop;
+    return this.$execute(arg0, arg1);
 };
 
 export = class {

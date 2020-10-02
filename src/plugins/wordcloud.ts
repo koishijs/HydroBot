@@ -11,7 +11,7 @@ export async function apply(ctx: Context, config: any) {
     ctx.app.on('connect', async () => {
         const c = ctx.app.database.db.collection('message');
 
-        ctx.command('wordcloud', 'Get daily wordcloud', { minInterval: 60000 })
+        ctx.command('wordcloud', 'Get daily wordcloud', { minInterval: 60000, cost: 5 })
             .action(async ({ session }) => {
                 const messages = await c.find(
                     { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) }, group: session.groupId },

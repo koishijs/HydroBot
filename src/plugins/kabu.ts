@@ -9,6 +9,7 @@ interface Price {
     _id: number,
     price: number,
     expire: Date,
+    bought: number,
 }
 
 interface Stock {
@@ -20,13 +21,15 @@ interface Stock {
 }
 
 interface Config {
-    expireDays: number,
-    serviceFee: number,
+    expireDays?: number,
+    serviceFee?: number,
+    maxBuyPerDay?: number,
 }
 
 const defaultConfig = {
     expireDays: 7,
     serviceFee: 0.03,
+    maxBuyPerDay: 10,
 };
 
 export const apply = (app: App, config: Config) => {
@@ -42,10 +45,12 @@ export const apply = (app: App, config: Config) => {
 
         async function priceToday(session: Session) {
             const res = await priceColl.findOne({ _id: session.userId });
-            if (res) return res.price;
+            if (res) return [res.price, res.bought || 0];
             const price = Math.floor(Math.random() < 0.5 ? 10 + Math.sqrt(Math.random() * 400) : 50 - Math.sqrt(Math.random() * 400));
-            await priceColl.insertOne({ _id: session.userId, price, expire: endOfToday() });
-            return price;
+            await priceColl.insertOne({
+                _id: session.userId, price, expire: endOfToday(), bought: 0,
+            });
+            return [price, 0];
         }
 
         app.command('kabu.query', '查询自己的库存以及今日大头菜价格')
@@ -62,12 +67,13 @@ export const apply = (app: App, config: Config) => {
                     sum += number;
                     stockList += `你有 ${number} 棵以 ${buyPrice} 个硬币每棵买入的大头菜，它们会在 ${moment(expire).fromNow()} 烂掉。\n`;
                 }
-                const price = await priceToday(session);
+                const [price, bought] = await priceToday(session);
+                const canBuy = config.maxBuyPerDay - bought;
                 if (!session.$user.coin) session.$user.coin = 0;
-                if (count === 0) stockList = `你现在手上还没有大头菜${session.$user.coin >= price ? '，要来买点吗？' : '。你可以使用 checkin 来获取硬币。'}`;
+                if (count === 0) stockList = `你现在手上还没有大头菜${(session.$user.coin >= price && canBuy) ? '，要来买点吗？' : '。'}`;
                 else if (count > res.length) stockList += `隐藏了 ${count - res.length} 个条目。`;
                 return `你现在共有 ${sum} 棵大头菜和 ${session.$user.coin} 个硬币。
-今天卖给 ${session.$username} 的大头菜价格是每棵 ${price} 硬币。
+今天卖给 ${session.$username} 的大头菜价格是每棵 ${price} 硬币。您今天还可购入${canBuy}个大头菜。
 ${stockList}`;
             });
 
@@ -75,10 +81,10 @@ ${stockList}`;
             .shortcut('购买大头菜', { prefix: false, fuzzy: true })
             .userFields(['coin'])
             .action(async ({ session }, arg) => {
-                const price = await priceToday(session);
+                const [price, bought] = await priceToday(session);
                 if (!session.$user.coin) session.$user.coin = 0;
                 const maxNumber = Math.floor(session.$user.coin / price / (1 + config.serviceFee));
-                const number = +(arg ?? maxNumber);
+                const number = Math.min(config.maxBuyPerDay - bought, +(arg ?? maxNumber));
                 if (!Number.isInteger(number) || number <= 0 || number > maxNumber) {
                     return `购买数量需要是 1~${maxNumber} 之间的正整数。`;
                 }
@@ -93,6 +99,10 @@ ${stockList}`;
                 });
                 const cost = Math.ceil((1 + config.serviceFee) * price * number);
                 session.$user.coin -= cost;
+                await priceColl.updateOne(
+                    { _id: session.userId },
+                    { $set: { bought: number + bought } },
+                );
                 return `你花了 ${cost} 个硬币（含 ${cost - price * number} 个硬币的手续费）以 ${price} 每棵的价格购买了 ${number} 棵大头菜。
 要是你没有在 ${config.expireDays} 天内把大头菜卖掉，它们就会全部烂掉，害你大亏本！一定要注意这一点喔。`;
             });
@@ -118,7 +128,7 @@ ${stockList}`;
                     }
                 }
                 if (sum === 0 || (sellNumber !== Infinity && sum !== sellNumber)) return '你没有足够多的大头菜来卖出！';
-                const price = await priceToday(session);
+                const [price] = await priceToday(session);
                 if (!session.$user.coin) session.$user.coin = 0;
                 const gain = Math.floor((1 - config.serviceFee) * sum * price);
                 session.$user.coin += gain;

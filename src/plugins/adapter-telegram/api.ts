@@ -85,6 +85,7 @@ Bot.prototype.sendMsg = async function sendMsg(this: Bot, chatId, message) {
             payload.message += node;
         } else if (node.type === 'image') {
             if (payload.image) {
+                // eslint-disable-next-line no-await-in-loop
                 result = await this._sendPhoto(chatId, payload.message, payload.image); // Flush
                 payload.message = '';
                 payload.image = '';
@@ -142,14 +143,14 @@ Bot.prototype.setGroupLeave = async function setGroupLeave(this: Bot, chatId: st
 
 function defineSync(name: string, ...params: string[]) {
     const prop = camelCase(name.replace(/^_/, ''));
-    Bot.prototype[prop] = function (this: Bot, ...args: any[]) {
-        return this.get(name, Object.fromEntries(params.map((name, index) => [name, args[index]])));
+    Bot.prototype[prop] = function _(this: Bot, ...args: any[]) {
+        return this.get(name, Object.fromEntries(params.map((_name, index) => [_name, args[index]])));
     };
 }
 
 function defineReturn(name: string, value: any) {
     const prop = camelCase(name.replace(/^_/, ''));
-    Bot.prototype[prop] = async function (this: Bot) {
+    Bot.prototype[prop] = async function _(this: Bot) {
         return value;
     };
 }

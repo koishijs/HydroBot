@@ -1,4 +1,5 @@
-import { App, Session, getTargetId } from 'koishi-core';
+import { App, getTargetId } from 'koishi-core';
+import { Session } from 'koishi-core/dist/session';
 
 declare module 'koishi-core/dist/command' {
     interface CommandConfig {
@@ -24,6 +25,7 @@ export function apply(app: App) {
     });
 
     app.on('command', ({ session, command }) => {
+        if (session._silent) return;
         const cost = command.getConfig('cost', session);
         // @ts-ignore
         if (cost) session.$user.coin -= cost;

@@ -1,4 +1,5 @@
-import { Session, App, Context } from 'koishi-core';
+import { App, Context } from 'koishi-core';
+import { Session } from 'koishi-core/dist/session';
 import { Time } from 'koishi-utils';
 import axios from 'axios';
 

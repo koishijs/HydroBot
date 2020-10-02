@@ -17,7 +17,8 @@
 declare namespace Telegram {
     type ChatType = 'private' | 'group' | 'supergroup' | 'channel';
 
-    type ChatAction = 'typing' | 'upload_photo' | 'record_video' | 'upload_video' | 'record_audio' | 'upload_audio' | 'upload_document' | 'find_location' | 'record_video_note' | 'upload_video_note';
+    type ChatAction = 'typing' | 'upload_photo' | 'record_video' | 'upload_video' | 'record_audio' | 'upload_audio'
+        | 'upload_document' | 'find_location' | 'record_video_note' | 'upload_video_note';
 
     type ChatMemberStatus = 'creator' | 'administrator' | 'member' | 'restricted' | 'left' | 'kicked';
 
@@ -51,7 +52,8 @@ declare namespace Telegram {
         'video_note' |
         'voice';
 
-    type MessageEntityType = 'mention' | 'hashtag' | 'bot_command' | 'url' | 'email' | 'bold' | 'italic' | 'code' | 'pre' | 'text_link' | 'text_mention';
+    type MessageEntityType = 'mention' | 'hashtag' | 'bot_command' | 'url' | 'email' | 'bold' | 'italic' | 'code'
+     | 'pre' | 'text_link' | 'text_mention';
 
     type ParseMode = 'Markdown' | 'MarkdownV2' | 'HTML';
 

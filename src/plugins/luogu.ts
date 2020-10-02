@@ -5,7 +5,7 @@ export const apply = (app: App) => {
     app.command('oi', 'OI related');
     app.command('oi/luogu', 'Luogu');
 
-    app.command('oi/luogu.problem <pid>', '获取Luogu题目')
+    app.command('oi/luogu.problem <pid>', '获取Luogu题目', { cost: 3 })
         .action(async (_, id) => {
             const res = await superagent.get(`https://www.luogu.com.cn/api/problem/detail/${id}`)
                 .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko');
@@ -14,7 +14,7 @@ export const apply = (app: App) => {
             return p.data;
         });
 
-    app.command('oi/luogu.user <uid>', '查询用户')
+    app.command('oi/luogu.user <uid>', '查询用户', { cost: 3 })
         .action(async (_, id) => {
             const uid = getTargetId(id);
             const res = await superagent.get(`https://www.luogu.com.cn/user/${uid}?_contentOnly=1`)

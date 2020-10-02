@@ -24,7 +24,7 @@ export function apply(app: App, config: Config) {
 
     app.command('shot').dispose();
 
-    app.command('page <url...>', 'Get page', { authority: 3, minInterval: 1000, checkArgCount: false })
+    app.command('page <url...>', 'Get page', { authority: 3, cost: 10, minInterval: 3000 })
         .alias('screenshot', 'shot')
         .option('full', '-f Full page')
         .option('viewport', '<viewport> 指定Viewport', { fallback: '1600x900' })
