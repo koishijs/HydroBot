@@ -38,44 +38,19 @@ const tasks: [string, number, ...string[][]][] = [
         ['replace', '[CQ:reply,id=(\\d+)', '[CQ:reply,id=(-?\\d+)'],
     ],
     [
-        'koishi-plugin-schedule/dist/database', 3,
+        'koishi-plugin-eval/dist/index', 1,
         [
-            'replaceBetween',
-            "koishi_core_1.extendDatabase('koishi-plugin-mongo', {",
-            '//# sourceMappingURL=database.js.map',
-            `\
-async createSchedule(time, interval, command, session) {
-    let _id = 1;
-    const [latest] = await this.db.collection('schedule').find().sort('_id', -1).limit(1)
-        .toArray();
-    if (latest) _id = latest._id + 1;
-    const result = await this.db.collection('schedule').insertOne({
-        _id, time, assignee: session.selfId, interval, command, session: JSON.stringify(session) 
-    });
-    return { time, assignee: session.selfId, interval, command, session, id: result.insertedId };
-},
-removeSchedule(_id) {
-    return this.db.collection('schedule').deleteOne({ _id });
-},
-async getSchedule(_id) {
-    const res = await this.db.collection('schedule').findOne({ _id });
-    if (res){
-        res.id = res._id;
-        res.session=JSON.parse(res.session);
-    }
-    return res;
-},
-async getAllSchedules(assignees) {
-    const $in = assignees || await this.app.getSelfIds();
-    return await this.db.collection('schedule')
-        .find({ assignee: { $in } }).map(doc => ({ ...doc, id: doc._id, session:JSON.parse(doc.session) })).toArray();
-},
-});`,
+            'replace',
+            `var _a;
+        if (!session['_redirected'] && ((_a = session.$user) === null || _a === void 0 ? void 0 : _a.authority) < 2)
+            return '权限不足。';`,
+            '',
         ],
     ],
 ];
 
 async function hack() {
+    console.log('Running Hack');
     for (const [filename, version, ...changes] of tasks) {
         const file = require.resolve(filename);
         if (!file) console.warn(`Unable to hack ${filename}: file not found`);

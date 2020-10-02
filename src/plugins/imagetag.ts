@@ -34,15 +34,14 @@ export const apply = async (ctx: Context, config: any = {}) => {
         const capture = imageRE.exec(session.message);
         if (capture) {
             // @ts-ignore
-            if (!session.$group.enableAutoTag) session.$execute(`tag -s ${capture[1]}`);
+            if (!session.$group.enableAutoTag) session.$executeSilent(`tag ${capture[1]}`);
             else session.$execute(`tag ${capture[1]}`);
         }
         return next();
     });
 
     ctx.command('tag <image>', 'Get image tag', { hidden: true, cost: 3 })
-        .option('silent', '-s')
-        .action(async ({ session, options }, image) => {
+        .action(async ({ session }, image) => {
             try {
                 const file = CQCode.parse(image);
                 const { data } = await axios.get<ArrayBuffer>(file.data.url, { responseType: 'arraybuffer' });
@@ -50,7 +49,10 @@ export const apply = async (ctx: Context, config: any = {}) => {
                 await writeFile(fp, data);
                 logger.info('downloaded');
                 const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
-                if (typeof probs === 'string') throw new Error(probs);
+                if (typeof probs === 'string') {
+                    if (probs.includes('output with shape')) throw new Error('不支持的图片格式');
+                    throw new Error(probs.split('HTTP')[0]);
+                }
                 console.log(probs);
                 const tags = [];
                 let txt = '';
@@ -66,10 +68,9 @@ export const apply = async (ctx: Context, config: any = {}) => {
                         }
                     }
                 }
-                if (!options.silent) await session.$send(txt);
+                await session.$send(txt);
                 await unlink(fp);
             } catch (e) {
-                if (options.silent) return logger.error(e);
                 return e.toString().split('\n')[0];
             }
         });
