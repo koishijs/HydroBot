@@ -323,7 +323,6 @@ function prepareSource(source: string) {
     return CQCode.stringifyAll(CQCode.parseAll(source || '').map((code) => {
         if (typeof code !== 'string') return code;
         return simplify(CQCode.unescape(`${code}`))
-            .toLowerCase()
             .replace(/，/g, ',')
             .replace(/、/g, ',')
             .replace(/。/g, '.')
