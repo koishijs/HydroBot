@@ -327,7 +327,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         const [, id, msg] = res;
         if (msg.includes('!!recall')) {
             const user = await ctx.database.getUser(session.userId, ['authority']);
-            if (user.authority >= 4) return session.$bot.deleteMsg(parseInt(id, 10));
+            if (user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role)) return session.$bot.deleteMsg(parseInt(id, 10));
         }
     });
 
