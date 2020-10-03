@@ -55,6 +55,14 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         .option('regexp', '-X  取消使用正则表达式匹配', { authority: 3, value: false })
         .option('redirect', '=> <answer>  重定向到其他问答');
 
+    ctx.on('before-command', async ({ session, command }) => {
+        const noRedirect = command.getConfig('noRedirect', session);
+        if (noRedirect && session._redirected) {
+            const creator = await ctx.app.database.getUser(session._dialogue.writer, ['authority']);
+            if (creator.authority < 5) return '不支持在插值中调用该命令。';
+        }
+    });
+
     ctx.on('dialogue/validate', (argv) => {
         const { options, args } = argv;
         if (args.length) {

@@ -30,7 +30,8 @@ declare module 'koishi-core/dist/context' {
 
 declare module 'koishi-core/dist/session' {
     interface Session {
-        _redirected?: number
+        _redirected?: number,
+        _dialogue?: Dialogue,
     }
 }
 
@@ -222,7 +223,6 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
 
     if (dialogue.flag & Dialogue.Flag.regexp) {
         const capture = dialogue._capture || new RegExp(dialogue.question, 'i').exec(state.test.question);
-        if (!capture) console.log(dialogue.question, state.test.question);
         capture.map((segment, index) => {
             if (index && index <= 9) {
                 state.answer = state.answer.replace(new RegExp(`%${index}`, 'g'), escapeAnswer(segment || ''));
@@ -231,11 +231,12 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     }
 
     if (await ctx.app.serial(session, 'dialogue/before-send', state)) return;
-    logger.debug('[send]', session.messageId, '->', dialogue.answer);
+    logger.info('[send]', session.messageId, '->', dialogue.answer);
 
     // send answers
     const buffer = new MessageBuffer(session);
     session._redirected = (session._redirected || 0) + 1;
+    session._dialogue = dialogue;
 
     // parse answer
     let index: number;
