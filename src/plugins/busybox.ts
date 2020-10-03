@@ -13,13 +13,8 @@ import { text2png } from '../lib/graph';
 
 declare module 'koishi-core/dist/database' {
     interface Group {
-        disallowedCommands: string[]
-    }
-}
-
-declare module 'koishi-core/dist/command' {
-    interface CommandConfig {
-        noRedirect?: boolean,
+        disallowedCommands: string[],
+        welcomeMsg: string,
     }
 }
 
@@ -85,12 +80,6 @@ async function formatMessage(session: Session) {
         } else output += `[${code.type}]`;
     }
     return output;
-}
-
-declare module 'koishi-core/dist/database' {
-    interface Group {
-        welcomeMsg: string
-    }
 }
 
 const checkGroupAdmin = (session: Session<'authority'>) => (
@@ -365,8 +354,6 @@ export const apply = (ctx: Context, config: Config = {}) => {
         if (!session.$group) return;
         // @ts-ignore
         if ((session.$group.disallowedCommands || []).includes(command.name)) return '';
-        const noRedirect = command.getConfig('noRedirect', session);
-        if (noRedirect && session._redirected) return '不支持在插值中调用该命令。';
     });
 
     ctx.on('before-attach-group', (session, fields) => {

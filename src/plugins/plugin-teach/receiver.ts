@@ -321,11 +321,10 @@ export default function (ctx: Context, config: Dialogue.Config) {
 }
 
 function prepareSource(source: string) {
-    return CQCode.stringifyAll(CQCode.parseAll(source || '').map((code, index, arr) => {
+    return CQCode.stringifyAll(CQCode.parseAll(source || '').map((code) => {
         if (typeof code !== 'string') return code;
-        let message = simplify(CQCode.unescape(`${code}`))
+        return simplify(CQCode.unescape(`${code}`))
             .toLowerCase()
-            .replace(/\s+/g, '')
             .replace(/，/g, ',')
             .replace(/、/g, ',')
             .replace(/。/g, '.')
@@ -337,8 +336,5 @@ function prepareSource(source: string) {
             .replace(/】/g, ']')
             .replace(/～/g, '~')
             .replace(/…/g, '...');
-        if (index === 0) message = message.replace(/^[()[\]]*/, '');
-        if (index === arr.length - 1) message = message.replace(/[.,?!()[\]~]*$/, '');
-        return message;
     }));
 }
