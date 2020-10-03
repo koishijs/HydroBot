@@ -21,7 +21,7 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
 
 declare module 'koishi-core/dist/database' {
     interface Group {
-        enableAutoTag?: boolean,
+        enableAutoTag?: number,
     }
 }
 
@@ -51,8 +51,9 @@ export const apply = async (ctx: Context, config: any = {}) => {
         const capture = imageRE.exec(session.message);
         if (capture) {
             // @ts-ignore
-            if (!session.$group.enableAutoTag) session.$executeSilent(`tag ${capture[1]}`);
-            else session.$execute(`tag ${capture[1]}`);
+            if (session.$group.enableAutoTag === 2) session.$executeSilent(`tag ${capture[1]}`);
+            // @ts-ignore
+            else if (session.$group.enableAutoTag === 1) session.$execute(`tag ${capture[1]}`);
         }
         return next();
     });
@@ -85,13 +86,13 @@ export const apply = async (ctx: Context, config: any = {}) => {
                         errmsg = probs.split('HTTP')[0];
                         throw new Error(errmsg);
                     }
-                    console.log(probs);
                     const tags = [];
                     let txt = '';
                     for (const i of probs) {
                         tags.push(names[i[0]]);
                         txt += `${trans[names[i[0]]] || names[i[0]]}:${Math.floor(i[1] * 100)}%  `;
                     }
+                    logger.info(txt);
                     if (config.url && config.tags) {
                         for (const tag of tags) {
                             if (config.tags.includes(tag)) {
@@ -113,17 +114,18 @@ export const apply = async (ctx: Context, config: any = {}) => {
             .before(checkGroupAdmin)
             .groupFields(['enableAutoTag'])
             .action(({ session }) => {
-                session.$group.enableAutoTag = false;
+                session.$group.enableAutoTag = 0;
                 return 'Disabled';
             });
 
         ctx.command('tag.enable', '在群内启用', { noRedirect: true })
+            .option('silent', '-s')
             .userFields(['authority'])
             .before(checkGroupAdmin)
             .groupFields(['enableAutoTag'])
-            .action(({ session }) => {
-                session.$group.enableAutoTag = true;
+            .action(({ session, options }) => {
+                session.$group.enableAutoTag = options.silent ? 2 : 1;
                 return 'enabled';
             });
-    })
+    });
 };
