@@ -1,11 +1,15 @@
 /* eslint-disable import/no-dynamic-require */
 import { resolve } from 'path';
 import { tmpdir } from 'os';
+import { createHash } from 'crypto';
 import { Context, Session } from 'koishi-core';
 import { CQCode, Logger } from 'koishi-utils';
 import yaml from 'js-yaml';
 import axios from 'axios';
-import { unlink, writeFile, readFile } from 'fs-extra';
+import {
+    unlink, writeFile, readFile, readFileSync,
+} from 'fs-extra';
+import { Collection } from 'mongodb';
 
 const logger = new Logger('imagetag');
 const imageRE = /(\[CQ:image,file=[^,]+,url=[^\]]+\])/;
@@ -19,6 +23,19 @@ declare module 'koishi-core/dist/database' {
     interface Group {
         enableAutoTag?: boolean,
     }
+}
+
+interface ImageTagCache {
+    _id: string,
+    md5: string,
+    txt: string,
+}
+
+function MD5(filePath: string) {
+    const buffer = readFileSync(filePath);
+    const hash = createHash('md5');
+    hash.update(buffer);
+    return hash.digest('hex');
 }
 
 export const apply = async (ctx: Context, config: any = {}) => {
@@ -40,56 +57,73 @@ export const apply = async (ctx: Context, config: any = {}) => {
         return next();
     });
 
-    ctx.command('tag <image>', 'Get image tag', { hidden: true, cost: 3 })
-        .action(async ({ session }, image) => {
-            try {
-                const file = CQCode.parse(image);
-                const { data } = await axios.get<ArrayBuffer>(file.data.url, { responseType: 'arraybuffer' });
-                const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
-                await writeFile(fp, data);
-                logger.info('downloaded');
-                const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
-                if (typeof probs === 'string') {
-                    if (probs.includes('output with shape')) throw new Error('不支持的图片格式');
-                    throw new Error(probs.split('HTTP')[0]);
-                }
-                console.log(probs);
-                const tags = [];
-                let txt = '';
-                for (const i of probs) {
-                    tags.push(names[i[0]]);
-                    txt += `${trans[names[i[0]]] || names[i[0]]}:${Math.floor(i[1] * 100)}%    `;
-                }
-                if (config.url && config.tags) {
-                    for (const tag of tags) {
-                        if (config.tags.includes(tag)) {
-                            axios.get(`${config.url}&source=${encodeURIComponent(file.data.url)}&format=json`);
-                            break;
+    ctx.app.on('connect', async () => {
+        const coll: Collection<ImageTagCache> = ctx.app.database.db.collection('image.tag');
+        coll.createIndex({ md5: 1 }, { unique: true });
+
+        ctx.command('tag <image>', 'Get image tag', { hidden: true, cost: 3 })
+            .action(async ({ session }, image) => {
+                try {
+                    const file = CQCode.parse(image);
+                    if (file.type !== 'image') throw new Error('没有发现图片。');
+                    let c = await coll.findOne({ _id: file.data.file });
+                    if (c) return c.txt;
+                    const { data } = await axios.get<ArrayBuffer>(file.data.url, { responseType: 'arraybuffer' });
+                    const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
+                    await writeFile(fp, data);
+                    const md5 = MD5(fp);
+                    c = await coll.findOne({ md5 });
+                    if (c) return c.txt;
+                    logger.info('downloaded');
+                    const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
+                    if (typeof probs === 'string') {
+                        let errmsg: string;
+                        if (probs.includes('output with shape')) {
+                            errmsg = '不支持的图片格式';
+                            await coll.insertOne({ _id: file.data.file, md5, txt: errmsg });
+                        }
+                        errmsg = probs.split('HTTP')[0];
+                        throw new Error(errmsg);
+                    }
+                    console.log(probs);
+                    const tags = [];
+                    let txt = '';
+                    for (const i of probs) {
+                        tags.push(names[i[0]]);
+                        txt += `${trans[names[i[0]]] || names[i[0]]}:${Math.floor(i[1] * 100)}%  `;
+                    }
+                    if (config.url && config.tags) {
+                        for (const tag of tags) {
+                            if (config.tags.includes(tag)) {
+                                axios.get(`${config.url}&source=${encodeURIComponent(file.data.url)}&format=json`);
+                                break;
+                            }
                         }
                     }
+                    await coll.insertOne({ _id: file.data.file, md5, txt });
+                    await session.$send(txt);
+                    await unlink(fp);
+                } catch (e) {
+                    return e.toString().split('\n')[0];
                 }
-                await session.$send(txt);
-                await unlink(fp);
-            } catch (e) {
-                return e.toString().split('\n')[0];
-            }
-        });
+            });
 
-    ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
-        .userFields(['authority'])
-        .before(checkGroupAdmin)
-        .groupFields(['enableAutoTag'])
-        .action(({ session }) => {
-            session.$group.enableAutoTag = false;
-            return 'Disabled';
-        });
+        ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
+            .userFields(['authority'])
+            .before(checkGroupAdmin)
+            .groupFields(['enableAutoTag'])
+            .action(({ session }) => {
+                session.$group.enableAutoTag = false;
+                return 'Disabled';
+            });
 
-    ctx.command('tag.enable', '在群内启用', { noRedirect: true })
-        .userFields(['authority'])
-        .before(checkGroupAdmin)
-        .groupFields(['enableAutoTag'])
-        .action(({ session }) => {
-            session.$group.enableAutoTag = true;
-            return 'enabled';
-        });
+        ctx.command('tag.enable', '在群内启用', { noRedirect: true })
+            .userFields(['authority'])
+            .before(checkGroupAdmin)
+            .groupFields(['enableAutoTag'])
+            .action(({ session }) => {
+                session.$group.enableAutoTag = true;
+                return 'enabled';
+            });
+    })
 };
