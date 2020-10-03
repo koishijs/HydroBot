@@ -100,7 +100,6 @@ const cheatSheet = (p: string, authority: number) => `\
 　%0：收到的原文本
 　%n：分条发送
 　%a：@说话人
-　%m：@四季酱
 　%s：说话人的名字
 　%{}: 指令插值`;
 

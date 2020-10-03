@@ -14,19 +14,6 @@ class RegExpError extends Error {
 }
 
 const validator = new RegExpValidator({
-    onEscapeCharacterSet(start, end, kind, negate) {
-        // eslint-disable-next-line curly
-        if (kind === 'space') throw negate
-            ? new RegExpError('四季酱会自动删除问题中的空白字符，你无需使用 \\s。')
-            : new RegExpError('四季酱会自动删除问题中的空白字符，请使用 . 代替 \\S。');
-        let chars = kind === 'digit' ? '0-9' : '_0-9a-z';
-        let source = kind === 'digit' ? 'd' : 'w';
-        if (negate) {
-            chars = `^${chars}`;
-            source = source.toUpperCase();
-        }
-        throw new RegExpError(`目前不支持在正则表达式中使用 \\${source}，请使用 [${chars}] 代替。`);
-    },
     onQuantifier(start, end, min, max, greedy) {
         if (!greedy) throw new RegExpError('目前不支持在正则表达式中使用非贪婪匹配语法。');
     },

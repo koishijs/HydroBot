@@ -217,7 +217,6 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
         .replace(/%%/g, '@@__PLACEHOLDER__@@')
         .replace(/%A/g, CQCode.stringify('at', { qq: 'all' }))
         .replace(/%a/g, CQCode.stringify('at', { qq: session.userId }))
-        .replace(/%m/g, CQCode.stringify('at', { qq: session.selfId }))
         .replace(/%s/g, escapeAnswer(session.$username))
         .replace(/%0/g, escapeAnswer(session.message));
 
