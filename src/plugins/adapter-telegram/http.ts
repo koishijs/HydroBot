@@ -1,3 +1,4 @@
+import { inspect } from 'util';
 import {
     App, Bot, Meta, Server,
 } from 'koishi-core';
@@ -33,17 +34,17 @@ export default class TelegramHTTPServer extends Server {
 
     constructor(app: App) {
         assertProperty(app.options, 'port');
-        const bot = app.options.bots.find((_bot) => _bot.server);
+        const bot = app.options.bots.find((_bot) => _bot.token);
         if (!bot.type) logger.info('infer type as telegram');
         super(app);
     }
 
     private async __listen(bot: Bot) {
         bot.ready = true;
-        this._axios = Axios.create({ baseURL: bot.server });
+        this._axios = Axios.create({ baseURL: `https://api.telegram.org/bot${bot.token}/` });
         const path = new URL(bot.url).pathname;
-        this.router.all(path, (ctx) => {
-            logger.info('receive %o', ctx.request.body);
+        this.router.all(path, async (ctx) => {
+            logger.info('receive %s', inspect(ctx.request.body, false, 99, true));
             const payload = ctx.request.body as Telegram.Update;
             const body: Meta = {
                 selfId: bot.selfId,
@@ -53,8 +54,15 @@ export default class TelegramHTTPServer extends Server {
                 body.postType = 'message';
                 body.messageType = payload.message.chat.type === 'private' ? 'private' : 'group';
                 body.time = payload.message.date;
-                // TODO convert message
-                body.message = body.rawMessage = payload.message.text;
+                // TODO convert video message
+                let msg = payload.message.text || '';
+                msg += payload.message.caption || '';
+                if (payload.message.photo) {
+                    const fid = payload.message.photo[0].file_id;
+                    const { data } = await this._axios.get(`getFile?file_id=${fid}`);
+                    msg += ` [CQ:image,file=${fid},url=https://api.telegram.org/file/bot${bot.token}/${data.result.file_path}]`;
+                }
+                body.message = body.rawMessage = msg;
                 body.userId = payload.message.from.id;
                 body.groupId = payload.message.chat.id;
                 body.sender = {
