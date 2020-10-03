@@ -1,6 +1,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import re
 import json
+import time
 
 import torch
 from PIL import Image
@@ -24,6 +25,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             content_length = int(self.headers['Content-Length'])
             body = self.rfile.read(content_length)
             ipt = json.loads(body)
+            time_start = time.time()
             print(ipt)
             image = Image.open(ipt['path'])
             input_tensor = preprocess(image)
@@ -37,6 +39,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             tags = list()
             for i in inds[0: len(tmp)]:
                 tags.append([int(re.sub("\D", "", str(i))), float(probs[i].detach().numpy())])
+            time_end = time.time()
+            print('Time: ', time_end-time_start, 's')
             self.send_response(200)
             self.end_headers()
             self.wfile.write(str.encode(json.dumps(tags)))
