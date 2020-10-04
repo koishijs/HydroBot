@@ -7,10 +7,9 @@ import {
 import { Session } from 'koishi-core/dist/session';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { Collection, ObjectID } from 'mongodb';
-import { Dictionary } from 'lodash';
+import moment from 'moment';
 import { GroupMemberInfo } from 'koishi-adapter-cqhttp';
 import { text2png } from '../lib/graph';
-import moment from 'moment';
 
 declare module 'koishi-core/dist/database' {
     interface Group {
@@ -436,7 +435,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
                     { $sort: { count: -1 } },
                     { $limit: 10 },
                 ]).toArray() as unknown as any;
-                const udict: Dictionary<GroupMemberInfo> = {};
+                const udict: Record<number, GroupMemberInfo> = {};
                 for (const r of result) {
                     try {
                         udict[r._id] = await session.$bot.getGroupMemberInfo(session.groupId, r._id);
