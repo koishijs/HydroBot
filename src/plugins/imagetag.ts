@@ -62,10 +62,10 @@ export const apply = async (ctx: Context, config: any = {}) => {
         const coll: Collection<ImageTagCache> = ctx.app.database.db.collection('image.tag');
         coll.createIndex({ md5: 1 }, { unique: true });
 
-        ctx.command('tag <image>', 'Get image tag', { hidden: true, cost: 3 })
+        ctx.command('tag [image]', 'Get image tag', { hidden: true, cost: 3 })
             .action(async ({ session }, image) => {
                 try {
-                    if (!image.trim()) {
+                    if (!image) {
                         await session.$send('请发送图片。');
                         image = await session.$prompt(30);
                     }
