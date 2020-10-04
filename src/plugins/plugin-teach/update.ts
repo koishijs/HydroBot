@@ -131,13 +131,13 @@ export async function update(argv: Dialogue.Argv) {
     const {
         ctx, session, options, target, config,
     } = argv;
-    const { maxShownDialogues = 3, detailDelay: detailInterval = 500 } = config;
+    const { maxShownDialogues = 5, detailDelay: detailInterval = 500 } = config;
     const {
         revert, review, remove, search,
     } = options;
 
     options.modify = !review && !search && Object.keys(options).length;
-    if (!options.modify && !search && target.length > maxShownDialogues) {
+    if (!options.modify && !search && target.length > maxShownDialogues && session.$user.authority < 3) {
         return session.$send(`一次最多同时预览 ${maxShownDialogues} 个问答。`);
     }
 
