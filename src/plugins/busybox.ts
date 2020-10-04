@@ -24,6 +24,7 @@ interface Message {
     message: string,
     sender: number,
     group: number,
+    id: number,
 }
 
 Group.extend(() => ({
@@ -109,7 +110,8 @@ export const apply = (ctx: Context, config: Config = {}) => {
 
     ctx.command('_.eval <expr...>', { authority: 5, noRedirect: true })
         .option('i', 'Output as image')
-        .action(async ({ options }, input) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .action(async ({ session, options }, input) => {
             let res: any;
             const expr = `\
 (async function f(){
@@ -396,6 +398,15 @@ export const apply = (ctx: Context, config: Config = {}) => {
         await c.createIndex({ time: -1, group: 1, user: 1 });
         logger.info('Done.');
 
+        ctx.command('_.recall', '撤回消息')
+            .userFields(['authority'])
+            .before(checkGroupAdmin)
+            .option('count', '-c <count> 数量', { fallback: 1 })
+            .action(async ({ session, options }) => {
+                const msgs = await c.find({ group: session.groupId }).sort({ time: -1 }).limit(options.count).toArray();
+                for (const msg of msgs) await session.$bot.deleteMsg(msg.id);
+            });
+
         ctx.command('_.stat', 'stat')
             .option('total', 'Total')
             .action(async ({ session, options }) => {
@@ -442,16 +453,18 @@ ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条
                     message: session.message,
                     sender: session.userId,
                     time: new Date(),
+                    id: session.messageId,
                 });
             });
 
-            ctx.on('before-send', (session) => {
+            ctx.on('send', (session) => {
                 if (!session.groupId) return;
                 c.insertOne({
                     time: new Date(),
                     sender: session.$bot.selfId,
                     group: session.groupId,
                     message: session.message,
+                    id: session.messageId,
                 });
             });
         }
