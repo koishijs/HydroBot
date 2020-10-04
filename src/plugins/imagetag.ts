@@ -43,7 +43,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
     const trans = yaml.safeLoad(transfile.toString());
     const names = require(resolve(process.cwd(), 'database', 'class_names_6000.json'));
 
-    ctx.on('before-attach-group', (session, fields) => {
+    ctx.on('before-attach-group', (_, fields) => {
         fields.add('enableAutoTag');
     });
 

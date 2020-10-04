@@ -5,7 +5,8 @@ type Page = import('puppeteer-core').Page;
 const AU = new AnsiUp();
 
 export async function text2png(page: Page, content: string) {
-    const str = `<pre style="font-family:'Source Code Pro', Consolas, 'Microsoft Yahei', 微软雅黑;font-size:14px;">${AU.ansi_to_html(content)}</pre>`;
+    // eslint-disable-next-line max-len
+    const str = `<pre style="font-family:'Source Code Pro', Consolas, 'Microsoft Yahei', HYShuaiXianTiW;font-size:14px;">${AU.ansi_to_html(content)}</pre>`;
     const data = `data:text/html;base64,${Buffer.from(str).toString('base64')}`;
     let s: Buffer;
     let e: Error;
