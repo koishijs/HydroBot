@@ -404,6 +404,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .option('count', '-c <count> 数量', { fallback: 1 })
             .action(async ({ session, options }) => {
                 const msgs = await c.find({ group: session.groupId }).sort({ time: -1 }).limit(options.count).toArray();
+                logger.info('deleting message: %o', msgs);
                 for (const msg of msgs) await session.$bot.deleteMsg(msg.id);
             });
 

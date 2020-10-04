@@ -67,7 +67,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                 try {
                     if (!image) {
                         await session.$send('请发送图片。');
-                        image = await session.$prompt(30);
+                        image = await session.$prompt(30000);
                     }
                     let id;
                     let url = image;
@@ -77,7 +77,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                         url = file.data.url;
                         id = file.data.file;
                     }
-                    if (!image.startsWith('http')) throw new Error('没有发现图片。');
+                    if (!url.startsWith('http')) throw new Error('没有发现图片。');
                     if (!id) id = Buffer.from(url).toString('base64');
                     let c = await coll.findOne({ _id: id });
                     if (c) return c.txt;
