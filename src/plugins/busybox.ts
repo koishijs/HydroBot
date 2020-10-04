@@ -10,6 +10,7 @@ import { Collection, ObjectID } from 'mongodb';
 import { Dictionary } from 'lodash';
 import { GroupMemberInfo } from 'koishi-adapter-cqhttp';
 import { text2png } from '../lib/graph';
+import moment from 'moment';
 
 declare module 'koishi-core/dist/database' {
     interface Group {
@@ -403,30 +404,32 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .before(checkGroupAdmin)
             .option('count', '-c <count> 数量', { fallback: 1 })
             .action(async ({ session, options }) => {
-                const msgs = await c.find({ group: session.groupId }).sort({ time: -1 }).limit(options.count).toArray();
+                const msgs = await c.find({ group: session.groupId, sender: session.selfId }).sort({ time: -1 }).limit(options.count).toArray();
                 logger.info('deleting message: %o', msgs);
                 for (const msg of msgs) await session.$bot.deleteMsg(msg.id);
             });
 
-        ctx.command('_.stat', 'stat')
-            .option('total', 'Total')
-            .action(async ({ session, options }) => {
-                const time = options.total ? {} : { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) } };
+        ctx.command('_.stat [duration]', 'stat')
+            .option('total', '-t Total')
+            .action(async ({ session, options }, duration = '1day') => {
+                const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
+                const time = options.total ? {} : { time: { $gt: moment().add(-n, a as any).toDate() } };
                 const totalSendCount = await c.find({ ...time, sender: session.selfId }).count();
                 const groupSendCount = await c.find({ ...time, group: session.groupId, sender: session.selfId }).count();
                 const totalReceiveCount = await c.find({ ...time, sender: { $ne: session.selfId } }).count();
                 const groupReceiveCount = await c.find({ ...time, group: session.groupId, sender: { $ne: session.selfId } }).count();
-                return `统计信息${options.total ? '（总计）' : '（今日）'}
+                return `统计信息${options.total ? '（总计）' : `（${duration}）`}
 发送消息${totalSendCount}条，本群${groupSendCount}条。
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
             });
 
-        ctx.command('_.rank', 'rank')
+        ctx.command('_.rank [duration]', 'rank')
             .option('total', 'Total')
-            .action(async ({ session, options }) => {
+            .action(async ({ session, options }, duration = '1day') => {
+                const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
                 const $match = options.total
                     ? { group: session.groupId }
-                    : { time: { $gt: new Date(new Date().getTime() - 24 * 3600 * 1000) }, group: session.groupId };
+                    : { time: { $gt: moment().add(-n, a as any).toDate() }, group: session.groupId };
                 const result = await c.aggregate([
                     { $match },
                     { $group: { _id: '$sender', count: { $sum: 1 } } },
@@ -442,7 +445,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
                     }
                 }
                 return `\
-群成员发言排行${options.total ? '（共计）' : '（今日）'}
+群成员发言排行${options.total ? '（共计）' : `（${duration}）`}
 ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条`).join('\n')}`;
             });
 
