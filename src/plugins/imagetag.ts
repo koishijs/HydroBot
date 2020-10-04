@@ -65,11 +65,23 @@ export const apply = async (ctx: Context, config: any = {}) => {
         ctx.command('tag <image>', 'Get image tag', { hidden: true, cost: 3 })
             .action(async ({ session }, image) => {
                 try {
+                    if (!image.trim()) {
+                        await session.$send('请发送图片。');
+                        image = await session.$prompt(30);
+                    }
+                    let id;
+                    let url = image;
                     const file = CQCode.parse(image);
-                    if (file.type !== 'image') throw new Error('没有发现图片。');
-                    let c = await coll.findOne({ _id: file.data.file });
+                    if (file) {
+                        if (file.type !== 'image') throw new Error('没有发现图片。');
+                        url = file.data.url;
+                        id = file.data.file;
+                    }
+                    if (!image.startsWith('http')) throw new Error('没有发现图片。');
+                    if (!id) id = Buffer.from(url).toString('base64');
+                    let c = await coll.findOne({ _id: id });
                     if (c) return c.txt;
-                    const { data } = await axios.get<ArrayBuffer>(file.data.url, { responseType: 'arraybuffer' });
+                    const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
                     const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
                     await writeFile(fp, data);
                     const md5 = MD5(fp);
@@ -81,7 +93,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                         let errmsg: string;
                         if (probs.includes('output with shape')) {
                             errmsg = '不支持的图片格式';
-                            await coll.insertOne({ _id: file.data.file, md5, txt: errmsg });
+                            await coll.insertOne({ _id: id, md5, txt: errmsg });
                         }
                         errmsg = probs.split('HTTP')[0];
                         throw new Error(errmsg);
@@ -96,12 +108,12 @@ export const apply = async (ctx: Context, config: any = {}) => {
                     if (config.url && config.tags) {
                         for (const tag of tags) {
                             if (config.tags.includes(tag)) {
-                                axios.get(`${config.url}&source=${encodeURIComponent(file.data.url)}&format=json`);
+                                axios.get(`${config.url}&source=${encodeURIComponent(url)}&format=json`);
                                 break;
                             }
                         }
                     }
-                    await coll.insertOne({ _id: file.data.file, md5, txt });
+                    await coll.insertOne({ _id: id, md5, txt });
                     await session.$send(txt);
                     await unlink(fp);
                 } catch (e) {
