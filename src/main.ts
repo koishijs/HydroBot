@@ -58,6 +58,7 @@ export = class {
         this.app = new App({
             port: this.config.port,
             bots: this.config.bots,
+            type: this.config.type,
             prefix: this.config.prompt as string,
             preferSync: true,
             defaultAuthority: 1,

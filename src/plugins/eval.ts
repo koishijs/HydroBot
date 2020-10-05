@@ -10,4 +10,9 @@ interface Config {
 export function apply(ctx: Context, config: Config) {
     ctx.plugin(KoishiPluginEval, config.eval);
     if (config.addons) ctx.plugin(KoishiPluginEvalAddons, config.addons);
+
+    ctx.command('#.silent <command...>')
+        .action(async ({ session }, command) => {
+            await session.$executeSilent(command);
+        });
 }
