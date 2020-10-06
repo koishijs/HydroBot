@@ -61,6 +61,7 @@ Bot.prototype.get = async function get(this: Bot, action, params = {}) {
     }
     const response = await this._request(action, snakeCase(params));
     logger.info('[response] %o', response);
+    // @ts-ignore
     const { result, ok } = response;
     if (ok) return camelCase(result);
     throw new SenderError(params, action, -1, this.selfId);

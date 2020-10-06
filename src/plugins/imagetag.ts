@@ -90,12 +90,11 @@ export const apply = async (ctx: Context, config: any = {}) => {
                     logger.info('downloaded');
                     const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
                     if (typeof probs === 'string') {
-                        let errmsg: string;
-                        if (probs.includes('output with shape')) {
-                            errmsg = '不支持的图片格式';
+                        let errmsg = probs.split('HTTP')[0];
+                        if (probs.includes('output with shape') || probs.includes('size of tensor')) {
+                            errmsg = '不支持的图片格式（请发送png格式图片）';
                             await coll.insertOne({ _id: id, md5, txt: errmsg });
                         }
-                        errmsg = probs.split('HTTP')[0];
                         throw new Error(errmsg);
                     }
                     const tags = [];
