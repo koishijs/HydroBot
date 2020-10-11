@@ -1,5 +1,5 @@
 {
-  "name": "qqbot",
+  "name": "hydro-bot",
   "version": "2.1.3",
   "bin": "bin/robot.js",
   "main": "dist/main.js",
