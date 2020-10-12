@@ -323,14 +323,6 @@ export const apply = (ctx: Context, config: Config = {}) => {
                 await session.$send('Activated');
             } else await session.$send('您没有权限执行该操作');
         }
-        if (!session.message.includes('[CQ:reply,id=')) return;
-        const res = RE_REPLY.exec(session.message);
-        if (!res) return;
-        const [, id, msg] = res;
-        if (msg.includes('!!recall')) {
-            const user = await ctx.database.getUser(session.userId, ['authority']);
-            if (user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role)) return session.$bot.deleteMsg(parseInt(id, 10));
-        }
     });
 
     ctx.on('group-ban', (session) => {
@@ -449,8 +441,8 @@ ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条
             });
 
         if (config.recordMessage) {
-            ctx.on('message', async (session) => {
-                if (!session.groupId) return;
+            ctx.middleware((session, next) => {
+                if (!session.groupId) return next();
                 c.insertOne({
                     group: session.groupId,
                     message: session.message,
