@@ -33,7 +33,6 @@ Group.extend(() => ({
 
 const groupMap: Record<number, [Promise<string>, number]> = {};
 const userMap: Record<number, [string | Promise<string>, number]> = {};
-const RE_REPLY = /\[CQ:reply,id=([0-9-]+)\]([\s\S]+)$/gmi;
 
 async function getGroupName(session: Session) {
     if (session.messageType === 'private') return '私聊';
@@ -104,6 +103,12 @@ export const apply = (ctx: Context, config: Config = {}) => {
     ctx.command('help', { authority: 1, hidden: true });
     ctx.command('tex', { authority: 1 });
     ctx.command('_', '管理工具');
+
+    ctx.command('_.assign', 'assign', { authority: 4 })
+        .action(async ({ session }) => {
+            await session.$app.database.getGroup(session.groupId, session.selfId);
+            await session.$app.database.setGroup(session.groupId, { assignee: session.selfId });
+        });
 
     ctx.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })
         .action((_, msg) => msg.decode());
@@ -365,24 +370,6 @@ export const apply = (ctx: Context, config: Config = {}) => {
         }
     });
 
-    async function checkPerm() {
-        logger.info('正在检查权限');
-        for (const bot of ctx.bots) {
-            const groups = await bot.getGroupList();
-            for (const group of groups) {
-                const users = await bot.getGroupMemberList(group.groupId);
-                const udocs = await ctx.database.getUsers(users.map((user) => user.userId));
-                if (!udocs.some((user) => user.authority === 5)) {
-                    logger.info('已退出 %d(%s)：无授权者', group.groupId, group.groupName);
-                    bot.sendGroupMsg(group.groupId, '未检测到有效的授权。即将自动退出。');
-                    setTimeout(() => {
-                        bot.setGroupLeave(group.groupId);
-                    }, 5000);
-                }
-            }
-        }
-    }
-
     ctx.on('connect', async () => {
         const c: Collection<Message> = ctx.database.db.collection('message');
 
@@ -463,8 +450,5 @@ ${result.map((r) => `${udict[r._id].card || udict[r._id].nickname} ${r.count}条
                 });
             });
         }
-
-        setTimeout(checkPerm, 10000);
-        setInterval(checkPerm, 30 * 60 * 1000);
     });
 };

@@ -77,12 +77,6 @@ export = class {
                 this.logger.info(`Opped ${admin}`);
             }
         });
-        this.app.prependMiddleware(async (session, next) => {
-            if (session.messageType === 'group') {
-                await this.app.database.getGroup(session.groupId, session.selfId);
-            }
-            return next();
-        });
         await this.load();
         await this.app.start();
         await this.app.getSelfIds();
