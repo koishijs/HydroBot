@@ -1,9 +1,11 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import re
+import base64
 import json
 import time
 
 import torch
+from io import BytesIO
 from PIL import Image
 from torchvision import transforms
 
@@ -27,7 +29,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             ipt = json.loads(body)
             time_start = time.time()
             print(ipt)
-            image = Image.open(ipt['path'])
+            byte_data = base64.b64decode(ipt['img'])
+            image_data = BytesIO(byte_data)
+            img = Image.open(image_data)
             input_tensor = preprocess(image)
             input_batch = input_tensor.unsqueeze(0)
             if torch.cuda.is_available():

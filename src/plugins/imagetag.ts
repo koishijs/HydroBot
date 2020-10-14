@@ -1,15 +1,13 @@
 /* eslint-disable import/no-dynamic-require */
 import { resolve } from 'path';
-import { tmpdir } from 'os';
 import { createHash } from 'crypto';
 import { Context, Session } from 'koishi-core';
 import { CQCode, Logger } from 'koishi-utils';
 import yaml from 'js-yaml';
 import axios from 'axios';
-import {
-    unlink, writeFile, readFile, readFileSync,
-} from 'fs-extra';
+import { readFile } from 'fs-extra';
 import { Collection } from 'mongodb';
+import sharp from 'sharp';
 
 const logger = new Logger('imagetag');
 const imageRE = /(\[CQ:image,file=[^,]+,url=[^\]]+\])/;
@@ -31,8 +29,7 @@ interface ImageTagCache {
     txt: string,
 }
 
-function MD5(filePath: string) {
-    const buffer = readFileSync(filePath);
+function MD5(buffer: Buffer) {
     const hash = createHash('md5');
     hash.update(buffer);
     return hash.digest('hex');
@@ -82,13 +79,15 @@ export const apply = async (ctx: Context, config: any = {}) => {
                     let c = await coll.findOne({ _id: id });
                     if (c) return c.txt;
                     const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
-                    const fp = resolve(tmpdir(), `${Math.random().toString()}.png`);
-                    await writeFile(fp, data);
-                    const md5 = MD5(fp);
+                    const buf = Buffer.alloc(data.byteLength);
+                    const view = new Uint8Array(data);
+                    for (let i = 0; i < buf.length; ++i) buf[i] = view[i];
+                    const md5 = MD5(buf);
                     c = await coll.findOne({ md5 });
                     if (c) return c.txt;
+                    const img = (await sharp(buf).png().toBuffer()).toString('base64');
                     logger.info('downloaded');
-                    const { data: probs } = await axios.post('http://127.0.0.1:10377/', { path: fp }) as any;
+                    const { data: probs } = await axios.post('http://127.0.0.1:10377/', { img }) as any;
                     if (typeof probs === 'string') {
                         let errmsg = probs.split('HTTP')[0];
                         if (probs.includes('output with shape') || probs.includes('size of tensor')) {
@@ -113,8 +112,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                         }
                     }
                     await coll.insertOne({ _id: id, md5, txt });
-                    await session.$send(txt);
-                    await unlink(fp);
+                    return txt;
                 } catch (e) {
                     return e.toString().split('\n')[0];
                 }
