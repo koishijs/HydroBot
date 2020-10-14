@@ -31,7 +31,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             print(ipt)
             byte_data = base64.b64decode(ipt['img'])
             image_data = BytesIO(byte_data)
-            img = Image.open(image_data)
+            image = Image.open(image_data)
             input_tensor = preprocess(image)
             input_batch = input_tensor.unsqueeze(0)
             if torch.cuda.is_available():
