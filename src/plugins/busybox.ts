@@ -113,7 +113,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
     ctx.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })
         .action((_, msg) => msg.decode());
 
-    ctx.command('_.eval <expr...>', { authority: 5, noRedirect: true })
+    ctx.command('_.eval <expr...>', { authority: 5, noRedirect: true, hidden: true })
         .option('i', 'Output as image')
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .action(async ({ session, options }, input) => {

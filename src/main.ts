@@ -72,8 +72,8 @@ export = class {
         this.app.plugin(KoishiPluginMongo, this.config.db);
         this.app.on('connect', async () => {
             for (const admin of this.config.admin) {
-                this.app.database.getUser(admin, 5);
-                this.app.database.setUser(admin, { authority: 5 });
+                this.app.database.getUser(admin, 3);
+                this.app.database.setUser(admin, { authority: 3, sudoer: true });
                 this.logger.info(`Opped ${admin}`);
             }
         });

@@ -12,6 +12,14 @@ export function apply(ctx: Context, config: Config) {
     ctx.plugin(KoishiPluginEval, config.eval);
     if (config.addons) ctx.plugin(KoishiPluginEvalAddons, config.addons);
 
+    ctx.command('evaluate')
+        .option('i', 'Output as image', { hidden: true })
+        .before((session) => {
+            if (!session._sudo) return false;
+            if (session.$argv.options.i) session.$execute(`sudo _.eval -i ${session.$argv.args[0]}`);
+            session.$execute(`sudo _.eval ${session.$argv.args[0]}`);
+        });
+
     ctx.command('#.silent <command...>')
         .action(async ({ session }, command) => {
             await session.$executeSilent(command);
