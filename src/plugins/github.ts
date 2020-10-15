@@ -204,33 +204,43 @@ export const apply = (app: App, config: any) => {
             pull_request: {
                 async hook(body) {
                     let resp;
+                    const { full_name, owner } = body.repository;
+                    const {
+                        user, html_url, title, base, head, number, merged,
+                    } = body.pull_request;
+                    const prefix = new RegExp(`^${owner.login}:`);
+                    const baseLabel = base.label.replace(prefix, '');
+                    const headLabel = head.label.replace(prefix, '');
+                    if (user.type === 'Bot') return;
                     if (body.action === 'opened') {
-                        resp = `${body.pull_request.user.login} opened an pull request for ${body.repository.full_name}#${body.pull_request.number}`;
-                        resp = `${resp}\n${body.pull_request.title}`;
+                        resp = `${user.login} opened an pull request for ${full_name}#${number}(${baseLabel}<${headLabel})`;
+                        resp += `\n${title}`;
+                        if (body.pull_request.body) resp += `\n${body.pull_request.body}`;
                     } else if (body.action === 'created') {
-                        resp = `${body.comment.user.login} commented on ${body.repository.full_name}#${body.pull_request.number}`;
+                        resp = `${user.login} commented on ${full_name}#${number}(${baseLabel}<${headLabel})`;
                         resp += `\n${body.comment.body}`;
                     } else if (body.action === 'assigned') {
-                        resp = `${body.repository.full_name}#${body.pull_request.number}: Assigned ${body.assignee.login}`;
+                        resp = `${full_name}#${number}: Assigned ${body.assignee.login}`;
                     } else if (body.action === 'unassigned') {
-                        resp = `${body.repository.full_name}#${body.pull_request.number}: Unassigned ${body.assignee.login}`;
+                        resp = `${full_name}#${number}: Unassigned ${body.assignee.login}`;
                     } else if (body.action === 'review_requested') {
-                        resp = `${body.repository.full_name}#${body.pull_request.number}: Request a review.`;
-                    } else if (body.action === 'closed' && !body.merged) {
-                        resp = `${body.sender.login} closed ${body.repository.full_name}#${body.pull_request.number}.`;
+                        resp = `${full_name}#${number}: Request a review.`;
+                    } else if (body.action === 'closed') {
+                        const type = merged ? 'merged' : 'closed';
+                        resp = `${body.sender.login} ${type} ${full_name}#${number}(${baseLabel}<${headLabel})`;
                     } else if (['reopened', 'locked', 'unlocked'].includes(body.action)) {
-                        resp = `${body.sender.login} ${body.action} PR:${body.repository.full_name}#${body.pull_request.number}`;
+                        resp = `${body.sender.login} ${body.action} PR:${full_name}#${number}`;
                     } else if (['synchronize'].includes(body.action)) {
                         resp = '';
                     } else if (body.action === 'ready_for_review') {
-                        resp = `${body.repository.full_name}#${body.pull_request.number} is ready for review.`;
+                        resp = `${full_name}#${number} is ready for review.`;
                     } else resp = `Unknown pull request action: ${body.action}`;
                     return [
                         resp,
                         {
-                            link: body.pull_request.html_url,
-                            reponame: body.repository.full_name,
-                            issueId: body.pull_request.number,
+                            link: html_url,
+                            reponame: full_name,
+                            issueId: number,
                         },
                     ];
                 },
@@ -258,7 +268,7 @@ export const apply = (app: App, config: any) => {
                 async hook(body) {
                     if (body.review.state === 'commented') return [];
                     if (body.review.state === 'approved') {
-                        return [`${body.review.login} approved ${body.repository.full_name}#${body.pull_request.number}`];
+                        return [`${body.sender.login} approved ${body.repository.full_name}#${body.pull_request.number}`];
                     }
                     return [];
                 },
