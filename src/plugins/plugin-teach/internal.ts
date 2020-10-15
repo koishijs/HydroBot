@@ -46,9 +46,12 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         const noRedirect = command.getConfig('noRedirect', session);
         if (noRedirect && session._redirected) {
             const creator = await ctx.app.database.getUser(session._dialogue.writer, ['authority']);
-            if (creator.authority < 5) return '不支持在插值中调用该命令。';
+            // @ts-ignore
+            if (creator.authority < 5 && !creator.sudoer) return '不支持在插值中调用该命令。';
         }
     });
+
+    ctx.on('before-attach-user', (session, fields) => fields.add('sudoer'));
 
     ctx.on('dialogue/validate', (argv) => {
         const { options, args } = argv;

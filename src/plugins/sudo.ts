@@ -1,4 +1,4 @@
-import { Context } from "koishi-core";
+import { Context } from 'koishi-core';
 
 declare module 'koishi-core/dist/database' {
     interface User {

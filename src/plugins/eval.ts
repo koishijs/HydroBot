@@ -18,6 +18,7 @@ export function apply(ctx: Context, config: Config) {
             if (!session._sudo) return false;
             if (session.$argv.options.i) session.$execute(`sudo _.eval -i ${session.$argv.args[0]}`);
             session.$execute(`sudo _.eval ${session.$argv.args[0]}`);
+            return true;
         });
 
     ctx.command('#.silent <command...>')
