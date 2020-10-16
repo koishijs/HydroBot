@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 const path = require('path');
-// eslint-disable-next-line import/no-dynamic-require
-const config = require(path.resolve(process.cwd(), 'config.json'));
+const fs = require('fs');
+const yaml = require('js-yaml');
 // eslint-disable-next-line import/no-unresolved
 const Main = require('../dist/main.js');
+
+const config = yaml.load(fs.readFileSync(path.resolve(process.cwd(), 'config.yaml')));
 
 const App = new Main({ config });
 global.App = App;
