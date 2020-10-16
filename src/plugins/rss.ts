@@ -28,7 +28,7 @@ export const apply = (app: App) => {
 
         feeder.on('new-item', async (payload) => {
             console.log(payload);
-            const source = payload.meta.link.toLowerCase();
+            const source = payload.meta.link;
             const message = `${payload.meta.title} (${payload.author})\n${payload.title}`;
             const data = await coll.findOne({ _id: source });
             if (data) {
@@ -43,7 +43,6 @@ export const apply = (app: App) => {
         app.command('rss.subscribe <url>', 'Subscribe a rss url', { cost: 5 })
             .alias('rss.add')
             .action(async ({ session }, url) => {
-                url = url.toLowerCase();
                 const current = await coll.findOne({ _id: url });
                 if (current) {
                     await coll.updateOne(
@@ -66,7 +65,6 @@ export const apply = (app: App) => {
         app.command('rss.cancel <url>', 'Cancel')
             .alias('rss.remove')
             .action(async ({ session }, url) => {
-                url = url.toLowerCase();
                 await coll.updateOne(
                     { _id: url },
                     { $pull: { target: get(session) } },
