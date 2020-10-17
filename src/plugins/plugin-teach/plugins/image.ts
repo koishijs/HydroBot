@@ -41,12 +41,34 @@ export default function apply(ctx: Context) {
         const coll: Collection<ImageDoc> = ctx.app.database.db.collection('image');
 
         const downloadFile = async (file: string, url: string) => {
+            if (await coll.findOne({ _id: file })) return;
             const { data } = await axios.get<ArrayBuffer>(url, { responseType: 'arraybuffer' });
             const buf = Buffer.alloc(data.byteLength);
             const view = new Uint8Array(data);
             for (let i = 0; i < buf.length; ++i) buf[i] = view[i];
             await coll.insertOne({ _id: file, data: new Binary(buf) });
         };
+
+        ctx.on('dialogue/detail', async (dialogue, output) => {
+            try {
+                for (const i in output) {
+                    let t = '';
+                    let capture: RegExpExecArray;
+                    // eslint-disable-next-line no-cond-assign
+                    while (capture = REimage.exec(output[i])) {
+                        const [text, file] = capture;
+                        t += output[i].slice(0, capture.index);
+                        output[i] = output[i].slice(capture.index + text.length);
+                        const res = await coll.findOne({ _id: file });
+                        t += `[CQ:image,file=base64://${res.data.buffer.toString('base64')}]`;
+                    }
+                    output[i] = t + output[i];
+                }
+            } catch (error) {
+                logger.warn(error.message);
+                throw new Error('下载图片时发生错误。');
+            }
+        });
 
         ctx.on('dialogue/before-send', async (state) => {
             let { answer } = state;
