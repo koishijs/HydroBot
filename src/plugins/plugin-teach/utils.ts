@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import { Session, ParsedLine, App } from 'koishi-core';
 import {
     difference, observe, isInteger, defineProperty, Observed,
@@ -6,118 +5,128 @@ import {
 import { RegExpValidator } from 'regexpp';
 
 declare module 'koishi-core/dist/app' {
-    interface App {
-        teachHistory: Record<number, Dialogue>
-    }
+  interface App {
+    teachHistory: Record<number, Dialogue>
+  }
 }
 
 declare module 'koishi-core/dist/context' {
-    interface EventMap {
-        'dialogue/permit'(argv: Dialogue.Argv, dialogue: Dialogue): boolean
-        'dialogue/flag'(flag: keyof typeof Dialogue.Flag): void
-    }
+  interface EventMap {
+    'dialogue/permit'(argv: Dialogue.Argv, dialogue: Dialogue): boolean
+    'dialogue/flag'(flag: keyof typeof Dialogue.Flag): void
+  }
 }
 
 declare module 'koishi-core/dist/database' {
-    interface Tables {
-        dialogue: Dialogue
-    }
+  interface Tables {
+    dialogue: Dialogue
+  }
 
-    interface Database {
-        getDialoguesById<T extends Dialogue.Field>(ids: number[], fields?: T[]): Promise<Dialogue[]>
-        getDialoguesByTest(test: DialogueTest): Promise<Dialogue[]>
-        createDialogue(dialogue: Dialogue, argv: Dialogue.Argv, revert?: boolean): Promise<Dialogue>
-        removeDialogues(ids: number[], argv: Dialogue.Argv, revert?: boolean): Promise<void>
-        updateDialogues(dialogues: Observed<Dialogue>[], argv: Dialogue.Argv): Promise<void>
-        revertDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<string>
-        recoverDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<void>
-        getDialogueStats(): Promise<DialogueStats>
-    }
+  interface Database {
+    getDialoguesById<T extends Dialogue.Field>(ids: number[], fields?: T[]): Promise<Dialogue[]>
+    getDialoguesByTest(test: DialogueTest): Promise<Dialogue[]>
+    createDialogue(dialogue: Dialogue, argv: Dialogue.Argv, revert?: boolean): Promise<Dialogue>
+    removeDialogues(ids: number[], argv: Dialogue.Argv, revert?: boolean): Promise<void>
+    updateDialogues(dialogues: Observed<Dialogue>[], argv: Dialogue.Argv): Promise<void>
+    revertDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<string>
+    recoverDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<void>
+    getDialogueStats(): Promise<DialogueStats>
+  }
 }
 
 interface DialogueStats {
-    questions: number
-    dialogues: number
+  questions: number
+  dialogues: number
 }
 
 export interface Dialogue {
-    id?: number
-    question: string
-    answer: string
-    original: string
-    flag: number
-    _weight?: number
-    _capture?: RegExpExecArray
-    _type?: Dialogue.ModifyType
-    _operator?: number
-    _timestamp?: number
-    _backup?: Readonly<Dialogue>
+  id?: number
+  question: string
+  answer: string
+  original: string
+  flag: number
+  _weight?: number
+  _capture?: RegExpExecArray
+  _type?: Dialogue.ModifyType
+  _operator?: number
+  _timestamp?: number
+  _backup?: Readonly<Dialogue>
 }
 
 export interface DialogueTest {
-    original?: string
-    question?: string
-    answer?: string
-    regexp?: boolean
-    activated?: boolean
-    appellative?: boolean
-    noRecursive?: boolean
+  original?: string
+  question?: string
+  answer?: string
+  regexp?: boolean
+  activated?: boolean
+  appellative?: boolean
+  noRecursive?: boolean
 }
 
 export namespace Dialogue {
-    export type ModifyType = '添加' | '修改' | '删除'
-    export type Field = keyof Dialogue
+  export type ModifyType = '添加' | '修改' | '删除'
+  export type Field = keyof Dialogue
 
-    export interface Config {
-        prefix?: string
-        historyAge?: number
-        validateRegExp?: RegExpValidator.Options
-    }
+  export interface AuthorityConfig {
+    base?: number
+    admin?: number
+    context?: number
+    frozen?: number
+    regExp?: number
+    writer?: number
+  }
 
-    export enum Flag {
-        /** 冻结：只有 4 级以上权限者可修改 */
-        frozen = 1,
-        /** 正则：使用正则表达式进行匹配 */
-        regexp = 2,
-        /** 上下文：后继问答可以被上下文内任何人触发 */
-        context = 4,
-        /** 代行者：由教学者完成回答的执行 */
-        substitute = 8,
-        /** 补集：上下文匹配时取补集 */
-        complement = 16,
-    }
+  export interface Config {
+    prefix?: string
+    authority?: AuthorityConfig
+    historyAge?: number
+    validateRegExp?: RegExpValidator.Options
+  }
 
-    export function addHistory(dialogue: Dialogue, type: Dialogue.ModifyType, argv: Dialogue.Argv, revert: boolean, target = argv.app.teachHistory) {
-        if (revert) return delete target[dialogue.id];
-        target[dialogue.id] = dialogue;
-        const time = Date.now();
-        defineProperty(dialogue, '_timestamp', time);
-        defineProperty(dialogue, '_operator', argv.session.userId);
-        defineProperty(dialogue, '_type', type);
-        setTimeout(() => {
-            if (argv.app.teachHistory[dialogue.id]?._timestamp === time) {
-                delete argv.app.teachHistory[dialogue.id];
-            }
-        }, argv.config.historyAge ?? 600000);
-    }
+  export enum Flag {
+    /** 冻结：只有 4 级以上权限者可修改 */
+    frozen = 1,
+    /** 正则：使用正则表达式进行匹配 */
+    regexp = 2,
+    /** 上下文：后继问答可以被上下文内任何人触发 */
+    context = 4,
+    /** 代行者：由教学者完成回答的执行 */
+    substitute = 8,
+    /** 补集：上下文匹配时取补集 */
+    complement = 16,
+  }
 
-    export interface Argv {
-        app: App
-        session: Session<'authority' | 'id'>
-        args: string[]
-        config: Config
-        target?: number[]
-        options: Record<string, any>
-        appellative?: boolean
+  export function addHistory(dialogue: Dialogue, type: Dialogue.ModifyType, argv: Dialogue.Argv, revert: boolean, target = argv.app.teachHistory) {
+      if (revert) return delete target[dialogue.id];
+      target[dialogue.id] = dialogue;
+      const time = Date.now();
+      defineProperty(dialogue, '_timestamp', time);
+      defineProperty(dialogue, '_operator', argv.session.userId);
+      defineProperty(dialogue, '_type', type);
+      setTimeout(() => {
+          if (argv.app.teachHistory[dialogue.id]?._timestamp === time) {
+              delete argv.app.teachHistory[dialogue.id];
+          }
+      }, argv.config.historyAge ?? 600000);
+  }
 
-        // modify status
-        dialogues?: Dialogue[]
-        dialogueMap?: Record<number, Dialogue>
-        skipped?: number[]
-        updated?: number[]
-        unknown?: number[]
-        uneditable?: number[]
-    }
+  export interface Argv {
+    app: App
+    session: Session<'authority' | 'id'>
+    args: string[]
+    config: Config
+    target?: number[]
+    options: Record<string, any>
+    appellative?: boolean
+
+    // modify status
+    dialogues?: Dialogue[]
+    dialogueMap?: Record<number, Dialogue>
+    skipped?: number[]
+    updated?: number[]
+    unknown?: number[]
+    uneditable?: number[]
+  }
 }
 
 export function sendResult(argv: Dialogue.Argv, prefix?: string, suffix?: string) {

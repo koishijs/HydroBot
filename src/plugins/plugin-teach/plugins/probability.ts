@@ -2,16 +2,16 @@ import { Context } from 'koishi-core';
 import { Dialogue, isZeroToOne } from '../utils';
 
 declare module '../utils' {
-    interface Dialogue {
-        probS: number
-        probA: number
-    }
+  interface Dialogue {
+    probS: number
+    probA: number
+  }
 }
 
 declare module '../receiver' {
-    interface SessionState {
-        activated: Record<number, number>
-    }
+  interface SessionState {
+    activated: Record<number, number>
+  }
 }
 
 export default function apply(ctx: Context, config: Dialogue.Config) {

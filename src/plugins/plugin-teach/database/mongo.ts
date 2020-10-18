@@ -7,9 +7,9 @@ import MongoDatabase from 'koishi-plugin-mongo/dist/database';
 import { Dialogue, DialogueTest, equal } from '../utils';
 
 declare module 'koishi-core/dist/context' {
-    interface EventMap {
-        'dialogue/mongo'(test: DialogueTest, conditionals?: FilterQuery<Dialogue>[]): void
-    }
+  interface EventMap {
+    'dialogue/mongo'(test: DialogueTest, conditionals?: FilterQuery<Dialogue>[]): void
+  }
 }
 
 extendDatabase<typeof MongoDatabase>('koishi-plugin-mongo', {

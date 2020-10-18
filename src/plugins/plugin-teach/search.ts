@@ -5,35 +5,35 @@ import {
 import { getTotalWeight } from './receiver';
 
 export interface SearchDetails extends Array<string> {
-    questionType?: string
-    answerType?: string
+  questionType?: string
+  answerType?: string
 }
 
 declare module 'koishi-core/dist/context' {
-    interface EventMap {
-        'dialogue/list'(dialogue: Dialogue, output: string[], prefix: string, argv: Dialogue.Argv): void
-        'dialogue/detail-short'(dialogue: Dialogue, output: SearchDetails, argv: Dialogue.Argv): void
-        'dialogue/before-search'(argv: Dialogue.Argv, test: DialogueTest): void | boolean
-        'dialogue/search'(argv: Dialogue.Argv, test: DialogueTest, dialogue: Dialogue[]): Promise<void>
-    }
+  interface EventMap {
+    'dialogue/list'(dialogue: Dialogue, output: string[], prefix: string, argv: Dialogue.Argv): void
+    'dialogue/detail-short'(dialogue: Dialogue, output: SearchDetails, argv: Dialogue.Argv): void
+    'dialogue/before-search'(argv: Dialogue.Argv, test: DialogueTest): void | boolean
+    'dialogue/search'(argv: Dialogue.Argv, test: DialogueTest, dialogue: Dialogue[]): Promise<void>
+  }
 }
 
 declare module './utils' {
-    interface Dialogue {
-        _redirections: Dialogue[]
+  interface Dialogue {
+    _redirections: Dialogue[]
+  }
+
+  namespace Dialogue {
+    interface Config {
+      itemsPerPage?: number
+      mergeThreshold?: number
+      maxAnswerLength?: number
     }
 
-    namespace Dialogue {
-        interface Config {
-            itemsPerPage?: number
-            mergeThreshold?: number
-            maxAnswerLength?: number
-        }
-
-        interface Argv {
-            questionMap?: Record<string, Dialogue[]>
-        }
+    interface Argv {
+      questionMap?: Record<string, Dialogue[]>
     }
+  }
 }
 
 export default function apply(ctx: Context) {

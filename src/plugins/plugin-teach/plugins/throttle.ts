@@ -3,22 +3,22 @@ import { makeArray } from 'koishi-utils';
 import { Dialogue } from '../utils';
 
 export interface ThrottleConfig {
-    interval: number
-    responses: number
+  interval: number
+  responses: number
 }
 
 declare module '../utils' {
-    namespace Dialogue {
-        interface Config {
-            throttle?: ThrottleConfig | ThrottleConfig[]
-        }
+  namespace Dialogue {
+    interface Config {
+      throttle?: ThrottleConfig | ThrottleConfig[]
     }
+  }
 }
 
 declare module '../receiver' {
-    interface SessionState {
-        counters: Record<number, number>
-    }
+  interface SessionState {
+    counters: Record<number, number>
+  }
 }
 
 export default function apply(ctx: Context, config: Dialogue.Config) {

@@ -2,21 +2,21 @@ import { Context } from 'koishi-core';
 import { Dialogue } from '../utils';
 
 declare module '../utils' {
-    interface DialogueTest {
-        matchTime?: number
-        mismatchTime?: number
-    }
+  interface DialogueTest {
+    matchTime?: number
+    mismatchTime?: number
+  }
 
-    interface Dialogue {
-        startTime: number
-        endTime: number
-    }
+  interface Dialogue {
+    startTime: number
+    endTime: number
+  }
 
-    namespace Dialogue {
-        interface Config {
-            useTime?: boolean
-        }
+  namespace Dialogue {
+    interface Config {
+      useTime?: boolean
     }
+  }
 }
 
 export function isHours(value: string) {

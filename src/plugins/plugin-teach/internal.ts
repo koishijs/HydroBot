@@ -8,23 +8,23 @@ import { update } from './update';
 import { Dialogue } from './utils';
 
 declare module 'koishi-core/dist/command' {
-    interface CommandConfig {
-        noInterp?: boolean
-    }
+  interface CommandConfig {
+    noInterp?: boolean
+  }
 }
 
 declare module 'koishi-core/dist/plugins/message' {
-    namespace Message {
-        export namespace Teach {
-            let TooManyArguments: string;
-            let MissingQuestionOrAnswer: string;
-            let ProhibitedCommand: string;
-            let ProhibitedCQCode: string;
-            let IllegalRegExp: string;
-            let MayModifyAnswer: string;
-            let MaybeRegExp: string;
-        }
+  namespace Message {
+    export namespace Teach {
+      let TooManyArguments: string;
+      let MissingQuestionOrAnswer: string;
+      let ProhibitedCommand: string;
+      let ProhibitedCQCode: string;
+      let IllegalRegExp: string;
+      let MayModifyAnswer: string;
+      let MaybeRegExp: string;
     }
+  }
 }
 
 Message.Teach = {} as any;
@@ -43,18 +43,9 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         .option('question', '<question>  问题', { type: 'string' })
         .option('answer', '<answer>  回答', { type: 'string' })
         .option('ignoreHint', '-i  忽略智能提示')
-        .option('regexp', '-x  使用正则表达式匹配', { authority: 3 })
-        .option('regexp', '-X  取消使用正则表达式匹配', { authority: 3, value: false })
+        .option('regexp', '-x  使用正则表达式匹配', { authority: config.authority.regExp })
+        .option('regexp', '-X  取消使用正则表达式匹配', { authority: config.authority.regExp, value: false })
         .option('redirect', '=> <answer>  重定向到其他问答');
-
-    ctx.on('before-command', async ({ session, command }) => {
-        const noRedirect = command.getConfig('noRedirect', session);
-        if (noRedirect && session._redirected) {
-            const creator = await ctx.app.database.getUser(session._dialogue.writer, ['authority']);
-            // @ts-ignore
-            if (creator.authority < 5 && !creator.sudoer) return '不支持在插值中调用该命令。';
-        }
-    });
 
     ctx.on('dialogue/validate', (argv) => {
         const { options, args } = argv;
@@ -88,7 +79,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         return dialogues.every((dialogue) => {
             const dist = distance(question, dialogue.answer);
             return dist < dialogue.answer.length / 2
-                && dist < distance(question, dialogue.question);
+        && dist < distance(question, dialogue.question);
         });
     }
 
@@ -143,7 +134,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
     });
 
     ctx.on('dialogue/before-modify', async ({ options, target }) => {
-        // 添加问答时缺少问题或回答
+    // 添加问答时缺少问题或回答
         if (options.create && !target && !(options.question && options.answer)) {
             return Message.Teach.MissingQuestionOrAnswer;
         }

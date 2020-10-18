@@ -3,24 +3,24 @@ import { makeArray } from 'koishi-utils';
 import { Dialogue } from '../utils';
 
 export interface LoopConfig {
-    participants: number
-    length: number
-    debounce?: number
+  participants: number
+  length: number
+  debounce?: number
 }
 
 declare module '../utils' {
-    namespace Dialogue {
-        interface Config {
-            preventLoop?: number | LoopConfig | LoopConfig[]
-        }
+  namespace Dialogue {
+    interface Config {
+      preventLoop?: number | LoopConfig | LoopConfig[]
     }
+  }
 }
 
 declare module '../receiver' {
-    interface SessionState {
-        initiators: number[]
-        loopTimestamp: number
-    }
+  interface SessionState {
+    initiators: number[]
+    loopTimestamp: number
+  }
 }
 
 export default function apply(ctx: Context, config: Dialogue.Config) {
@@ -42,8 +42,8 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
             if (state.initiators.length < length) break;
             const initiators = new Set(state.initiators.slice(0, length));
             if (initiators.size <= participants
-                && initiators.has(state.userId)
-                && !(debounce > timestamp - state.loopTimestamp)) {
+        && initiators.has(state.userId)
+        && !(debounce > timestamp - state.loopTimestamp)) {
                 state.loopTimestamp = timestamp;
                 return true;
             }
