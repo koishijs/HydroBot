@@ -83,6 +83,8 @@ export = class {
             }
             return next();
         });
+        this.app.on('request/friend', (session) => session.$bot.setFriendAddRequest(session.flag, true));
+        this.app.on('request/group/invite', (session) => session.$bot.setGroupAddRequest(session.flag, 'invite', true));
         await this.load();
         await this.app.start();
         await this.app.getSelfIds();
