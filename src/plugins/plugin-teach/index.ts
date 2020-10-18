@@ -1,5 +1,6 @@
+/* eslint-disable import/no-named-as-default */
 /* eslint-disable no-irregular-whitespace */
-
+// @ts-nocheck
 import { Context, ExecuteArgv } from 'koishi-core';
 import { escapeRegExp } from 'koishi-utils';
 import { Dialogue, parseTeachArgs } from './utils';
@@ -37,6 +38,12 @@ declare module 'koishi-core/dist/context' {
     'dialogue/validate'(argv: Dialogue.Argv): void | string
     'dialogue/execute'(argv: Dialogue.Argv): void | Promise<void | string>
   }
+}
+
+declare module 'koishi-core/dist/command' {
+    interface CommandConfig {
+        noRedirect?: boolean,
+    }
 }
 
 const cheatSheet = (p: string, authority: number) => `\
@@ -144,7 +151,7 @@ export function apply(ctx: Context, config: Dialogue.Config = {}) {
     config = { ...defaultConfig, ...config };
     registerPrefix(ctx, config.prefix);
 
-    ctx.command('teach', '添加教学对话', { authority: 2, checkUnknown: true, hideOptions: true })
+    ctx.command('teach', '添加教学对话', { authority: 2, checkUnknown: true, hideOptions: true, noRedirect: true })
         .userFields(['authority', 'id'])
         .usage(({ $user }) => cheatSheet(config.prefix, $user.authority))
         .action(async ({ options, session, args }) => {
