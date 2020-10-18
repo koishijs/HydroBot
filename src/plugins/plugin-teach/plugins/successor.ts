@@ -1,4 +1,3 @@
-/* eslint-disable no-shadow */
 import { Context } from 'koishi-core';
 import { contain, union, difference } from 'koishi-utils';
 import {
@@ -7,41 +6,42 @@ import {
 import { formatQuestionAnswers } from '../search';
 
 declare module '../receiver' {
-  interface SessionState {
-    predecessors: Record<number, Record<number, number>>
-  }
+    interface SessionState {
+        predecessors: Record<number, Record<number, number>>
+    }
 }
 
 declare module '../utils' {
-  interface DialogueTest {
-    stateful?: boolean
-    context?: boolean
-    predecessors?: (string | number)[]
-  }
-
-  interface Dialogue {
-    predecessors: string[]
-    successorTimeout: number
-    _predecessors: Dialogue[]
-    _successors: Dialogue[]
-  }
-
-  namespace Dialogue {
-    interface Config {
-      successorTimeout?: number
+    interface DialogueTest {
+        stateful?: boolean
+        context?: boolean
+        predecessors?: (string | number)[]
     }
 
-    interface Argv {
-      predecessors?: number[]
-      successors?: number[]
-      predOverwrite?: boolean
-      succOverwrite?: boolean
+    interface Dialogue {
+        predecessors: string[]
+        successorTimeout: number
+        _predecessors: Dialogue[]
+        _successors: Dialogue[]
     }
-  }
+
+    namespace Dialogue {
+        interface Config {
+            successorTimeout?: number
+        }
+
+        interface Argv {
+            predecessors?: number[]
+            successors?: number[]
+            predOverwrite?: boolean
+            succOverwrite?: boolean
+        }
+    }
 }
 
 export default function apply(ctx: Context, config: Dialogue.Config) {
     const { successorTimeout = 20000 } = config;
+    if (!successorTimeout) return;
 
     ctx.command('teach')
         .option('setPred', '< <ids>  设置前置问题', { type: 'string', validate: RE_DIALOGUES })
@@ -54,23 +54,6 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         .option('context', '-C  后继问答只能被同一人触发', { value: false });
 
     ctx.emit('dialogue/flag', 'context');
-
-    ctx.on('dialogue/mongo', ({ predecessors, stateful, noRecursive }, conditionals) => {
-        if (noRecursive) {
-            conditionals.push({ predecessors: { $size: 0 } });
-        } else if (predecessors !== undefined) {
-            if (stateful) {
-                conditionals.push({
-                    $or: [
-                        { predecessors: { $size: 0 } },
-                        { predecessors: { $in: predecessors.map((i) => i.toString()) } },
-                    ],
-                });
-            } else if (predecessors.length) {
-                conditionals.push({ predecessors: { $in: predecessors.map((i) => i.toString()) } });
-            }
-        }
-    });
 
     ctx.on('dialogue/validate', (argv) => {
         const { options } = argv;
@@ -104,7 +87,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
     });
 
     ctx.on('dialogue/modify', ({ predOverwrite, predecessors }, data) => {
-    // merge predecessors
+        // merge predecessors
         if (!data.predecessors) data.predecessors = [];
         if (!predecessors) return;
         if (predOverwrite) {
@@ -113,14 +96,14 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
     });
 
     ctx.on('dialogue/modify', ({ options }, data) => {
-    // set successor timeout
+        // set successor timeout
         if (options.successorTimeout) {
             data.successorTimeout = options.successorTimeout * 1000;
         }
     });
 
     ctx.on('dialogue/after-modify', async (argv) => {
-    // 修改后置问答
+        // 修改后置问答
         const { succOverwrite, successors, dialogues } = argv;
         if (!successors) return;
         const predecessors = dialogues.map((dialogue) => `${dialogue.id}`);
@@ -151,12 +134,11 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
     });
 
     ctx.on('dialogue/after-modify', async ({ options: { createSuccessor }, dialogues, session }) => {
-    // 当存在 ># 时自动添加新问答并将当前处理的问答作为其前置
+        // 当存在 ># 时自动添加新问答并将当前处理的问答作为其前置
         if (!createSuccessor) return;
         if (!dialogues.length) return session.$send('没有搜索到任何问答。');
         const command = ctx.command('teach');
         const argv = { ...command.parse(createSuccessor), session, command };
-        // @ts-ignore
         const target = argv.options.setPred = dialogues.map((d) => d.id).join(',');
         argv.source = `# ${createSuccessor} < ${target}`;
         parseTeachArgs(argv);
@@ -164,7 +146,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
     });
 
     // get predecessors
-    ctx.on('dialogue/before-detail', async ({ options, dialogues, ctx }) => {
+    ctx.on('dialogue/before-detail', async ({ options, dialogues }) => {
         if (options.modify) return;
         const predecessors = new Set<number>();
         for (const dialogue of dialogues) {
@@ -231,7 +213,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
             }
         }
 
-        await argv.ctx.parallel('dialogue/search', argv, test, successors);
+        await argv.app.parallel('dialogue/search', argv, test, successors);
     });
 
     ctx.on('dialogue/list', ({ _successors }, output, prefix, argv) => {

@@ -1,5 +1,3 @@
-/* eslint-disable no-empty */
-/* eslint-disable no-shadow */
 import { Context, getTargetId, User } from 'koishi-core';
 import { isInteger, deduplicate } from 'koishi-utils';
 import { Dialogue } from '../utils';
@@ -21,24 +19,26 @@ declare module '../utils' {
             /** 用于保存用户权限的键值对，键的范围包括目标问答列表的全体作者以及 -w 参数 */
             authMap?: Record<number, number>
         }
+
+        interface Config {
+            useWriter?: boolean
+        }
     }
 }
 
-export default function apply(ctx: Context) {
+export default function apply(ctx: Context, config: Dialogue.Config) {
+    if (config.useWriter === false) return;
+
     ctx.command('teach')
         .option('frozen', '-f  锁定这个问答', { authority: 4 })
         .option('frozen', '-F, --no-frozen  解锁这个问答', { authority: 4, value: false })
-        .option('writer', '-w <uid>  添加或设置问题的作者', { authority: 2 })
-        .option('writer', '-W, --anonymous  添加或设置匿名问题', { authority: 2, value: 0 })
+        .option('writer', '-w <uid>  添加或设置问题的作者')
+        .option('writer', '-W, --anonymous  添加或设置匿名问题', { value: 0 })
         .option('substitute', '-s  由教学者完成回答的执行')
         .option('substitute', '-S, --no-substitute  由触发者完成回答的执行', { value: false });
 
     ctx.emit('dialogue/flag', 'frozen');
     ctx.emit('dialogue/flag', 'substitute');
-
-    ctx.on('dialogue/mongo', (test, conditionals) => {
-        if (test.writer !== undefined) conditionals.push({ writer: test.writer });
-    });
 
     ctx.on('dialogue/validate', ({ options }) => {
         if (options.writer) {
@@ -103,12 +103,12 @@ export default function apply(ctx: Context) {
     ctx.on('dialogue/permit', ({
         session, target, options, authMap,
     }, { writer, flag }) => {
-        const { substitute, writer: newWriter } = options; const
-            { authority } = session.$user;
+        const { substitute, writer: newWriter } = options;
+        const { id, authority } = session.$user;
         return (
-            (newWriter && authority <= authMap[newWriter])
+            (newWriter && authority <= authMap[newWriter] && newWriter !== id)
             || ((flag & Dialogue.Flag.frozen) && authority < 4)
-            || (writer !== session.$user.id && (
+            || (writer !== id && (
                 (target && authority < 3) || (
                     (substitute || (flag & Dialogue.Flag.substitute))
                     && (authority <= (authMap[writer] || 2))
@@ -119,7 +119,7 @@ export default function apply(ctx: Context) {
 
     ctx.on('dialogue/detail-short', ({ flag }, output) => {
         if (flag & Dialogue.Flag.frozen) output.push('锁定');
-        if (flag & Dialogue.Flag.substitute) output.push('教学者执行');
+        if (flag & Dialogue.Flag.substitute) output.push('代行');
     });
 
     ctx.on('dialogue/before-search', ({ options }, test) => {
@@ -132,7 +132,7 @@ export default function apply(ctx: Context) {
         }
     });
 
-    ctx.on('dialogue/modify', ({ options, target, session }, data) => {
+    ctx.on('dialogue/modify', ({ options, session, target }, data) => {
         if (options.writer !== undefined) {
             data.writer = options.writer;
         } else if (!target) {

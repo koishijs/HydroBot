@@ -1,26 +1,35 @@
 import { Context } from 'koishi-core';
+import { Dialogue } from '../utils';
 
 declare module '../utils' {
-  interface DialogueTest {
-    matchTime?: number
-    mismatchTime?: number
-  }
+    interface DialogueTest {
+        matchTime?: number
+        mismatchTime?: number
+    }
 
-  interface Dialogue {
-    startTime: number
-    endTime: number
-  }
+    interface Dialogue {
+        startTime: number
+        endTime: number
+    }
+
+    namespace Dialogue {
+        interface Config {
+            useTime?: boolean
+        }
+    }
 }
 
 export function isHours(value: string) {
-    if (!/^\d+(:\d+)?$/.test(value)) return true;
+    if (!/^\d+(:\d+)?$/.test(value)) return '请输入正确的时间。';
     const [_hours, _minutes = '0'] = value.split(':');
     const hours = +_hours; const
         minutes = +_minutes;
     return !(hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60);
 }
 
-export default function apply(ctx: Context) {
+export default function apply(ctx: Context, config: Dialogue.Config) {
+    if (config.useTime === false) return;
+
     ctx.command('teach')
         .option('startTime', '-t <time>  起始时间', { type: 'string', validate: isHours })
         .option('endTime', '-T <time>  结束时间', { type: 'string', validate: isHours });
@@ -40,25 +49,18 @@ export default function apply(ctx: Context) {
         state.test.matchTime = date.getHours() * 60 + date.getMinutes();
     });
 
-    ctx.on('dialogue/mongo', (test, conditionals) => {
-        const expr = {
-            $multiply: [
-                { $subtract: ['$endTime', '$startTime'] },
-                { $subtract: ['$startTime', test.matchTime] },
-                { $subtract: [test.matchTime, '$endTime'] },
-            ],
-        };
-        if (test.matchTime !== undefined) {
-            conditionals.push({ $expr: { $gte: [expr, 0] } });
-        }
-        if (test.mismatchTime !== undefined) {
-            conditionals.push({ $expr: { $lt: [expr, 0] } });
-        }
-    });
-
     ctx.on('dialogue/modify', async ({ options }, data) => {
-        if (options.startTime !== undefined) data.startTime = parseTime(options.startTime);
-        if (options.endTime !== undefined) data.endTime = parseTime(options.endTime);
+        if (options.startTime !== undefined) {
+            data.startTime = parseTime(options.startTime);
+        } else if (options.create) {
+            data.startTime = 0;
+        }
+
+        if (options.endTime !== undefined) {
+            data.endTime = parseTime(options.endTime);
+        } else if (options.create) {
+            data.endTime = 0;
+        }
     });
 
     function formatTime(time: number) {

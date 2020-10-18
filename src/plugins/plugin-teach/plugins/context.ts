@@ -1,9 +1,5 @@
-/* eslint-disable no-mixed-operators */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-shadow */
 import { Context } from 'koishi-core';
 import { union, difference } from 'koishi-utils';
-import { FilterQuery } from 'mongodb';
 import { Dialogue, equal, RE_GROUPS } from '../utils';
 
 declare module '../utils' {
@@ -22,40 +18,24 @@ declare module '../utils' {
             groups?: string[]
             partial?: boolean
             reversed?: boolean
-            noContextOptions?: boolean
+        }
+
+        interface Config {
+            useContext?: boolean
         }
     }
 }
 
 export default function apply(ctx: Context, config: Dialogue.Config) {
+    if (config.useContext === false) return;
+
     ctx.command('teach')
         .option('disable', '-d  在当前环境下禁用问答')
-        .option('disableGlobal', '-D  在所有环境下禁用问答', { authority: 4 })
+        .option('disableGlobal', '-D  在所有环境下禁用问答', { authority: 3 })
         .option('enable', '-e  在当前环境下启用问答')
-        .option('enableGlobal', '-E  在所有环境下启用问答', { authority: 4 })
-        .option('groups', '-g <gids>  设置具体的生效环境', { authority: 4, type: 'string', validate: RE_GROUPS })
+        .option('enableGlobal', '-E  在所有环境下启用问答', { authority: 3 })
+        .option('groups', '-g <gids>  设置具体的生效环境', { authority: 3, type: 'string', validate: RE_GROUPS })
         .option('global', '-G  无视上下文搜索');
-
-    ctx.on('dialogue/mongo', (test, conditionals) => {
-        if (!test.groups || !test.groups.length) return;
-        const $and: FilterQuery<Dialogue>[] = test.groups.map((group) => ({ groups: { $ne: group } }));
-        $and.push({ flag: { [test.reversed ? '$bitsAllClear' : '$bitsAllSet']: Dialogue.Flag.complement } });
-        conditionals.push({
-            $or: [
-                {
-                    flag: { [test.reversed ? '$bitsAllSet' : '$bitsAllClear']: Dialogue.Flag.complement },
-                    groups: { $all: test.groups },
-                },
-                { $and },
-            ],
-        });
-    });
-
-    // TODO: ???
-    ctx.on('dialogue/fetch', (data, test) => {
-        if (!test.groups || test.partial) return;
-        return !(data.flag & Dialogue.Flag.complement) === test.reversed || !equal(test.groups, data.groups);
-    });
 
     ctx.on('dialogue/validate', (argv) => {
         const { options, session } = argv;
@@ -65,12 +45,12 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         } if (options.disableGlobal && options.enableGlobal) {
             return '选项 -D, -E 不能同时使用。';
         } if (options.disableGlobal && options.disable) {
-            return '选项 -d, -D 不能同时使用。';
+            return '选项 -D, -d 不能同时使用。';
         } if (options.enable && options.enableGlobal) {
-            return '选项 -e, -E 不能同时使用。';
+            return '选项 -E, -e 不能同时使用。';
         }
 
-        argv.noContextOptions = false;
+        let noContextOptions = false;
         if (options.disable) {
             argv.reversed = true;
             argv.partial = !options.enableGlobal;
@@ -84,7 +64,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
             argv.partial = false;
             argv.groups = [];
         } else {
-            argv.noContextOptions = !options.enable;
+            noContextOptions = !options.enable;
             if (options.target ? options.enable : !options.global) {
                 argv.reversed = false;
                 argv.partial = true;
@@ -93,12 +73,12 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         }
 
         if ('groups' in options) {
-            if (argv.noContextOptions) {
-                return '参数 -g, --groups 必须与 -d/-D/-e/-E 之一同时使用。';
+            if (noContextOptions) {
+                return '选项 -g, --groups 必须与 -d/-D/-e/-E 之一同时使用。';
             }
             argv.groups = options.groups ? options.groups.split(',') : [];
         } else if (session.messageType !== 'group' && argv.partial) {
-            return '非群聊上下文中请使用 -E/-D 进行操作或指定 -g, --groups 参数。';
+            return '非群聊上下文中请使用 -E/-D 进行操作或指定 -g, --groups 选项。';
         }
     });
 

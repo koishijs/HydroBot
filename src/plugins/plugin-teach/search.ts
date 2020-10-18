@@ -1,8 +1,3 @@
-/* eslint-disable max-len */
-/* eslint-disable no-mixed-operators */
-/* eslint-disable no-shadow */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-use-before-define */
 import { Context } from 'koishi-core';
 import {
     isPositiveInteger, parseTeachArgs, Dialogue, DialogueTest,
@@ -43,7 +38,7 @@ declare module './utils' {
 
 export default function apply(ctx: Context) {
     ctx.command('teach')
-        .option('search', '搜索已有问答', { authority: 2, notUsage: true })
+        .option('search', '搜索已有问答', { notUsage: true })
         .option('page', '/ <page>  设置搜索结果的页码', { validate: isPositiveInteger })
         .option('autoMerge', '自动合并相同的问题和回答')
         .option('recursive', '-R  禁用递归查询', { fallback: true, value: false })
@@ -97,12 +92,12 @@ export default function apply(ctx: Context) {
                 original: prefixed,
             });
             Object.defineProperty(dialogue, '_redirections', { writable: true, value: dialogues });
-            await argv.ctx.parallel('dialogue/search', argv, test, dialogues);
+            await argv.app.parallel('dialogue/search', argv, test, dialogues);
         }
     });
 }
 
-export function formatAnswer(source: string, { maxAnswerLength = 50 }: Dialogue.Config) {
+export function formatAnswer(source: string, { maxAnswerLength = 100 }: Dialogue.Config) {
     let trimmed = false;
     const lines = source.split(/(\r?\n|\$n)/g);
     if (lines.length > 1) {
@@ -126,7 +121,7 @@ export function formatAnswer(source: string, { maxAnswerLength = 50 }: Dialogue.
 
 export function getDetails(argv: Dialogue.Argv, dialogue: Dialogue) {
     const details: SearchDetails = [];
-    argv.ctx.emit('dialogue/detail-short', dialogue, details, argv);
+    argv.app.emit('dialogue/detail-short', dialogue, details, argv);
     return details;
 }
 
@@ -146,7 +141,7 @@ export function formatAnswers(argv: Dialogue.Argv, dialogues: Dialogue[], prefix
     return dialogues.map((dialogue) => {
         const { answer } = dialogue;
         const output = [`${prefix}${formatPrefix(argv, dialogue, true)}${formatAnswer(answer, argv.config)}`];
-        argv.ctx.emit('dialogue/list', dialogue, output, prefix, argv);
+        argv.app.emit('dialogue/list', dialogue, output, prefix, argv);
         return output.join('\n');
     });
 }
@@ -157,13 +152,13 @@ export function formatQuestionAnswers(argv: Dialogue.Argv, dialogues: Dialogue[]
         const { questionType = '问题', answerType = '回答' } = details;
         const { original, answer } = dialogue;
         const output = [`${prefix}${formatDetails(dialogue, details)}${questionType}：${original}，${answerType}：${formatAnswer(answer, argv.config)}`];
-        argv.ctx.emit('dialogue/list', dialogue, output, prefix, argv);
+        argv.app.emit('dialogue/list', dialogue, output, prefix, argv);
         return output.join('\n');
     });
 }
 
 async function showSearch(argv: Dialogue.Argv) {
-    const { ctx, session, options } = argv;
+    const { app, session, options } = argv;
     const {
         regexp, question, answer, page = 1, original, pipe, recursive, autoMerge,
     } = options;
@@ -172,14 +167,13 @@ async function showSearch(argv: Dialogue.Argv) {
     const test: DialogueTest = {
         question, answer, regexp, original: options._original,
     };
-    if (ctx.bail('dialogue/before-search', argv, test)) return;
-    const dialogues = await ctx.database.getDialoguesByTest(test);
+    if (app.bail('dialogue/before-search', argv, test)) return;
+    const dialogues = await app.database.getDialoguesByTest(test);
 
     if (pipe) {
         if (!dialogues.length) return '没有搜索到任何问答。';
-        const command = ctx.command('teach');
+        const command = app.command('teach');
         const argv = { ...command.parse(pipe), session, command };
-        // @ts-ignore
         const target = argv.options.target = dialogues.map((d) => d.id).join(',');
         argv.source = `#${target} ${pipe}`;
         parseTeachArgs(argv);
@@ -187,7 +181,7 @@ async function showSearch(argv: Dialogue.Argv) {
     }
 
     if (recursive && !autoMerge) {
-        await argv.ctx.parallel('dialogue/search', argv, test, dialogues);
+        await argv.app.parallel('dialogue/search', argv, test, dialogues);
     }
 
     if (!question && !answer) {
@@ -204,11 +198,11 @@ async function showSearch(argv: Dialogue.Argv) {
         } if (!answer) {
             if (!dialogues.length) return session.$send(`没有搜索到问题“${original}”${suffix}。`);
             const output = formatAnswers(argv, dialogues);
-            const state = ctx.getSessionState(session);
+            const state = app.getSessionState(session);
             state.isSearch = true;
             state.test = test;
             state.dialogues = dialogues;
-            const total = await getTotalWeight(ctx, state);
+            const total = await getTotalWeight(app, state);
             return sendResult(`问题“${original}”的回答如下`, output, dialogues.length > 1 ? `实际触发概率：${+Math.min(total, 1).toFixed(3)}` : '');
         }
         if (!dialogues.length) return session.$send(`没有搜索到问答“${original}”“${answer}”${suffix}。`);
@@ -259,11 +253,11 @@ async function showSearch(argv: Dialogue.Argv) {
     }
 }
 
-async function showInfo({ ctx }: Dialogue.Argv) {
+async function showInfo({ app }: Dialogue.Argv) {
     const tasks: Promise<string>[] = [];
-    tasks.push(ctx.database.getDialogueStats().then(({ questions, dialogues }) => `共收录了 ${questions} 个问题和 ${dialogues} 个回答。`));
-    if (ctx.app.getImageServerStatus) {
-        tasks.push(ctx.app.getImageServerStatus().then(({ totalSize, totalCount }) => `收录图片 ${totalCount} 张，总体积 ${(totalSize / (1 << 20)).toFixed(1)} MB。`));
+    tasks.push(app.database.getDialogueStats().then(({ questions, dialogues }) => `共收录了 ${questions} 个问题和 ${dialogues} 个回答。`));
+    if (app.getImageServerStatus) {
+        tasks.push(app.getImageServerStatus().then(({ totalSize, totalCount }) => `收录图片 ${totalCount} 张，总体积 ${+(totalSize / (1 << 20)).toFixed(1)} MB。`));
     }
 
     const output = await Promise.all(tasks);

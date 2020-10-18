@@ -20,7 +20,7 @@ export const apply = (ctx: Context) => {
                 session.$send('请求正在处理中，请稍后（这可能需要数分钟）');
                 await sleep(100000);
                 const res1 = await new Promise((resolve) => {
-                    exec(`wget --tries=50 -O ${wav} https://glados.c-net.org/generate?text=${encodeURIComponent(text)}`, (err)=>{
+                    exec(`wget --tries=50 -O ${wav} https://glados.c-net.org/generate?text=${encodeURIComponent(text)}`, (err) => {
                         if (err) resolve(err);
                         resolve();
                     });

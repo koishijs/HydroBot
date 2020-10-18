@@ -1,16 +1,16 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-use-before-define */
-/* eslint-disable func-names */
-/* eslint-disable array-callback-return */
-/* eslint-disable no-shadow */
-/* eslint-disable no-cond-assign */
 import {
-    Context, User, Session, NextFunction, Command, Group,
+    Context, User, Session, NextFunction, Command,
 } from 'koishi-core';
 import {
-    CQCode, simplify, noop, escapeRegExp,
+    CQCode, simplify, noop, escapeRegExp, Random, makeArray,
 } from 'koishi-utils';
 import { Dialogue, DialogueTest } from './utils';
+
+declare module 'koishi-core/dist/app' {
+    interface App {
+        _dialogueStates: Record<number, SessionState>
+    }
+}
 
 declare module 'koishi-core/dist/context' {
     interface EventMap {
@@ -30,8 +30,7 @@ declare module 'koishi-core/dist/context' {
 
 declare module 'koishi-core/dist/session' {
     interface Session {
-        _redirected?: number,
-        _dialogue?: Dialogue,
+        _redirected?: number
     }
 }
 
@@ -57,7 +56,6 @@ declare module './utils' {
     }
 }
 
-// TODO change name
 export interface SessionState {
     userId: number
     groupId: number
@@ -70,8 +68,6 @@ export interface SessionState {
     isSearch?: boolean
 }
 
-const states: Record<number, SessionState> = {};
-
 export function escapeAnswer(message: string) {
     return message.replace(/%/g, '@@__PLACEHOLDER__@@');
 }
@@ -81,11 +77,13 @@ export function unescapeAnswer(message: string) {
 }
 
 Context.prototype.getSessionState = function (session) {
-    const { groupId, anonymous, userId } = session;
-    if (!states[groupId]) {
-        this.emit('dialogue/state', states[groupId] = { groupId } as SessionState);
+    const {
+        groupId, anonymous, userId, $app,
+    } = session;
+    if (!$app._dialogueStates[groupId]) {
+        this.emit('dialogue/state', $app._dialogueStates[groupId] = { groupId } as SessionState);
     }
-    const state = Object.create(states[groupId]);
+    const state = Object.create($app._dialogueStates[groupId]);
     state.session = session;
     state.userId = anonymous ? -anonymous.id : userId;
     return state;
@@ -173,18 +171,10 @@ export class MessageBuffer {
     }
 }
 
-export async function triggerDialogue(ctx: Context, session: Session, config: Dialogue.Config, next: NextFunction = noop) {
+export async function triggerDialogue(ctx: Context, session: Session, next: NextFunction = noop) {
     const state = ctx.getSessionState(session);
     state.next = next;
     state.test = {};
-
-    // @ts-ignore
-    if (session.$user.authority < 1
-        // @ts-ignore
-        || session.$group.flag & Group.Flag.silent
-        // @ts-ignore
-        || (session.$group.disabledCommands || []).includes('teach/dialogue')
-    ) return next();
 
     if (ctx.bail('dialogue/receive', state)) return next();
     const logger = ctx.logger('dialogue');
@@ -197,7 +187,7 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     let dialogue: Dialogue;
     const total = await getTotalWeight(ctx, state);
     if (!total) return next();
-    const target = Math.random() * Math.max(1, total);
+    const target = Random.real(Math.max(1, total));
     let pointer = 0;
     for (const _dialogue of dialogues) {
         pointer += _dialogue._weight;
@@ -208,7 +198,6 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     }
     if (!dialogue) return next();
     logger.debug('[attach]', session.messageId);
-    logger.info('Executing dialogue:', dialogue);
 
     // parse answer
     state.dialogue = dialogue;
@@ -217,11 +206,13 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
         .replace(/%%/g, '@@__PLACEHOLDER__@@')
         .replace(/%A/g, CQCode.stringify('at', { qq: 'all' }))
         .replace(/%a/g, CQCode.stringify('at', { qq: session.userId }))
+        .replace(/%m/g, CQCode.stringify('at', { qq: session.selfId }))
         .replace(/%s/g, escapeAnswer(session.$username))
         .replace(/%0/g, escapeAnswer(session.message));
 
     if (dialogue.flag & Dialogue.Flag.regexp) {
         const capture = dialogue._capture || new RegExp(dialogue.question, 'i').exec(state.test.question);
+        if (!capture) console.log(dialogue.question, state.test.question);
         capture.map((segment, index) => {
             if (index && index <= 9) {
                 state.answer = state.answer.replace(new RegExp(`%${index}`, 'g'), escapeAnswer(segment || ''));
@@ -230,12 +221,11 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
     }
 
     if (await ctx.app.serial(session, 'dialogue/before-send', state)) return;
-    logger.info('[send]', session.messageId, '->', dialogue.answer);
+    logger.debug('[send]', session.messageId, '->', dialogue.answer);
 
     // send answers
     const buffer = new MessageBuffer(session);
     session._redirected = (session._redirected || 0) + 1;
-    session._dialogue = dialogue;
 
     // parse answer
     let index: number;
@@ -268,8 +258,10 @@ export async function triggerDialogue(ctx: Context, session: Session, config: Di
 
 export default function (ctx: Context, config: Dialogue.Config) {
     const { nickname = ctx.app.options.nickname, maxRedirections = 3 } = config;
-    const nicknames = Array.isArray(nickname) ? nickname : nickname ? [nickname] : [];
-    const nicknameRE = new RegExp(`^((${nicknames.map(escapeRegExp).join('|')})[,，]?\\s*)+`);
+    const nicknames = makeArray(nickname).map(escapeRegExp);
+    const nicknameRE = new RegExp(`^((${nicknames.join('|')})[,，]?\\s*)+`);
+
+    ctx.app._dialogueStates = {};
 
     config._stripQuestion = (source) => {
         source = prepareSource(source);
@@ -284,7 +276,20 @@ export default function (ctx: Context, config: Dialogue.Config) {
         };
     };
 
-    ctx.group().middleware(async (session, next) => triggerDialogue(ctx, session, config, next));
+    ctx.group().middleware(async (session, next) => triggerDialogue(ctx, session, next));
+
+    ctx.on('notify/poke', (session) => {
+        if (session.targetId !== session.selfId) return;
+        session.message = 'hook:poke';
+        triggerDialogue(ctx, session);
+    });
+
+    ctx.on('notify/honor', async (session) => {
+        const { assignee } = await session.$observeGroup(['assignee']);
+        if (assignee !== session.selfId) return;
+        session.message = `hook:${session.honorType}`;
+        triggerDialogue(ctx, session);
+    });
 
     ctx.on('dialogue/receive', ({ session, test }) => {
         if (session.message.includes('[CQ:image,')) return true;
@@ -311,18 +316,20 @@ export default function (ctx: Context, config: Dialogue.Config) {
         }
     });
 
-    ctx.group().command('teach/dialogue <message...>', '触发教学对话', { authority: 1 })
+    ctx.group().command('dialogue <message...>', '触发教学对话')
         .action(async ({ session, next }, message = '') => {
             if (session._redirected > maxRedirections) return next();
             session.message = message;
-            return triggerDialogue(ctx, session, config, next);
+            return triggerDialogue(ctx, session, next);
         });
 }
 
 function prepareSource(source: string) {
-    return CQCode.stringifyAll(CQCode.parseAll(source || '').map((code) => {
+    return CQCode.stringifyAll(CQCode.parseAll(source).map((code, index, arr) => {
         if (typeof code !== 'string') return code;
-        return simplify(CQCode.unescape(`${code}`))
+        let message = simplify(CQCode.unescape(`${code}`))
+            .toLowerCase()
+            .replace(/\s+/g, '')
             .replace(/，/g, ',')
             .replace(/、/g, ',')
             .replace(/。/g, '.')
@@ -334,5 +341,8 @@ function prepareSource(source: string) {
             .replace(/】/g, ']')
             .replace(/～/g, '~')
             .replace(/…/g, '...');
+        if (index === 0) message = message.replace(/^[()\[\]]*/, '');
+        if (index === arr.length - 1) message = message.replace(/[\.,?!()\[\]~]*$/, '');
+        return message;
     }));
 }

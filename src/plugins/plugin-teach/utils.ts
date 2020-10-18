@@ -1,13 +1,18 @@
-/* eslint-disable max-len */
 /* eslint-disable no-use-before-define */
-import { Context, Session, ParsedLine } from 'koishi-core';
+import { Session, ParsedLine, App } from 'koishi-core';
 import {
-    difference, observe, isInteger, defineProperty,
+    difference, observe, isInteger, defineProperty, Observed,
 } from 'koishi-utils';
+import { RegExpValidator } from 'regexpp';
+
+declare module 'koishi-core/dist/app' {
+    interface App {
+        teachHistory: Record<number, Dialogue>
+    }
+}
 
 declare module 'koishi-core/dist/context' {
     interface EventMap {
-        'dialogue/fetch'(dialogue: Dialogue, test: DialogueTest): boolean | void
         'dialogue/permit'(argv: Dialogue.Argv, dialogue: Dialogue): boolean
         'dialogue/flag'(flag: keyof typeof Dialogue.Flag): void
     }
@@ -17,6 +22,22 @@ declare module 'koishi-core/dist/database' {
     interface Tables {
         dialogue: Dialogue
     }
+
+    interface Database {
+        getDialoguesById<T extends Dialogue.Field>(ids: number[], fields?: T[]): Promise<Dialogue[]>
+        getDialoguesByTest(test: DialogueTest): Promise<Dialogue[]>
+        createDialogue(dialogue: Dialogue, argv: Dialogue.Argv, revert?: boolean): Promise<Dialogue>
+        removeDialogues(ids: number[], argv: Dialogue.Argv, revert?: boolean): Promise<void>
+        updateDialogues(dialogues: Observed<Dialogue>[], argv: Dialogue.Argv): Promise<void>
+        revertDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<string>
+        recoverDialogues(dialogues: Dialogue[], argv: Dialogue.Argv): Promise<void>
+        getDialogueStats(): Promise<DialogueStats>
+    }
+}
+
+interface DialogueStats {
+    questions: number
+    dialogues: number
 }
 
 export interface Dialogue {
@@ -47,36 +68,10 @@ export namespace Dialogue {
     export type ModifyType = '添加' | '修改' | '删除'
     export type Field = keyof Dialogue
 
-    type Getter = () => Partial<Dialogue>
-    const getters: Getter[] = [];
-
-    export function extend(getter: Getter) {
-        getters.push(getter);
-    }
-
-    extend(() => ({
-        flag: 0,
-        probA: 0,
-        probS: 1,
-        startTime: 0,
-        endTime: 0,
-        groups: [],
-        predecessors: [],
-    }));
-
-    export function create() {
-        const result = {} as Dialogue;
-        for (const getter of getters) {
-            Object.assign(result, getter());
-        }
-        return result;
-    }
-
-    export const history: Record<number, Dialogue> = [];
-
     export interface Config {
         prefix?: string
         historyAge?: number
+        validateRegExp?: RegExpValidator.Options
     }
 
     export enum Flag {
@@ -92,7 +87,7 @@ export namespace Dialogue {
         complement = 16,
     }
 
-    export function addHistory(dialogue: Dialogue, type: Dialogue.ModifyType, argv: Dialogue.Argv, revert: boolean, target = argv.ctx.database.dialogueHistory) {
+    export function addHistory(dialogue: Dialogue, type: Dialogue.ModifyType, argv: Dialogue.Argv, revert: boolean, target = argv.app.teachHistory) {
         if (revert) return delete target[dialogue.id];
         target[dialogue.id] = dialogue;
         const time = Date.now();
@@ -100,14 +95,14 @@ export namespace Dialogue {
         defineProperty(dialogue, '_operator', argv.session.userId);
         defineProperty(dialogue, '_type', type);
         setTimeout(() => {
-            if (argv.ctx.database.dialogueHistory[dialogue.id]?._timestamp === time) {
-                delete argv.ctx.database.dialogueHistory[dialogue.id];
+            if (argv.app.teachHistory[dialogue.id]?._timestamp === time) {
+                delete argv.app.teachHistory[dialogue.id];
             }
         }, argv.config.historyAge ?? 600000);
     }
 
     export interface Argv {
-        ctx: Context
+        app: App
         session: Session<'authority' | 'id'>
         args: string[]
         config: Config
@@ -148,9 +143,9 @@ export function sendResult(argv: Dialogue.Argv, prefix?: string, suffix?: string
     return session.$send(output.join('\n'));
 }
 
-export function split(source: string | number) {
+export function split(source: string) {
     if (!source) return [];
-    return source.toString().split(',').flatMap((value) => {
+    return source.split(',').flatMap((value) => {
         if (!value.includes('..')) return +value;
         const capture = value.split('..');
         const start = +capture[0]; const
@@ -165,7 +160,7 @@ export function equal(array1: (string | number)[], array2: (string | number)[]) 
 }
 
 export function prepareTargets(argv: Dialogue.Argv, dialogues = argv.dialogues) {
-    const targets = dialogues.filter((dialogue) => !argv.ctx.bail('dialogue/permit', argv, dialogue));
+    const targets = dialogues.filter((dialogue) => !argv.app.bail('dialogue/permit', argv, dialogue));
     argv.uneditable.unshift(...difference(dialogues, targets).map((d) => d.id));
     return targets.map((data) => observe(data, `dialogue ${data.id}`));
 }
@@ -179,9 +174,7 @@ export function parseTeachArgs({ args, options }: Partial<ParsedLine>) {
     }
 
     defineProperty(options, 'noArgs', !args.length);
-    // @ts-ignore
     options.question = parseArgument();
-    // @ts-ignore
     options.answer = options.redirect || parseArgument();
 }
 

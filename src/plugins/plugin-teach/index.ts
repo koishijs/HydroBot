@@ -1,5 +1,3 @@
-/* eslint-disable import/no-named-as-default */
-/* eslint-disable import/export */
 /* eslint-disable no-irregular-whitespace */
 
 import { Context, ExecuteArgv } from 'koishi-core';
@@ -9,6 +7,7 @@ import internal from './internal';
 import receiver from './receiver';
 import search from './search';
 import update, { create } from './update';
+import mongo from './database/mongo';
 import context from './plugins/context';
 import image from './plugins/image';
 import throttle from './plugins/throttle';
@@ -17,9 +16,7 @@ import probability from './plugins/probability';
 import successor from './plugins/successor';
 import time from './plugins/time';
 import writer from './plugins/writer';
-import database from './database';
 
-export * from './database';
 export * from './utils';
 export * from './receiver';
 export * from './search';
@@ -36,16 +33,10 @@ export * from './plugins/writer';
 export type Config = Dialogue.Config
 
 declare module 'koishi-core/dist/context' {
-    interface EventMap {
-        'dialogue/validate'(argv: Dialogue.Argv): void | string
-        'dialogue/execute'(argv: Dialogue.Argv): void | Promise<void | string>
-    }
-}
-
-declare module 'koishi-core/dist/command' {
-    interface CommandConfig {
-        noRedirect?: boolean,
-    }
+  interface EventMap {
+    'dialogue/validate'(argv: Dialogue.Argv): void | string
+    'dialogue/execute'(argv: Dialogue.Argv): void | Promise<void | string>
+  }
 }
 
 const cheatSheet = (p: string, authority: number) => `\
@@ -56,8 +47,8 @@ const cheatSheet = (p: string, authority: number) => `\
 　查看问答：${p}id
 　修改问题：${p}id 问题
 　修改回答：${p}id ~ 回答
-　删除问答：${p}id -r${authority >= 2 ? `
-　批量查看：${p}${p}id` : ''}
+　删除问答：${p}id -r
+　批量查看：${p}${p}id
 搜索选项：
 　管道语法：　　　|
 　结果页码：　　　/ page
@@ -72,15 +63,17 @@ const cheatSheet = (p: string, authority: number) => `\
 　无视上下文搜索：-G` : ''}
 问答选项：${authority >= 3 ? `
 　锁定问答：　　　-f/-F
-　教学者代行：　　-s/-S` : ''}${authority >= 2 ? `
+　教学者代行：　　-s/-S` : ''}
 　设置问题作者：　-w uid
-　设置为匿名：　　-W` : ''}
+　设置为匿名：　　-W
 　忽略智能提示：　-i
 　重定向：　　　　=>
 匹配规则：${authority >= 3 ? `
 　正则表达式：　　-x/-X` : ''}
 　严格匹配权重：　-p prob
 　称呼匹配权重：　-P prob
+　设置最小好感度：-a aff
+　设置最大好感度：-A aff
 　设置起始时间：　-t time
 　设置结束时间：　-T time
 前置与后继：
@@ -100,6 +93,7 @@ const cheatSheet = (p: string, authority: number) => `\
 　%0：收到的原文本
 　%n：分条发送
 　%a：@说话人
+　%m：@四季酱
 　%s：说话人的名字
 　%{}: 指令插值`;
 
@@ -111,34 +105,29 @@ function registerPrefix(ctx: Context, prefix: string) {
     const teachRegExp = new RegExp(`^${p}(${p}?)((${g}(?:,${g})*)?|${p}?)(\\s+|$)`);
     //                                   $1     $2
 
-    ctx.on('parse', (source, session, builtin) => {
-        if (builtin && session.$prefix) return;
+    ctx.on('parse', (source, session, builtin, terminator) => {
+        if (builtin && session.$prefix || session.$reply) return;
         const capture = source.match(teachRegExp);
         if (!capture) return;
 
         const command = ctx.command('teach');
         const message = source.slice(capture[0].length);
-        const { options, args, rest } = command.parse(message);
+        const { options, args, rest } = command.parse(message, terminator);
         const argv: ExecuteArgv = {
             options, args, command, source, rest,
         };
 
         if (capture[1] === prefix) {
-            // @ts-ignore
             options.search = true;
             if (capture[2] === prefix) {
-                // @ts-ignore
                 options.autoMerge = true;
-                // @ts-ignore
                 options.regexp = true;
             }
         } else if (!capture[2] && !message) {
-            // @ts-ignore
             options.help = true;
         }
 
         if (capture[2] && capture[2] !== prefix) {
-            // @ts-ignore
             options.target = capture[2];
         }
 
@@ -155,25 +144,23 @@ export function apply(ctx: Context, config: Dialogue.Config = {}) {
     config = { ...defaultConfig, ...config };
     registerPrefix(ctx, config.prefix);
 
-    ctx.command('teach', '添加教学对话', {
-        authority: 1, checkUnknown: true, hideOptions: true, hidden: true, noRedirect: true,
-    })
+    ctx.command('teach', '添加教学对话', { authority: 2, checkUnknown: true, hideOptions: true })
         .userFields(['authority', 'id'])
         .usage(({ $user }) => cheatSheet(config.prefix, $user.authority))
         .action(async ({ options, session, args }) => {
             const argv: Dialogue.Argv = {
-                ctx, session, args, config, options,
+                app: ctx.app, session, args, config, options,
             };
             return ctx.bail('dialogue/validate', argv)
-                || ctx.bail('dialogue/execute', argv)
-                || create(argv);
+        || ctx.bail('dialogue/execute', argv)
+        || create(argv);
         });
 
     // features
-    ctx.plugin(database, config);
     ctx.plugin(receiver, config);
     ctx.plugin(search, config);
     ctx.plugin(update, config);
+    ctx.plugin(mongo, config);
 
     // options
     ctx.plugin(internal, config);

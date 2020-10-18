@@ -2170,13 +2170,13 @@ koishi-plugin-status@^2.0.0-beta.17:
   resolved "https://registry.yarnpkg.com/koishi-plugin-status/-/koishi-plugin-status-2.0.0-beta.17.tgz#7d707b9afc432e6b32935828433227e5e853e706"
   integrity sha512-AoUAfp9VpwTS+KLN+Pne88eRddpXyaIywYLczzb7zzT6oePCfXdVBNNRCDp/6Bd3moWDv+OSy/E6OG1wS+01bA==
 
-koishi-plugin-teach@^1.0.0-beta.16:
-  version "1.0.0-beta.16"
-  resolved "https://registry.yarnpkg.com/koishi-plugin-teach/-/koishi-plugin-teach-1.0.0-beta.16.tgz#5d652d5d82e91254bc60d946a1249cf3ea4625c5"
-  integrity sha512-9Q7UBBxUCzVmfniVoMGKOKirL7nhKAlWk8JczDhtA2P2EX/zGNjciZxFrgjWfWo5uJlVIkMPXXaOLGLu/84u/w==
+koishi-plugin-teach@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/koishi-plugin-teach/-/koishi-plugin-teach-1.2.0.tgz#0e5305dde76a26e8b70180decd0d7fd2365fc77f"
+  integrity sha512-mzocjHiXht1u5WwVtIsOL9VF+C8GU7J7jJwfV9GnOt69igMKNOD8hboabEr2DGRgL1KgPcJL8Tcg7zNt9oljvA==
   dependencies:
-    koishi-utils "^3.1.0"
-    leven "^3.1.0"
+    axios "^0.20.0"
+    fastest-levenshtein "^1.0.12"
     regexpp "^3.1.0"
 
 koishi-plugin-tools@^1.0.2:
@@ -2189,17 +2189,12 @@ koishi-plugin-tools@^1.0.2:
     qrcode "^1.4.4"
     xml-js "^1.6.11"
 
-koishi-utils@^3.1.0, koishi-utils@^3.1.5:
+koishi-utils@^3.1.5:
   version "3.1.5"
   resolved "https://registry.yarnpkg.com/koishi-utils/-/koishi-utils-3.1.5.tgz#a9f8e6729f915d336e3659a68ded584fe82f1039"
   integrity sha512-FFXOlVD87nqiRXt0Y23+RJTAqUzjVe4UgxCsd1IxeDg1W57MsRzkTen+KlAL3yrAaXy9QW8rZgqtc+pO9rt+pQ==
   dependencies:
     supports-color "^7.2.0"
-
-leven@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/leven/-/leven-3.1.0.tgz#77891de834064cccba82ae7842bb6b14a13ed7f2"
-  integrity sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==
 
 levn@^0.4.1:
   version "0.4.1"
