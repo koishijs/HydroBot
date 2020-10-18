@@ -30,7 +30,8 @@ declare module 'koishi-core/dist/context' {
 
 declare module 'koishi-core/dist/session' {
   interface Session {
-    _redirected?: number
+      _redirected?: number
+      _dialogue?: Dialogue
   }
 }
 
@@ -226,6 +227,7 @@ export async function triggerDialogue(ctx: Context, session: Session, next: Next
     // send answers
     const buffer = new MessageBuffer(session);
     session._redirected = (session._redirected || 0) + 1;
+    session._dialogue = dialogue;
 
     // parse answer
     let index: number;

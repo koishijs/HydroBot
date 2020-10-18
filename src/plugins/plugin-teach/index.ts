@@ -39,6 +39,12 @@ declare module 'koishi-core/dist/context' {
   }
 }
 
+declare module 'koishi-core/dist/command' {
+    interface CommandConfig {
+        noRedirect?: boolean,
+    }
+}
+
 const cheatSheet = (p: string, authority: number, config: Config) => `\
 教学系统基本用法：
 　添加问答：${p} 问题 回答
