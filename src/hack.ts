@@ -11,6 +11,10 @@ const tasks: [string, number, ...string[][]][] = [
             }
             session.$send(error.message);`,
         ],
+        [
+            'replace', 'names = [option.name];',
+            'names = [koishi_utils_1.paramCase(option.name)];',
+        ],
     ],
     [
         'koishi-core/dist/plugins/help', 1,
@@ -31,20 +35,6 @@ const tasks: [string, number, ...string[][]][] = [
             'replace',
             "'可用的子指令有'",
             "'可用的子指令有（括号内为命令花费）'",
-        ],
-    ],
-    [
-        'koishi-core/dist/app', 2,
-        ['replace', '[CQ:reply,id=(\\d+)', '[CQ:reply,id=(-?\\d+)'],
-    ],
-    [
-        'koishi-plugin-eval/dist/index', 1,
-        [
-            'replace',
-            `var _a;
-        if (!session['_redirected'] && ((_a = session.$user) === null || _a === void 0 ? void 0 : _a.authority) < 2)
-            return '权限不足。';`,
-            '',
         ],
     ],
 ];

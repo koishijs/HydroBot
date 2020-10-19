@@ -88,7 +88,7 @@ async function _post(args: string[], {
                 args,
                 env,
                 files: [
-                    stdin ? { src: stdin } : { content: '' },
+                    stdin ? { content: stdin } : { content: '' },
                     { name: 'stdout', max: 20480 },
                     { name: 'stderr', max: 20480 },
                 ],
