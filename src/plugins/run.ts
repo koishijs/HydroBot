@@ -41,6 +41,7 @@ const LANGS = {
         type: 'compiler',
         compile: ['/usr/bin/javac', '-d', '/w', '-encoding', 'utf8', './Main.java'],
         code_file: 'Main.java',
+        copyOut: 'Main.class',
         execute: ['/usr/bin/java', 'Main'],
     },
     php: {
@@ -139,13 +140,13 @@ async function _run(code: string, lang: string, input: string) {
         const {
             status, stdout, stderr, fileIds,
         } = await _post(
-            info.compile, { copyIn, copyOutCached: ['code'] },
+            info.compile, { copyIn, copyOutCached: [info.copyOut || 'code'] },
         );
         if (status !== 'Accepted') return { status: `Compile Error:${status}`, stdout, stderr };
         const res = await _post(
-            info.execute, { copyIn: { code: { fileId: fileIds.code } } },
+            info.execute, { copyIn: { [info.copyOut || 'code']: { fileId: fileIds[info.copyOut || 'code'] } } },
         );
-        await axios.delete(`/file/${fileIds.code}`);
+        await axios.delete(`/file/${fileIds[info.copyOut || 'code']}`);
         return res;
     } if (info.type === 'interpreter') {
         return await _post(info.execute, { copyIn, stdin: input });
