@@ -16,7 +16,7 @@ const ALLOW = [
 ];
 
 export function apply(app: App) {
-    app.command('cat <id>', 'http.cat', { cost: 1 })
+    app.command('cat <id>', 'http.cat', { minInterval: 1000 })
         .action(async (_, id) => {
             if (!ALLOW.includes(id)) return `你家http协议会返回${id}？`;
             return `[CQ:image,file=https://cdn.jsdelivr.net/gh/httpcats/http.cat/public/images/${id}.jpg]`;

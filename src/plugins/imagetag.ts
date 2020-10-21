@@ -59,7 +59,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
         const coll: Collection<ImageTagCache> = ctx.app.database.db.collection('image.tag');
         coll.createIndex({ md5: 1 }, { unique: true });
 
-        ctx.command('tag [image]', 'Get image tag', { hidden: true, cost: 3 })
+        ctx.command('tag [image]', 'Get image tag', { hidden: true, minInterval: 2000 })
             .action(async ({ session }, image) => {
                 try {
                     if (!image) {

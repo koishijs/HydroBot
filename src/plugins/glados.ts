@@ -6,7 +6,7 @@ import { sleep } from 'koishi-utils';
 import { unlink } from 'fs-extra';
 
 export const apply = (ctx: Context) => {
-    ctx.command('glados <message...>', 'Glados', { minInterval: 30000, cost: 5 })
+    ctx.command('glados <message...>', 'Glados', { minInterval: 30000, cost: 3 })
         .action(async ({ session }, text) => {
             const id = Math.random().toString();
             const wav = path.resolve(tmpdir(), `${id}.wav`);

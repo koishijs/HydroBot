@@ -59,6 +59,6 @@ export function apply(app: App) {
             session.$user.coin -= n;
             user.coin += n;
             await newSession.$user._update();
-            return '操作完成。';
+            return `已转账${n}个硬币。`;
         });
 }

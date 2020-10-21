@@ -6,7 +6,7 @@ export function apply(app: App) {
     app.command('oi', 'OI related');
     app.command('oi/cf', 'Codeforces');
 
-    app.command('oi/cf.user <name>', 'Codeforces User', { cost: 3 })
+    app.command('oi/cf.user <name>', 'Codeforces User', { minInterval: 3000 })
         .action(async (_, name) => {
             const res = await superagent.get(`https://codeforces.com/api/user.info?handles=${name}`).catch(() => { });
             if (!res) return 'CF 挂了！';
@@ -20,7 +20,7 @@ MaxRating: ${result.maxRating}
 MaxRank: ${result.maxRank}`;
         });
 
-    app.command('oi/cf.contest', 'Codeforces Contest', { cost: 3 })
+    app.command('oi/cf.contest', 'Codeforces Contest', { minInterval: 3000 })
         .action(async () => {
             const res = await superagent.get('https://codeforces.com/api/contest.list').catch(() => { });
             if (!res || res.body.status !== 'OK') return 'CF 挂了！';

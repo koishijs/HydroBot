@@ -38,7 +38,7 @@ const RE_BVID: [reg: RegExp, processer: (result: RegExpExecArray) => Promise<num
 ];
 
 export const apply = (app: App) => {
-    app.command('bilibili <avid>', { hidden: true, cost: 1 })
+    app.command('bilibili <avid>', { hidden: true })
         .action(async ({ session }, av) => {
             const info = await superagent.get(`http://api.bilibili.com/x/web-interface/view?aid=${av}`);
             if (info.body.code !== 0) return;

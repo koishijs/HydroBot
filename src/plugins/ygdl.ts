@@ -67,15 +67,15 @@ const handle = (input: string) => {
     return result;
 };
 
-function _ygdl({ session }, args) {
-    const d = handle(args);
-    if (d.length) {
-        const res = [];
-        for (const i in d) res.push(d[i].word, ' ');
-        return session.$send(res.join(''));
-    }
-}
-
 export const apply = (app: App) => {
-    app.command('成语接龙 <成语>', '成语接龙', { cost: 1 }).action(_ygdl);
+    app.command('成语接龙 <成语>', '成语接龙', { minInterval: 1000, checkArgCount: false })
+        .action((_, args) => {
+            if (!args) return '请输入成语。';
+            const d = handle(args);
+            if (d.length) {
+                const res = [];
+                for (const i in d) res.push(d[i].word, ' ');
+                return res.join('');
+            }
+        });
 };

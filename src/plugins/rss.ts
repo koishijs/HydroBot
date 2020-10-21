@@ -53,7 +53,7 @@ export const apply = (app: App) => {
                     return `Watching ${url}`;
                 }
                 const res = await superagent.get(url).catch(() => { });
-                if (!res) return '无法获取内容。';
+                if (!res) throw new Error('无法获取内容。');
                 await coll.insertOne({
                     _id: url,
                     target: [get(session)],
