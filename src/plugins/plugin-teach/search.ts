@@ -1,3 +1,8 @@
+/* eslint-disable max-len */
+/* eslint-disable no-mixed-operators */
+/* eslint-disable no-shadow */
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-await-in-loop */
 import { Context } from 'koishi-core';
 import {
     isPositiveInteger, parseTeachArgs, Dialogue, DialogueTest,
@@ -174,6 +179,7 @@ async function showSearch(argv: Dialogue.Argv) {
         if (!dialogues.length) return '没有搜索到任何问答。';
         const command = app.command('teach');
         const argv = { ...command.parse(pipe), session, command };
+        // @ts-ignore
         const target = argv.options.target = dialogues.map((d) => d.id).join(',');
         argv.source = `#${target} ${pipe}`;
         parseTeachArgs(argv);

@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 import { Context } from 'koishi-core';
 import { contain, union, difference } from 'koishi-utils';
 import {
@@ -139,6 +140,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
         if (!dialogues.length) return session.$send('没有搜索到任何问答。');
         const command = ctx.command('teach');
         const argv = { ...command.parse(createSuccessor), session, command };
+        // @ts-ignore
         const target = argv.options.setPred = dialogues.map((d) => d.id).join(',');
         argv.source = `# ${createSuccessor} < ${target}`;
         parseTeachArgs(argv);

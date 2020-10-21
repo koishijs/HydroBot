@@ -63,7 +63,6 @@
     "@types/puppeteer-core": "^2.0.0",
     "@types/sharp": "^0.26.0",
     "@types/superagent": "4.1.9",
-    "@types/superagent-proxy": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
     "@typescript-eslint/parser": "^3.10.1",
     "eslint": "^7.11.0",

@@ -117,7 +117,7 @@ export class MessageBuffer {
         this.sendQueued = session.$sendQueued.bind(session);
 
         session.$send = async (message: string) => {
-            console.log('send', message)
+            console.log('send', message);
             if (!message) return;
             this.hasData = true;
             if (this.original) {

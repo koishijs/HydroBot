@@ -167,7 +167,7 @@ async function run(code: string, lang: string, input: string) {
 export const apply = (app: App) => {
     app.command('tools', '实用工具');
 
-    app.command('tools/run <language> <code...>', '运行程序', { minInterval:1000 })
+    app.command('tools/run <language> <code...>', '运行程序', { minInterval: 1000 })
         .alias('code')
         .option('input', '启用stdin')
         .action(async ({ session, options }, lang, code) => {

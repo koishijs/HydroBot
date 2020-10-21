@@ -1,31 +1,30 @@
-import { App } from 'koishi-core';
+import { Context } from 'koishi-core';
 import { Collection, ObjectID } from 'mongodb';
 
 interface Bottle {
     _id?: ObjectID,
     content: string,
-    isFromGroup: boolean,
     groupId?: number,
     userId: number,
 }
 
-export const apply = (app: App) => {
-    app.on('connect', async () => {
-        const coll: Collection<Bottle> = app.database.db.collection('bottle');
+export const apply = (ctx: Context) => {
+    ctx.on('connect', async () => {
+        const coll: Collection<Bottle> = ctx.database.db.collection('bottle');
 
-        app.command('bottle.throw <content...>', 'Throw a bottle', { noRedirect: true })
+        ctx.group().command('bottle.throw <content...>', '丢漂流瓶', { noRedirect: true })
+            .alias('丢漂流瓶')
             .action(async ({ session }, content) => {
                 const res = await coll.insertOne({
-                    isFromGroup: !!session.groupId,
                     groupId: session.groupId,
-                    groupName:session
                     userId: session.userId,
                     content: content.trim(),
                 });
                 return `已丢出。(${res.insertedId})`;
             });
 
-        app.command('bottle.pick', 'Pick a bottle')
+        ctx.command('bottle.pick', '捡漂流瓶')
+            .alias('捡漂流瓶')
             .action(async () => {
                 const cnt = await coll.find({}).count();
                 if (!cnt) return '没有捡到';
@@ -33,13 +32,12 @@ export const apply = (app: App) => {
                 const [res] = await coll.find({}).skip(target).limit(1).toArray();
                 const shouldDestory = Math.random() > 0.5;
                 if (shouldDestory) await coll.deleteOne({ _id: res._id });
-                const user = await 
-                return `来源：${res.isFromGroup ? `群组${res.groupId}` : ''} 用户${res.userId}
+                return `来源：群${res.groupId}
 时间：${new Date(res._id.generationTime * 1000).toLocaleString()}
 内容：${res.content}`;
             });
 
-        app.command('bottle.del <query>', { authority: 5, hidden: true })
+        ctx.command('bottle.del <query>', { authority: 5, hidden: true })
             .action(async (_, query) => {
                 // eslint-disable-next-line no-eval
                 const res = await coll.deleteMany(JSON.parse(query.decode()));
@@ -47,5 +45,5 @@ export const apply = (app: App) => {
             });
     });
 
-    app.command('bottle', '漂流瓶');
+    ctx.command('bottle', '漂流瓶');
 };

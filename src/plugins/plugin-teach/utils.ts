@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import { Session, ParsedLine, App } from 'koishi-core';
 import {
     difference, observe, isInteger, defineProperty, Observed,
@@ -183,7 +184,9 @@ export function parseTeachArgs({ args, options }: Partial<ParsedLine>) {
     }
 
     defineProperty(options, 'noArgs', !args.length);
+    // @ts-ignore
     options.question = parseArgument();
+    // @ts-ignore
     options.answer = options.redirect || parseArgument();
 }
 

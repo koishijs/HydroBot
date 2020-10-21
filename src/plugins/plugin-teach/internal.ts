@@ -55,7 +55,7 @@ export default function apply(ctx: Context, config: Dialogue.Config) {
             if (creator.authority < 5 && !creator.sudoer) return '不支持在插值中调用该命令。';
         }
     });
-    
+
     ctx.on('dialogue/validate', (argv) => {
         const { options, args } = argv;
         if (args.length) {

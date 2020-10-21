@@ -1,4 +1,5 @@
 /* eslint-disable no-empty-function */
+// @ts-nocheck
 import crypto from 'crypto';
 import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';

@@ -280,14 +280,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/superagent-proxy@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@types/superagent-proxy/-/superagent-proxy-2.0.0.tgz#9dd72c2b875ab56c4e6bd42435542fb040aa75b8"
-  integrity sha512-EiC8z93IkQhTYtmQ4/g/CoXUlZRmrmfOwMkjO3/lzxEmfShaPYlkk7vtgMpFkKw8V/1g13fPwR98dZuieHeBUw==
-  dependencies:
-    "@types/superagent" "*"
-
-"@types/superagent@*", "@types/superagent@4.1.9":
+"@types/superagent@4.1.9":
   version "4.1.9"
   resolved "https://registry.yarnpkg.com/@types/superagent/-/superagent-4.1.9.tgz#d899d3bc90b17eb298cac18b7aa22f7c3ec88c13"
   integrity sha512-gpIC0p49YHT4VYDbdl0fKjOMWBurJFfYtKUIxOHzOwBtu5VT29FyldFI2vbmZ1K2iH2vS6MVcJZMjHM+652l4Q==
