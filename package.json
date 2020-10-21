@@ -33,6 +33,7 @@
     "koishi-plugin-chess": "^2.0.0-beta.12",
     "koishi-plugin-eval": "^2.0.3",
     "koishi-plugin-eval-addons": "^1.0.0-beta.12",
+    "koishi-plugin-image-search": "^2.0.1",
     "koishi-plugin-mongo": "^1.1.0",
     "koishi-plugin-monitor": "^1.0.0-beta.16",
     "koishi-plugin-puppeteer": "^1.0.1",

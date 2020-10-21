@@ -17,6 +17,10 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
+        'koishi-plugin-teach', 1,
+        ['append', '// send answers', 'session._dialogue = dialogue;'],
+    ],
+    [
         'koishi-core/dist/plugins/help', 1,
         [
             'append',

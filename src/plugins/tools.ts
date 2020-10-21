@@ -5,6 +5,7 @@ import axios from 'axios';
 import sharp from 'sharp';
 import { App } from 'koishi-core';
 import { take, filter } from 'lodash';
+import { apply as KoishiPluginImageSearch } from 'koishi-plugin-image-search';
 import { apply as KoishiPluginTools } from 'koishi-plugin-tools';
 
 export const apply = (app: App) => {
@@ -21,6 +22,7 @@ export const apply = (app: App) => {
         magi: false,
         oeis: false,
     });
+    app.plugin(KoishiPluginImageSearch);
 
     app.command('tools/tex <code...>', 'KaTeX 渲染', { minInterval: 1000 })
         .alias('katex <code...>')
