@@ -1,7 +1,7 @@
 import { App } from 'koishi-core';
 
 export function apply(app: App) {
-    app.once('connect', async () => {
+    app.on('connect', async () => {
         const c = app.database.db.collection('forward');
         await c.createIndex({ from: 1 });
         await c.createIndex({ to: 1 });
