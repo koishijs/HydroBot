@@ -17,8 +17,13 @@ const tasks: [string, number, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-plugin-teach/dist/receiver', 1,
+        'koishi-plugin-teach/dist/receiver', 2,
         ['append', '// send answers', 'session._dialogue = dialogue;'],
+        ['replace', '            .toLowerCase()', ''],
+        ['replace', `        if (index === 0)
+            message = message.replace(/^[()\\[\\]]*/, '');
+        if (index === arr.length - 1)
+            message = message.replace(/[\\.,?!()\\[\\]~]*$/, '');`, ''],
     ],
     [
         'koishi-core/dist/plugins/help', 1,
@@ -39,6 +44,14 @@ const tasks: [string, number, ...string[][]][] = [
             'replace',
             "'可用的子指令有'",
             "'可用的子指令有（括号内为命令花费）'",
+        ],
+    ],
+    [
+        'koishi-plugin-mongo/dist/database', 1,
+        [
+            'replace',
+            'this.group.insertOne({ _id: groupId, selfId, groupId });',
+            'this.group.insertOne({ _id: groupId,assignee: selfId, groupId,flag:0})',
         ],
     ],
 ];

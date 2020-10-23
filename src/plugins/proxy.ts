@@ -15,8 +15,9 @@ export const apply = (ctx: Context) => {
                 newSession.messageType = 'group';
                 newSession.subType = 'normal';
             } else {
+                newSession.groupId = undefined;
                 newSession.messageType = 'private';
-                newSession.subType = 'other';
+                newSession.subType = 'friend';
             }
             if (options.self) newSession.selfId = +options.self;
             if (options.user) {
@@ -25,17 +26,10 @@ export const apply = (ctx: Context) => {
                 newSession.userId = id;
                 newSession.sender.userId = id;
             }
-            if (options.group) {
-                const info = await session.$bot.getGroupMemberInfo(newSession.groupId, newSession.userId).catch(() => ({}));
-                Object.assign(newSession.sender, info);
-            } else if (options.user) {
-                const info = await session.$bot.getStrangerInfo(newSession.userId).catch(() => ({}));
-                Object.assign(newSession.sender, info);
-            }
             await newSession.$send(command);
             let message = '';
             // eslint-disable-next-line no-await-in-loop
-            for (let i = 1; i <= options.length; i++) message += await newSession.$prompt(5000);
+            for (let i = 1; i <= options.length; i++) message += await newSession.$prompt(30000);
             return message;
         });
 };

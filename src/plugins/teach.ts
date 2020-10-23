@@ -48,7 +48,7 @@ export const apply = (ctx: Context, config: Dialogue.Config) => {
 
     ctx.plugin(KoishiPluginTeach, config);
 
-    ctx.on('before-command', async ({ session, command }) => {
+    ctx.app.on('before-command', async ({ session, command }) => {
         const noRedirect = command.getConfig('noRedirect', session);
         if (noRedirect && session._redirected) {
             const creator = await ctx.app.database.getUser(session._dialogue.writer, ['authority']);
@@ -57,7 +57,7 @@ export const apply = (ctx: Context, config: Dialogue.Config) => {
         }
     });
 
-    ctx.on('connect', () => {
+    ctx.app.on('connect', () => {
         const coll: Collection<ImageDoc> = ctx.app.database.db.collection('image');
 
         const downloadFile = async (file: string, url: string) => {
