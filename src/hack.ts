@@ -18,7 +18,7 @@ const tasks: [string, number, ...string[][]][] = [
     ],
     [
         'koishi-plugin-teach/dist/receiver', 3,
-        ['append', '// send answers', 'session._dialogue = dialogue;'],
+        ['append', '// send answers', '\nsession._dialogue = dialogue;'],
         ['replace', '            .toLowerCase()', ''],
         ['replace', ".replace(/\\s+/g, '')", ''],
         ['replace', `        if (index === 0)
