@@ -74,7 +74,7 @@ async function formatMessage(session: Session) {
         } else if (code.type === 'face') {
             output += `[face ${code.data.id}]`;
         } else if (code.type === 'image') {
-            output += `[image ${(code.data.url as string).split('?')[0]}]`;
+            output += `[image ${(code.data.url as string || '').split('?')[0]}]`;
         } else if (code.type === 'reply') {
             output += `[reply ${code.data.id}]`;
         } else output += `[${code.type}]`;
@@ -119,9 +119,9 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .action(async ({ session, options }, input) => {
             let res: any;
             const expr = `\
-(async function f(){
-    return ${input.decode()}
-})()`;
+        (async function f() {
+            return ${input.decode()}
+        })()`;
             try {
                 // eslint-disable-next-line no-eval
                 res = await eval(expr);
@@ -133,7 +133,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             const page = await ctx.app.browser.newPage();
             const img = await text2png(page, output);
             page.close();
-            return `[CQ:image,file=base64://${img}]`;
+            return `[CQ: image, file = base64://${img}]`;
         });
 
     ctx.command('_.sh <command...>', '执行shell命令', { authority: 5, noRedirect: true })
