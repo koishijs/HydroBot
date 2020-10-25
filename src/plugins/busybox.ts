@@ -330,6 +330,14 @@ export const apply = (ctx: Context, config: Config = {}) => {
         }
     });
 
+    // @ts-ignore
+    ctx.on('before-send', async (session) => {
+        const groupName = await getGroupName(session);
+        const senderName = getSenderName(session);
+        const message = await formatMessage(session);
+        logger.info(`send [${groupName}] ${senderName}: ${message}`);
+    });
+
     ctx.on('group-ban', (session) => {
         // TODO handle auto-leave?
         if (session.userId === session.selfId) console.log(session);
