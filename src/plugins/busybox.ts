@@ -330,12 +330,13 @@ export const apply = (ctx: Context, config: Config = {}) => {
         }
     });
 
-    // @ts-ignore
-    ctx.on('before-send', async (session) => {
-        const groupName = await getGroupName(session);
-        const senderName = getSenderName(session);
-        const message = await formatMessage(session);
-        logger.info(`send [${groupName}] ${senderName}: ${message}`);
+    ctx.on('before-send', (session) => {
+        Promise.all([
+            getGroupName(session),
+            formatMessage(session),
+        ]).then(
+            ([groupName, message]) => logger.info(`send [${groupName}] ${session.selfId}: ${message}`),
+        );
     });
 
     ctx.on('group-ban', (session) => {
