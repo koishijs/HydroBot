@@ -1,4 +1,4 @@
-import { App, getTargetId } from 'koishi-core';
+import { App, getTargetId, User } from 'koishi-core';
 import { Session } from 'koishi-core/dist/session';
 
 declare module 'koishi-core/dist/command' {
@@ -12,6 +12,10 @@ declare module 'koishi-core/dist/database' {
         coin: number,
     }
 }
+
+User.extend(() => ({
+    coin: 0,
+}));
 
 export function apply(app: App) {
     app.on('before-command', ({ session, command }) => {
