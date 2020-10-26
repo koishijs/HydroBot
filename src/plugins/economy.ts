@@ -40,7 +40,6 @@ export function apply(app: App) {
         .userFields(['coin'])
         .action(async ({ session }) => {
             const add = 20 + Math.floor(Math.random() * 10);
-            if (!session.$user.coin) session.$user.coin = 0;
             session.$user.coin += add;
             return `签到成功，获得${add}个硬币（共有${session.$user.coin}个）`;
         });
