@@ -115,6 +115,8 @@ export const apply = (ctx: Context, config: Config = {}) => {
 
     ctx.command('_.eval <expr...>', { authority: 5, noRedirect: true, hidden: true })
         .option('i', 'Output as image')
+        .userFields(User.fields)
+        .groupFields(Group.fields)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .action(async ({ session, options }, input) => {
             let res: any;

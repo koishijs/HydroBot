@@ -1,4 +1,4 @@
-import { Context } from 'koishi-core';
+import { Context, Group, User } from 'koishi-core';
 import { apply as KoishiPluginEval, Config as KoishiPluginEvalConfig } from 'koishi-plugin-eval';
 import { apply as KoishiPluginEvalAddons, Config as KoishiPluginEvalAddonsConfig } from 'koishi-plugin-eval-addons';
 import { sleep } from 'koishi-utils';
@@ -14,6 +14,8 @@ export function apply(ctx: Context, config: Config) {
 
     ctx.command('evaluate')
         .option('i', 'Output as image', { hidden: true })
+        .userFields(User.fields)
+        .groupFields(Group.fields)
         .before((session) => {
             if (!session._sudo) return false;
             if (session.$argv.options.i) session.$execute(`sudo _.eval -i ${session.$argv.args[0]}`);
