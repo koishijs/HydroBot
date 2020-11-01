@@ -104,10 +104,10 @@ export const apply = (ctx: Context, config: Config = {}) => {
     ctx.command('tex', { authority: 1 });
     ctx.command('_', '管理工具');
 
-    ctx.command('_.assign', 'assign', { authority: 4 })
+    ctx.group().command('_.assign', 'assign', { authority: 4 })
+        .groupFields(['assignee'])
         .action(async ({ session }) => {
-            await session.$app.database.getGroup(session.groupId, session.selfId);
-            await session.$app.database.setGroup(session.groupId, { assignee: session.selfId });
+            session.$group.assignee = session.selfId;
         });
 
     ctx.command('_.echo <msg...>', 'echo', { noRedirect: true, authority: 3 })
