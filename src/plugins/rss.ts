@@ -1,4 +1,4 @@
-import { App, Session } from 'koishi-core';
+import { App } from 'koishi-core';
 import superagent from 'superagent';
 import RssFeedEmitter from 'rss-feed-emitter';
 import { Collection } from 'mongodb';
@@ -6,15 +6,9 @@ import { Collection } from 'mongodb';
 const feeder = new RssFeedEmitter({ skipFirstLoad: true });
 feeder.on('error', console.error);
 
-type Target = [boolean, number, number];
-
 interface RssSubscription {
     _id: string,
-    target: Target[],
-}
-
-function get(session: Session): Target {
-    return [!!session.groupId, session.groupId || session.userId, session.selfId];
+    target: number[],
 }
 
 export const apply = (app: App) => {
@@ -32,22 +26,22 @@ export const apply = (app: App) => {
             const message = `${payload.meta.title} (${payload.author})\n${payload.title}`;
             const data = await coll.findOne({ _id: source });
             if (data) {
-                for (const [isGroup, id, selfId] of data.target) {
-                    if (!app.bots[selfId]) continue;
-                    if (isGroup) app.bots[selfId].sendGroupMsg(id, message);
-                    else app.bots[selfId].sendPrivateMsg(id, message);
+                for (const id of data.target) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const gdoc = await app.database.getGroup(id, ['assignee']);
+                    if (gdoc.assignee) app.bots[gdoc.assignee].sendGroupMsg(id, message);
                 }
             }
         });
 
-        app.command('rss.subscribe <url>', 'Subscribe a rss url', { cost: 5 })
+        app.group().command('rss.subscribe <url>', 'Subscribe a rss url', { cost: 5 })
             .alias('rss.add')
             .action(async ({ session }, url) => {
                 const current = await coll.findOne({ _id: url });
                 if (current) {
                     await coll.updateOne(
                         { _id: url },
-                        { $addToSet: { target: get(session) } },
+                        { $addToSet: { target: session.groupId } },
                         { upsert: true },
                     );
                     return `Watching ${url}`;
@@ -56,28 +50,28 @@ export const apply = (app: App) => {
                 if (!res) throw new Error('无法获取内容。');
                 await coll.insertOne({
                     _id: url,
-                    target: [get(session)],
+                    target: [session.groupId],
                 });
                 feeder.add({ url, refresh: 60000 });
                 return `Watching ${url}`;
             });
 
-        app.command('rss.cancel <url>', 'Cancel')
+        app.group().command('rss.cancel <url>', 'Cancel')
             .alias('rss.remove')
             .action(async ({ session }, url) => {
                 await coll.updateOne(
                     { _id: url },
-                    { $pull: { target: get(session) } },
+                    { $pull: { target: session.groupId } },
                 );
                 return `Cancelled ${url}`;
             });
 
-        app.command('rss.list', 'List')
+        app.group().command('rss.list', 'List')
             .action(async ({ session }) => {
-                const docs = await coll.find({ target: { $elemMatch: { $eq: get(session) } } }).project({ _id: 1 }).toArray();
+                const docs = await coll.find({ target: { $elemMatch: { $eq: session.groupId } } }).project({ _id: 1 }).toArray();
                 return docs.map((doc) => doc._id).join('\n');
             });
     });
 
-    app.command('rss', 'Rss');
+    app.group().command('rss', 'Rss');
 };

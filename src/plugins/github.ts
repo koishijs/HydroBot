@@ -64,21 +64,14 @@ function beautifyContent(content: string) {
     return content.replace(/(\r?\n *)+/gmi, '\n');
 }
 
-// IsGroup? group/userId assignee
-type Target = [boolean, number, number];
-
 interface Subscription {
     _id: string,
-    target: Target[],
+    target: number[],
 }
 
 interface EventHandler {
     hook?: (body: any) => Promise<[string?, NodeJS.Dict<any>?]>
     interact?: (message: string, session: Session, event: any, getToken: () => Promise<string>) => Promise<[string?, NodeJS.Dict<any>?] | boolean>
-}
-
-function get(session: Session): Target {
-    return [!!session.groupId, session.groupId || session.userId, session.selfId];
 }
 
 function sha256(str: string): string {
@@ -345,12 +338,10 @@ export const apply = (app: App, config: any) => {
                         if (message) {
                             const data = await coll.findOne({ _id: reponame.toLowerCase() });
                             if (data) {
-                                for (const [isGroup, id, selfId] of data.target) {
-                                    if (isGroup) {
-                                        relativeIds.push(app.bots[selfId].sendGroupMsg(id, message));
-                                    } else {
-                                        relativeIds.push(app.bots[selfId].sendPrivateMsg(id, message));
-                                    }
+                                for (const id of data.target) {
+                                    // eslint-disable-next-line no-await-in-loop
+                                    const gdoc = await app.database.getGroup(id, ['assignee']);
+                                    if (gdoc.assignee) relativeIds.push(app.bots[gdoc.assignee].sendGroupMsg(id, message));
                                 }
                             }
                             relativeIds = await Promise.all(relativeIds);
@@ -446,7 +437,7 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
             return next();
         });
 
-        app.command('github.listen <repo>', '监听一个Repository的事件')
+        app.group().command('github.listen <repo>', '监听一个Repository的事件')
             .action(async ({ session }, repo) => {
                 repo = repo.toLowerCase();
                 if (repo.split('/').length !== 2) return '无效地址';
@@ -454,27 +445,27 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
                 if (current) {
                     await coll.updateOne(
                         { _id: repo },
-                        { $addToSet: { target: get(session) } },
+                        { $addToSet: { target: session.groupId } },
                         { upsert: true },
                     );
                     return `Watching ${repo}`;
                 }
-                await coll.insertOne({ _id: repo, target: [get(session)] });
+                await coll.insertOne({ _id: repo, target: [session.groupId] });
                 return `Watching ${repo}
-(请创建 webhook 投递至 http://2.masnn.ml:6701/github ，格式 application/json )`;
+(请创建 webhook 投递至 https://github.undefined.moe/webhook ，格式 application/json )`;
             });
 
-        app.command('github.list', 'List repos')
+        app.group().command('github.list', 'List repos')
             .action(async ({ session }) => {
-                const repos = await coll.find({ target: get(session) }).project({ _id: 1 }).toArray();
+                const repos = await coll.find({ target: session.groupId }).project({ _id: 1 }).toArray();
                 return repos.map((doc) => doc._id).join('\n');
             });
 
-        app.command('github.cancel <repo>', '取消一个Repository的事件')
+        app.group().command('github.cancel <repo>', '取消一个Repository的事件')
             .action(async ({ session }, repo) => {
                 await coll.updateOne(
                     { _id: repo.toLowerCase() },
-                    { $pull: { target: get(session) } },
+                    { $pull: { target: session.groupId } },
                 );
                 return `Cancelled ${repo}.`;
             });
