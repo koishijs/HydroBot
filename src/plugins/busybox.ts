@@ -91,6 +91,7 @@ const checkGroupAdmin = (session: Session<'authority'>) => (
 interface Config {
     recordMessage?: boolean,
     timezoneOffset?: number,
+    public?: number[],
 }
 
 export const apply = (ctx: Context, config: Config = {}) => {
@@ -370,14 +371,15 @@ export const apply = (ctx: Context, config: Config = {}) => {
         fields.add('disallowedCommands');
     });
 
-    ctx.on('request/group/invite', async (session) => {
+    ctx.app.on('request/friend', (session) => session.$bot.setFriendAddRequest(session.flag, true));
+    ctx.app.on('request/group/invite', async (session) => {
         const udoc = await ctx.database.getUser(session.userId);
-        if (udoc?.authority === 5) {
+        if ((config.public || []).includes(session.selfId) || udoc?.authority === 5) {
             logger.info('Approve Invite Request', session, udoc);
-            session.$bot.setGroupAddRequest('Approved', session.subType, true);
+            session.$bot.setGroupAddRequest(session.flag, session.subType, true);
         } else {
             logger.info('Denied Invite Request', session, udoc);
-            session.$bot.setGroupAddRequest('Please contact admin.', session.subType, false);
+            session.$bot.setGroupAddRequest(session.flag, session.subType, '此账号不对外开放，请使用其他账号。');
         }
     });
 
