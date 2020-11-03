@@ -380,7 +380,7 @@ export const apply = (app: App, config: any) => {
         });
 
         app.middleware(async (session, next) => {
-            const replyTo = session.$reply;
+            const replyTo = session.$reply?.messageId;
             const parsedMsg = session.$parsed.replace(/\[CQ:at,qq=\d+\]/, '').trim();
             if (!replyTo || !parsedMsg) return next();
             const [relativeEvent, user] = await Promise.all([
