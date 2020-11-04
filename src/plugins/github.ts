@@ -341,7 +341,10 @@ export const apply = (app: App, config: any) => {
                                 for (const id of data.target) {
                                     // eslint-disable-next-line no-await-in-loop
                                     const gdoc = await app.database.getGroup(id, ['assignee']);
-                                    if (gdoc.assignee) relativeIds.push(app.bots[gdoc.assignee].sendGroupMsg(id, message));
+                                    if (gdoc.assignee) {
+                                        if (app.bots[gdoc.assignee]) relativeIds.push(app.bots[gdoc.assignee].sendGroupMsg(id, message));
+                                        else logger.warn('Cannot send message to group %d with assignee %d', id, gdoc.assignee);
+                                    }
                                 }
                             }
                             relativeIds = await Promise.all(relativeIds);
