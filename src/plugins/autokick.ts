@@ -38,7 +38,10 @@ export async function apply(ctx: Context) {
                     users = sortBy(users.map((user) => ({ ...user, sort: Math.max(user.lastSentTime, user.joinTime) })), 'sort');
                     for (const user of users) {
                         const udoc = await coll.findOne({ groupId: session.groupId, userId: user.userId });
-                        if (!udoc) target = user;
+                        if (!udoc) {
+                            target = user;
+                            break;
+                        }
                     }
                     await session.$send([
                         `将 ${target.nickname || target.card} (${target.userId}) 移出群`,
