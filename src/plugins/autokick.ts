@@ -18,11 +18,13 @@ export async function apply(ctx: Context) {
         .groupFields(['kick'])
         .action(async ({ session }, count) => {
             session.$group.kick = +count;
+            return `set to ${count}`;
         });
 
     ctx.command('autokick.run [groupId]', '', { hidden: true, authority: 4 })
         .groupFields(['kick'])
-        .action(async ({ session }, groupId) => {
+        .option('dry', 'dry run', { authority: 2 })
+        .action(async ({ session, options }, groupId) => {
             const groupList = groupId ? [await session.$bot.getGroupInfo(+groupId)] : await session.$bot.getGroupList();
             for (const group of groupList) {
                 const gdoc = await session.$app.database.getGroup(group.groupId, ['kick']);
@@ -33,7 +35,7 @@ export async function apply(ctx: Context) {
                         `将 ${users[0].nickname || users[0].card} (${users[0].userId}) 移出群`,
                         `（上次发言 ${moment(users[0].lastSentTime * 1000 || 0).fromNow()}）`,
                     ].join('\n'));
-                    await session.$bot.setGroupKick(group.groupId, users[0].userId);
+                    if (!options.dry) await session.$bot.setGroupKick(group.groupId, users[0].userId);
                 }
             }
         });
