@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { Context, Group } from 'koishi-core';
-import { sortBy } from 'lodash';
+import { sortBy, sort } from 'lodash';
 import moment from 'moment';
 
 declare module 'koishi-core/dist/database' {
@@ -30,10 +30,10 @@ export async function apply(ctx: Context) {
                 const gdoc = await session.$app.database.getGroup(group.groupId, ['kick']);
                 if (gdoc.kick && gdoc.kick < group.memberCount) {
                     let users = await session.$bot.getGroupMemberList(group.groupId);
-                    users = sortBy(users, 'lastSentTime');
+                    users = sortBy(users.map((user) => ({ ...user, sort: Math.max(user.lastSentTime, user.joinTime) })), 'sort');
                     await session.$send([
                         `将 ${users[0].nickname || users[0].card} (${users[0].userId}) 移出群`,
-                        `（上次发言 ${moment(users[0].lastSentTime * 1000 || 0).fromNow()}）`,
+                        `（${moment(users[0].joinTime * 1000 || 0).fromNow()}加入，上次发言 ${moment(users[0].lastSentTime * 1000 || 0).fromNow()}）`,
                     ].join('\n'));
                     if (!options.dry) await session.$bot.setGroupKick(group.groupId, users[0].userId);
                 }
