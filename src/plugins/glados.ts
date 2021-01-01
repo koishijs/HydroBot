@@ -13,7 +13,7 @@ export const apply = (ctx: Context) => {
             const res = await new Promise((resolve) => {
                 exec(`wget --tries=50 -O ${wav} https://glados.c-net.org/generate?text=${encodeURIComponent(text)}`, (err) => {
                     if (err) resolve(err);
-                    resolve();
+                    resolve(undefined);
                 });
             });
             if (res) {
@@ -22,7 +22,7 @@ export const apply = (ctx: Context) => {
                 const res1 = await new Promise((resolve) => {
                     exec(`wget --tries=50 -O ${wav} https://glados.c-net.org/generate?text=${encodeURIComponent(text)}`, (err) => {
                         if (err) resolve(err);
-                        resolve();
+                        resolve(undefined);
                     });
                 });
                 if (res1) throw new Error('Service Error');

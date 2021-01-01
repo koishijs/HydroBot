@@ -21,7 +21,7 @@ export async function apply(ctx: Context) {
             '==========',
             '活跃用户数量：{{ activeUsers }}',
             '活跃群数量：{{ activeGroups }}',
-            'CPU 使用率：{{ (cpu.total * 100).toFixed() }%',
+            'CPU 使用率：{{ (cpu.total * 100).toFixed() }}%',
             '内存使用量：{{ usedmem }}M / {{ totalmem }}M',
             '今日收发消息量 {{ totalReceiveCount }}/{{ totalSendCount }}',
         ].join('\n'),

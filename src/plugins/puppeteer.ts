@@ -55,7 +55,7 @@ export function apply(app: App, config: Config) {
                     );
                     const _resolve = () => {
                         clearTimeout(timer);
-                        resolve();
+                        resolve(undefined);
                     };
                     page.goto(url, {
                         waitUntil: 'networkidle0',
