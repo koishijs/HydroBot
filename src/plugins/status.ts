@@ -9,7 +9,7 @@ declare module 'koishi-plugin-status' {
         totalSendCount: number,
         totalReceiveCount: number,
         freemem: number,
-        usedmem: number,
+        totalmem: number,
     }
 }
 
@@ -36,7 +36,7 @@ export async function apply(ctx: Context) {
             status.totalSendCount = await c.find({ ...time, sender: { $in: bots } }).count();
             status.totalReceiveCount = await c.find({ ...time, sender: { $nin: bots } }).count();
             status.usedmem = Math.floor((totalmem() - freemem()) / 1024 / 1024);
-            status.freemem = Math.floor(freemem() / 1024 / 1024);
+            status.totalmem = Math.floor(totalmem() / 1024 / 1024);
         }, true);
     });
 }
