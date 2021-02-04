@@ -1,3 +1,4 @@
+/* eslint-disable import/no-duplicates */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable global-require */
 /* eslint-disable no-await-in-loop */
@@ -9,6 +10,7 @@ import { Logger, noop } from 'koishi-utils';
 import fs from 'fs-extra';
 import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
 import 'koishi-adapter-onebot';
+import 'koishi-adapter-telegram';
 import { Session as _Session } from 'koishi-core/dist/session';
 
 process.on('unhandledRejection', (_, p) => {
@@ -58,6 +60,8 @@ export = class {
             port: this.config.port,
             bots: this.config.bots,
             type: this.config.type,
+            onebot: this.config.onebot,
+            telegram: this.config.telegram,
             prefix: this.config.prompt as string,
             autoAuthorize: 1,
             autoAssign: true,

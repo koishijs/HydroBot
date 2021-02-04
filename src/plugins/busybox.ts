@@ -44,7 +44,7 @@ async function getGroupName(session: Session) {
     const timestamp = Date.now();
     const id = session.channelId;
     if (!groupMap[id] || timestamp - groupMap[id][1] >= Time.hour) {
-        const promise = (session.$bot as CQBot).getGroup(id).then((d) => d.name, () => `${id}`);
+        const promise = (session.$bot as CQBot).getGroup(id).then((d) => d.name, () => id);
         groupMap[id] = [promise, timestamp];
     }
     let output = await groupMap[id][0];
@@ -357,16 +357,14 @@ export const apply = (ctx: Context, config: Config = {}) => {
         fields.add('disallowedCommands');
     });
 
-    ctx.app.on('friend-request', (session: Session<never, never, 'onebot'>) => session.$bot.setFriendAddRequest(session.flag, true));
-    ctx.app.on('group-request', async (session: Session<never, never, 'onebot'>) => {
+    ctx.app.on('friend-request', (session: any) => session.$bot.setFriendAddRequest(session.flag, true));
+    ctx.app.on('group-request', async (session: any) => {
         const udoc = await ctx.database.getUser(session.platform, session.userId);
         if ((config.public || []).includes(`${session.platform}:${session.selfId}`) || udoc?.authority === 5) {
             logger.info('Approve Invite Request', session, udoc);
-            // @ts-expect-error
             session.$bot.setGroupAddRequest(session.flag, session.subtype, true);
         } else {
             logger.info('Denied Invite Request', session, udoc);
-            // @ts-expect-error
             session.$bot.setGroupAddRequest(session.flag, session.subtype, '此账号不对外开放，请使用其他账号。');
         }
     });

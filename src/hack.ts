@@ -1,8 +1,12 @@
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { existsSync, readFileSync, writeFileSync } from 'fs-extra';
+import { sep } from 'path';
 
-const tasks: [string, number, ...string[][]][] = [
+const tasks: [string, number | string, ...string[][]][] = [
     [
-        'koishi-core/dist/command', 1,
+        'koishi-core/session.js', "exports.Session=require('./index').Session",
+    ],
+    [
+        'koishi-core/dist/index', 1,
         [
             'append', 'throw error;',
             `if (typeof error === 'string'){
@@ -26,9 +30,20 @@ const tasks: [string, number, ...string[][]][] = [
 async function hack() {
     console.log('Running Hack');
     for (const [filename, version, ...changes] of tasks) {
-        const file = require.resolve(filename);
-        if (!file) console.warn(`Unable to hack ${filename}: file not found`);
-        let content = readFileSync(file).toString();
+        let file;
+        try {
+            file = require.resolve(filename);
+        } catch (e) {
+            const name = filename.split('/')[0];
+            file = require.resolve(name).split(sep);
+            file.pop();
+            file = `${file.join(sep)}${sep}${filename.split('/')[1]}`;
+        }
+        let content = existsSync(file) ? readFileSync(file).toString() : '';
+        if (typeof version === 'string') {
+            writeFileSync(file, version);
+            continue;
+        }
         const first = content.split('\n')[0];
         const ver = parseInt(first.split('// Hacked v')[1], 10);
         if (ver >= version) continue;
