@@ -1,5 +1,5 @@
 import superagent from 'superagent';
-import { getTargetId, App } from 'koishi-core';
+import { App } from 'koishi-core';
 
 export const apply = (app: App) => {
     app.command('oi', 'OI related');
@@ -16,8 +16,7 @@ export const apply = (app: App) => {
 
     app.command('oi/luogu.user <uid>', '查询用户')
         .action(async (_, id) => {
-            const uid = getTargetId(id);
-            const res = await superagent.get(`https://www.luogu.com.cn/user/${uid}?_contentOnly=1`)
+            const res = await superagent.get(`https://www.luogu.com.cn/user/${id}?_contentOnly=1`)
                 .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko');
             if (res.body.code === '404') return '没这个人!';
             const udoc = res.body.currentData.user;

@@ -42,14 +42,14 @@ export const apply = (app: App) => {
         .action(async ({ session }, av) => {
             const info = await superagent.get(`http://api.bilibili.com/x/web-interface/view?aid=${av}`);
             if (info.body.code !== 0) return;
-            await session.$send(`bilibili.com/video/av${av}\n${info.body.data.title}\n[CQ:image,file=${info.body.data.pic}]`);
+            await session.send(`bilibili.com/video/av${av}\n${info.body.data.title}\n[CQ:image,file=${info.body.data.pic}]`);
         });
 
     app.middleware(async (session, next) => {
         await next();
         let av: number;
         for (const RE of RE_BVID) {
-            const result = RE[0].exec(session.message);
+            const result = RE[0].exec(session.content);
             if (result) {
                 const res = RE[1](result);
                 // eslint-disable-next-line no-await-in-loop
@@ -58,6 +58,6 @@ export const apply = (app: App) => {
                 break;
             }
         }
-        if (av) await session.$execute(`bilibili ${av}`);
+        if (av) await session.execute(`bilibili ${av}`);
     });
 };

@@ -8,7 +8,6 @@ export interface Config {
     idleTimeout?: number
     maxLength?: number
 }
-
 export const defaultConfig: Config = {
     loadTimeout: 10000, // 10s
     idleTimeout: 30000, // 30s
@@ -16,7 +15,6 @@ export const defaultConfig: Config = {
 };
 
 const allowedProtocols = ['http', 'https'];
-
 const logger = new Logger('puppeteer');
 
 export function apply(app: App, config: Config) {
@@ -24,7 +22,7 @@ export function apply(app: App, config: Config) {
 
     app.command('shot').dispose();
 
-    app.command('page <url...>', 'Get page', { authority: 3, cost: 3, minInterval: 3000 })
+    app.command('page <url:text>', 'Get page', { authority: 3, minInterval: 3000 })
         .alias('screenshot', 'shot')
         .option('full', '-f Full page')
         .option('viewport', '<viewport> 指定Viewport', { fallback: '1600x900' })
@@ -48,7 +46,7 @@ export function apply(app: App, config: Config) {
                 await new Promise((resolve, reject) => {
                     const timer = setTimeout(
                         () => (loaded
-                            ? session.$send('正在加载中，请稍等片刻~')
+                            ? session.send('正在加载中，请稍等片刻~')
                             : reject(new Error('navigation timeout'))
                         ),
                         config.loadTimeout,

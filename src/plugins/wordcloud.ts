@@ -33,7 +33,7 @@
 //                 wc.generate_from_frequencies({ items: getter });
 //                 const file = path.join(os.tmpdir(), `${Math.random().toString()}.png`);
 //                 wc.to_file(file);
-//                 await session.$send(`今日热词：[CQ:image,file=file://${file}]`);
+//                 await session.send(`今日热词：[CQ:image,file=file://${file}]`);
 //                 await fs.unlink(file);
 //             });
 //     });

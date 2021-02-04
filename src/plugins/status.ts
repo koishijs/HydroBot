@@ -1,14 +1,14 @@
 /* eslint-disable no-template-curly-in-string */
 import { totalmem, freemem } from 'os';
 import { Context } from 'koishi-core';
-import { apply as KoishiPluginStatus, extendStatus } from 'koishi-plugin-status';
+import { apply as KoishiPluginStatus, extend } from 'koishi-plugin-status';
 import moment from 'moment';
 
 declare module 'koishi-plugin-status' {
     interface Status {
         totalSendCount: number,
         totalReceiveCount: number,
-        freemem: number,
+        usedmem: number,
         totalmem: number,
     }
 }
@@ -30,7 +30,7 @@ export async function apply(ctx: Context) {
     ctx.app.on('connect', () => {
         const c = ctx.app.database.db.collection('message');
 
-        extendStatus(async (status) => {
+        extend(async (status) => {
             const bots = status.bots.map((bot) => bot.selfId);
             const time = { time: { $gt: moment().add(-1, 'day').toDate() } };
             status.totalSendCount = await c.find({ ...time, sender: { $in: bots } }).count();

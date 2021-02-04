@@ -7,53 +7,19 @@ const tasks: [string, number, ...string[][]][] = [
             'append', 'throw error;',
             `if (typeof error === 'string'){
                 session.$user.usage[argv.command.name]--;
-                return session.$send(error);
+                return session.send(error);
             }
-            session.$send(error.message);`,
-        ],
-        [
-            'replace', 'names = [option.name];',
-            'names = [koishi_utils_1.paramCase(option.name)];',
+            session.send(error.message);`,
         ],
     ],
     [
-        'koishi-plugin-teach/dist/receiver', 3,
-        ['append', '// send answers', '\nsession._dialogue = dialogue;'],
-        ['replace', '            .toLowerCase()', ''],
-        ['replace', ".replace(/\\s+/g, '')", ''],
+        'koishi-plugin-teach/dist/index', 3,
+        ['append', 'state.dialogue = dialogue;', '\nsession._dialogue = dialogue;'],
+        ['replace', ".toLowerCase().replace(/\\s+/g, '')", ''],
         ['replace', `        if (index === 0)
             message = message.replace(/^[()\\[\\]]*/, '');
         if (index === arr.length - 1)
             message = message.replace(/[\\.,?!()\\[\\]~]*$/, '');`, ''],
-    ],
-    [
-        'koishi-core/dist/plugins/help', 1,
-        [
-            'append',
-            "output += '  ' + config.description;",
-            "if (config.cost) output += ' (' + config.cost+')';",
-        ],
-        [
-            'append',
-            `if (command.config.authority > 1) {
-            output.push(\`最低权限：\${command.config.authority} 级。\`);
-        }`,
-            // eslint-disable-next-line no-template-curly-in-string
-            'if (command.config.cost) output.push(`命令花费：${command.config.cost}`)',
-        ],
-        [
-            'replace',
-            "'可用的子指令有'",
-            "'可用的子指令有（括号内为命令花费）'",
-        ],
-    ],
-    [
-        'koishi-plugin-mongo/dist/database', 1,
-        [
-            'replace',
-            'this.group.insertOne({ _id: groupId, selfId, groupId });',
-            'this.group.insertOne({ _id: groupId,assignee: selfId, groupId,flag:0})',
-        ],
     ],
 ];
 

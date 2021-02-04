@@ -1,12 +1,12 @@
 import { App, Session } from 'koishi-core';
-import { Collection, ObjectID } from 'mongodb';
+import { ObjectID } from 'mongodb';
 import moment from 'moment';
 import { endOfToday } from '../lib/expire';
 
 moment.locale('zh-cn');
 
 interface Price {
-    _id: number,
+    _id: string,
     price: number,
     expire: Date,
     bought: number,
@@ -14,10 +14,16 @@ interface Price {
 
 interface Stock {
     _id: ObjectID,
-    userId: number,
+    userId: string,
     number: number,
     buyPrice: number,
     expire: Date,
+}
+declare module 'koishi-core/dist/database' {
+    interface Tables {
+        'kabu.price': Price,
+        'kabu.stock': Stock,
+    }
 }
 
 interface Config {
@@ -36,10 +42,10 @@ export const apply = (app: App, config: Config) => {
     config = { ...defaultConfig, ...config };
 
     app.on('connect', () => {
-        const priceColl: Collection<Price> = app.database.db.collection('kabu.price');
+        const priceColl = app.database.collection('kabu.price');
         priceColl.createIndex('expire', { expireAfterSeconds: 0 });
 
-        const stockColl: Collection<Stock> = app.database.db.collection('kabu.stock');
+        const stockColl = app.database.collection('kabu.stock');
         stockColl.createIndex({ userId: 1, expire: 1 });
         stockColl.createIndex('expire', { expireAfterSeconds: 0 });
 

@@ -13,13 +13,13 @@ export function apply(app: App) {
                     { from: currentSession, in: true }, { to: currentSession, out: true },
                 ],
             }).toArray();
-            const username = session.sender.card || session.sender.nickname;
-            const message = `${username}: ${session.message}`;
+            const username = session.author.name || session.author.nick;
+            const message = `${username}: ${session.rawMessage}`;
             for (const target of targets) {
                 // eslint-disable-next-line prefer-const
                 let [assignee, chatId] = (target.from === currentSession ? target.to : target.from).split('/');
                 if (!Number.isNaN(parseInt(chatId, 10))) chatId = parseInt(chatId, 10);
-                session.$app.bots[assignee].sendGroupMsg(chatId, message);
+                session.$app.bots[assignee].sendMessage(chatId, message);
             }
         });
 

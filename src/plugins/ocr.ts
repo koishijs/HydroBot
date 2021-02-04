@@ -5,11 +5,11 @@ import superagent from 'superagent';
 export function apply(app: App) {
     app.command('tools', '实用工具');
 
-    app.command('tools/ocr [image]', { minInterval: 3000, cost: 3 })
+    app.command('tools/ocr [image]', { minInterval: 3000 })
         .action(async ({ session }, image) => {
             if (!image) {
-                await session.$sendQueued('请发送图片。');
-                image = await session.$prompt(30000);
+                await session.sendQueued('请发送图片。');
+                image = await session.prompt(30000) as string;
             }
             if (!image) return '没有检测到图片。';
             const img = CQCode.parse(image);

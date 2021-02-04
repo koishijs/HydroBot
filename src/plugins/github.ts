@@ -70,8 +70,8 @@ interface Subscription {
 }
 
 interface EventHandler {
-    hook?: (body: any) => Promise<[string?, NodeJS.Dict<any>?]>
-    interact?: (message: string, session: Session, event: any, getToken: () => Promise<string>) => Promise<[string?, NodeJS.Dict<any>?] | boolean>
+    hook?: (body: any) => Promise<[string?, Record<string, any>?]>
+    interact?: (message: string, session: Session, event: any, getToken: () => Promise<string>) => Promise<[string?, Record<string, any>?] | boolean>
 }
 
 function sha256(str: string): string {
@@ -101,7 +101,7 @@ export const apply = (app: App, config: any) => {
         const coll: Collection<Subscription> = app.database.db.collection('github_watch');
         const collData: Collection<any> = app.database.db.collection('github_data');
 
-        const events: NodeJS.Dict<EventHandler> = {
+        const events: Record<string, EventHandler> = {
             push: {
                 async hook(body) {
                     const ref = body.ref.split('/')[2];
@@ -425,22 +425,22 @@ export const apply = (app: App, config: any) => {
                 } catch (e) {
                     console.log('catch', e);
                     if (e instanceof InvalidTokenError) {
-                        session.$send('请输入Github用户名');
-                        const login = await session.$prompt(60000);
-                        if (!login) return session.$send('输入超时');
-                        return session.$send(`请点击下面的链接继续操作：
+                        session.send('请输入Github用户名');
+                        const login = await session.prompt(60000);
+                        if (!login) return session.send('输入超时');
+                        return session.send(`请点击下面的链接继续操作：
 https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${session.userId}&redirect_url=${config.redirect_uri}&scope=admin%3Arepo_hook%2Crepo&login=${login}`); // eslint-disable-line max-len
                     }
                     throw e;
                 }
                 const [message, $set] = result;
-                if (message) await session.$send(message);
+                if (message) await session.send(message);
                 if ($set) await collData.updateOne({ _id: relativeEvent._id }, { $set });
-            } catch (e) { session.$send(e.message); }
+            } catch (e) { session.send(e.message); }
             return next();
         });
 
-        app.group().command('github.listen <repo>', '监听一个Repository的事件')
+        app.select('groupId').command('github.listen <repo>', '监听一个Repository的事件')
             .action(async ({ session }, repo) => {
                 repo = repo.toLowerCase();
                 if (repo.split('/').length !== 2) return '无效地址';
@@ -458,13 +458,13 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
 (请创建 webhook 投递至 https://github.undefined.moe/webhook ，格式 application/json )`;
             });
 
-        app.group().command('github.list', 'List repos')
+        app.select('groupId').command('github.list', 'List repos')
             .action(async ({ session }) => {
                 const repos = await coll.find({ target: session.groupId }).project({ _id: 1 }).toArray();
                 return repos.map((doc) => doc._id).join('\n');
             });
 
-        app.group().command('github.cancel <repo>', '取消一个Repository的事件')
+        app.select('groupId').command('github.cancel <repo>', '取消一个Repository的事件')
             .action(async ({ session }, repo) => {
                 await coll.updateOne(
                     { _id: repo.toLowerCase() },

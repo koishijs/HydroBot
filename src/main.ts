@@ -3,14 +3,13 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import {
-    App, Command, ExecuteArgv, NextFunction,
+    App, Argv, Command, NextFunction, Session,
 } from 'koishi-core';
-import { Session } from 'koishi-core/dist/session';
 import { Logger, noop } from 'koishi-utils';
 import fs from 'fs-extra';
 import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
-import 'koishi-adapter-cqhttp';
-// import './plugins/adapter-telegram/index';
+import 'koishi-adapter-onebot';
+import { Session as _Session } from 'koishi-core/dist/session';
 
 process.on('unhandledRejection', (_, p) => {
     console.log('Unhandled Rejection:', p);
@@ -27,8 +26,8 @@ declare global {
 declare module 'koishi-core' {
     interface Session {
         _silent: boolean,
-        $executeSilent(argv: ExecuteArgv): Promise<void>,
-        $executeSilent(message: string, next?: NextFunction): Promise<void>,
+        executeSilent(content: string, next?: NextFunction): Promise<string>;
+        executeilent(argv: Argv, next?: NextFunction): Promise<string>;
     }
 }
 
@@ -38,15 +37,15 @@ String.prototype.decode = function decode() {
 String.prototype.encode = function encode() {
     return this.replace(/&/gm, '&amp;').replace(/\[/gm, '&#91;').replace(/\]/gm, '&#93;');
 };
-Session.prototype.$executeSilent = function $executeSilent(this: Session, arg0: any, arg1?: any) {
+_Session.prototype.executeSilent = function executeSilent(this: Session, arg0: any, arg1?: any) {
     this._silent = true;
-    this.$send = noop;
-    this.$sendQueued = noop;
-    return this.$execute(arg0, arg1);
+    this.send = noop;
+    this.sendQueued = noop;
+    return this.execute(arg0, arg1);
 };
 
 export = class {
-    config: NodeJS.Dict<any>;
+    config: Record<string, any>;
 
     app: App;
 
@@ -60,9 +59,9 @@ export = class {
             bots: this.config.bots,
             type: this.config.type,
             prefix: this.config.prompt as string,
-            preferSync: true,
-            defaultAuthority: 1,
-            similarityCoefficient: 0.9,
+            autoAuthorize: 1,
+            autoAssign: true,
+            similarityCoefficient: 0.7,
         });
         this.run();
     }
@@ -71,21 +70,20 @@ export = class {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
         this.app.on('connect', async () => {
-            for (const admin of this.config.admin) {
-                this.app.database.getUser(admin, 5);
-                this.app.database.setUser(admin, { authority: 5, sudoer: true });
-                this.logger.info(`Opped ${admin}`);
+            for (const user of this.config.admin) {
+                const [type, id] = user.split(':');
+                this.app.database.setUser(type, id, { authority: 5, sudoer: true });
+                this.logger.info(`Opped ${type}:${id}`);
             }
         });
-        this.app.prependMiddleware(async (session, next) => {
-            if (session.messageType === 'group') {
-                await this.app.database.getGroup(session.groupId, session.selfId);
+        this.app.middleware(async (session, next) => {
+            if (session.subtype === 'group') {
+                await this.app.database.setChannel(session.platform, session.groupId, { assignee: session.selfId });
             }
             return next();
-        });
+        }, true);
         await this.load();
         await this.app.start();
-        await this.app.getSelfIds();
     }
 
     async load() {

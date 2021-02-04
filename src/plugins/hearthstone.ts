@@ -29,7 +29,7 @@ try {
 
 async function _card({ session }, id) {
     const url = id.trim();
-    if (!url) return await session.$send('请输入要查看的Card ID/Name');
+    if (!url) return await session.send('请输入要查看的Card ID/Name');
     if (!Object.keys(db).length) {
         // Load CN
         const res = await superagent.get('https://api.hearthstonejson.com/v1/latest/zhCN/cards.collectible.json');
@@ -45,10 +45,10 @@ async function _card({ session }, id) {
             db[card.name] = card.id;
         }
     }
-    if (!db[id]) return await session.$send('NotFound');
-    return session.$send(`[CQ:image,file=https://art.hearthstonejson.com/v1/render/latest/zhCN/512x/${db[id]}.png]`);
+    if (!db[id]) return await session.send('NotFound');
+    return session.send(`[CQ:image,file=https://art.hearthstonejson.com/v1/render/latest/zhCN/512x/${db[id]}.png]`);
 }
 
 export const apply = (app: App) => {
-    app.command('card <name/id...>', 'Get a card').action(_card);
+    app.command('card <name/id:text>', 'Get a card').action(_card);
 };

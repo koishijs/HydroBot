@@ -1,4 +1,4 @@
-import { Context, Group, User } from 'koishi-core';
+import { Context, Channel, User } from 'koishi-core';
 import { apply as KoishiPluginEval, Config as KoishiPluginEvalConfig } from 'koishi-plugin-eval';
 import { apply as KoishiPluginEvalAddons, Config as KoishiPluginEvalAddonsConfig } from 'koishi-plugin-eval-addons';
 import { sleep } from 'koishi-utils';
@@ -15,24 +15,26 @@ export function apply(ctx: Context, config: Config) {
     ctx.command('evaluate')
         .option('i', 'Output as image', { hidden: true })
         .userFields(User.fields)
-        .groupFields(Group.fields)
-        .before((session) => {
-            if (!session._sudo) return false;
-            if (session.$argv.options.i) session.$execute(`sudo _.eval -i ${session.$argv.args[0]}`);
-            session.$execute(`sudo _.eval ${session.$argv.args[0]}`);
-            return true;
+        .channelFields(Channel.fields)
+        .check(({ session }) => {
+            if (!session._sudo) return;
+            const cmd = session.$argv.args[0].replace('eval ', '');
+            // @ts-expect-error
+            if (session.$argv.options.i) session.execute(`_.eval -i ${cmd}`);
+            session.execute(`_.eval ${cmd}`);
+            return '';
         });
 
-    ctx.command('#.silent <command...>')
-        .action(async ({ session }, command) => {
-            await session.$executeSilent(command);
-        });
+    ctx.command('#', 'utils', { hidden: true });
 
-    ctx.command('#.sleep <duration> <command...>')
+    ctx.command('#.silent <command:text>')
+        .action(({ session }, command) => session.executeSilent(command));
+
+    ctx.command('#.sleep <duration> <command:text>')
         .action(async ({ session }, _duration, command) => {
             let duration = Math.min(10000, +_duration);
             if (Number.isNaN(duration) || !duration) duration = 0;
             await sleep(duration);
-            await session.$execute(command);
+            await session.execute(command);
         });
 }

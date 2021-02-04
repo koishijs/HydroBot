@@ -7,7 +7,7 @@ export function apply(app: App) {
         .action(async ({ session }, id) => {
             try {
                 const resp = await superagent.get(`https://cdn.jsdelivr.net/gh/komeiji-satori/Dress/${id}`).buffer();
-                await session.$send(`[CQ:image,file=base64://${resp.body.toString('base64')}]`);
+                await session.send(`[CQ:image,file=base64://${resp.body.toString('base64')}]`);
             } catch (e) {
                 return e.toString();
             }

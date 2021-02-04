@@ -2,11 +2,21 @@
 import { Context } from 'koishi-core';
 import { apply as KoishiPluginTeach, Dialogue } from 'koishi-plugin-teach';
 import axios from 'axios';
-import { Binary, Collection } from 'mongodb';
+import { Binary } from 'mongodb';
 
+interface ImageServerStatus {
+    totalSize: number
+    totalCount: number
+}
+interface ImageDoc {
+    _id: string,
+    data: Binary
+}
 declare module 'koishi-core/dist/command' {
-    interface CommandConfig {
-        noRedirect?: boolean,
+    namespace Command {
+        interface Config {
+            noRedirect?: boolean,
+        }
     }
 }
 declare module 'koishi-core/dist/session' {
@@ -31,13 +41,10 @@ declare module 'koishi-plugin-teach/dist/utils' {
         }
     }
 }
-interface ImageServerStatus {
-    totalSize: number
-    totalCount: number
-}
-interface ImageDoc {
-    _id: string,
-    data: Binary
+declare module 'koishi-plugin-mongo' {
+    interface Collections {
+        image: ImageDoc
+    }
 }
 
 const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;
@@ -51,14 +58,14 @@ export const apply = (ctx: Context, config: Dialogue.Config) => {
     ctx.app.on('before-command', async ({ session, command }) => {
         const noRedirect = command.getConfig('noRedirect', session);
         if (noRedirect && session._redirected) {
-            const creator = await ctx.app.database.getUser(session._dialogue.writer, ['authority']);
+            const creator = await ctx.app.database.getUser('id', session._dialogue.writer, ['authority']);
             // @ts-ignore
             if (creator.authority < 5 && !creator.sudoer) return '不支持在插值中调用该命令。';
         }
     });
 
     ctx.app.on('connect', () => {
-        const coll: Collection<ImageDoc> = ctx.app.database.db.collection('image');
+        const coll = ctx.app.database.db.collection('image');
 
         const downloadFile = async (file: string, url: string) => {
             if (await coll.findOne({ _id: file })) return;

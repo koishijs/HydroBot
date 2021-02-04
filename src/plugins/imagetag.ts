@@ -6,27 +6,28 @@ import { CQCode, Logger } from 'koishi-utils';
 import yaml from 'js-yaml';
 import axios from 'axios';
 import { readFile } from 'fs-extra';
-import { Collection } from 'mongodb';
 import sharp from 'sharp';
 
 const logger = new Logger('imagetag');
 const imageRE = /(\[CQ:image,file=[^,]+,url=[^\]]+\])/;
-const checkGroupAdmin = (session: Session<'authority'>) => (
-    (session.$user.authority >= 4 || ['admin', 'owner'].includes(session.sender.role))
-        ? false
+const checkGroupAdmin = ({ session }) => (
+    (session.$user.authority >= 4 || session.author.roles.includes('admin') || session.author.roles.includes('owner'))
+        ? null
         : '仅管理员可执行该操作。'
 );
-
-declare module 'koishi-core/dist/database' {
-    interface Group {
-        enableAutoTag?: number,
-    }
-}
 
 interface ImageTagCache {
     _id: string,
     md5: string,
     txt: string,
+}
+declare module 'koishi-core/dist/database' {
+    interface Channel {
+        enableAutoTag?: number,
+    }
+    interface Tables {
+        'image.tag': ImageTagCache
+    }
 }
 
 function MD5(buffer: Buffer) {
@@ -40,31 +41,31 @@ export const apply = async (ctx: Context, config: any = {}) => {
     const trans = yaml.safeLoad(transfile.toString());
     const names = require(resolve(process.cwd(), 'database', 'class_names_6000.json'));
 
-    ctx.on('before-attach-group', (_, fields) => {
+    ctx.on('before-attach-channel', (_, fields) => {
         fields.add('enableAutoTag');
     });
 
     ctx.middleware(async (session, next) => {
-        const capture = imageRE.exec(session.message);
+        const capture = imageRE.exec(session.content);
         if (capture) {
             // @ts-ignore
-            if (session.$group.enableAutoTag === 2) session.$executeSilent(`tag ${capture[1]}`);
+            if (session.$channel.enableAutoTag === 2) session.executeSilent(`tag ${capture[1]}`);
             // @ts-ignore
-            else if (session.$group.enableAutoTag === 1) session.$execute(`tag ${capture[1]}`);
+            else if (session.$channel.enableAutoTag === 1) session.execute(`tag ${capture[1]}`);
         }
         return next();
     });
 
     ctx.app.on('connect', async () => {
-        const coll: Collection<ImageTagCache> = ctx.app.database.db.collection('image.tag');
+        const coll = ctx.app.database.collection('image.tag');
         coll.createIndex({ md5: 1 }, { unique: true });
 
         ctx.command('tag [image]', 'Get image tag', { hidden: true, minInterval: 2000 })
             .action(async ({ session }, image) => {
                 try {
                     if (!image) {
-                        await session.$send('请发送图片。');
-                        image = await session.$prompt(30000);
+                        await session.send('请发送图片。');
+                        image = await session.prompt(30000) as string;
                     }
                     let id;
                     let url = image;
@@ -120,20 +121,20 @@ export const apply = async (ctx: Context, config: any = {}) => {
 
         ctx.command('tag.disable', '在群内禁用', { noRedirect: true })
             .userFields(['authority'])
-            .before(checkGroupAdmin)
-            .groupFields(['enableAutoTag'])
+            .check(checkGroupAdmin)
+            .channelFields(['enableAutoTag'])
             .action(({ session }) => {
-                session.$group.enableAutoTag = 0;
+                session.$channel.enableAutoTag = 0;
                 return 'Disabled';
             });
 
         ctx.command('tag.enable', '在群内启用', { noRedirect: true })
             .option('silent', '-s')
             .userFields(['authority'])
-            .before(checkGroupAdmin)
-            .groupFields(['enableAutoTag'])
+            .check(checkGroupAdmin)
+            .channelFields(['enableAutoTag'])
             .action(({ session, options }) => {
-                session.$group.enableAutoTag = options.silent ? 2 : 1;
+                session.$channel.enableAutoTag = options.silent ? 2 : 1;
                 return 'enabled';
             });
     });

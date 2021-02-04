@@ -1,12 +1,6 @@
-import { App, getTargetId, User } from 'koishi-core';
+import { App, User } from 'koishi-core';
 import { Session } from 'koishi-core/dist/session';
 import { Items, ItemMeta } from '../lib/item';
-
-declare module 'koishi-core/dist/command' {
-    interface CommandConfig {
-        cost?: number,
-    }
-}
 
 export interface Slot<T extends string> {
     id: T,
@@ -33,23 +27,6 @@ function sum(...args: number[]) {
 }
 
 export function apply(app: App) {
-    app.on('before-command', ({ session, command }) => {
-        const cost = command.getConfig('cost', session);
-        // @ts-ignore
-        if (session.$user.coin < cost) return '你没有足够的硬币执行该命令。';
-    });
-
-    app.on('before-attach-user', (session, fields) => {
-        fields.add('coin');
-    });
-
-    app.on('command', ({ session, command }) => {
-        if (session._silent) return;
-        const cost = command.getConfig('cost', session);
-        // @ts-ignore
-        if (cost) session.$user.coin -= cost;
-    });
-
     app.command('property', '财产系统');
 
     app.command('property/backpack', '背包')
@@ -76,17 +53,16 @@ export function apply(app: App) {
 
     app.command('property/pay <targetUserId> <count>', '转账', { noRedirect: true })
         .userFields(['coin'])
-        .action(async ({ session }, targetUser, count) => {
+        .action(async ({ session }, target, count) => {
             const n = parseInt(count, 10);
             if (!(Number.isSafeInteger(n) && n > 0)) return '不合法的数值。';
             if (session.$user.coin < n) return '你没有足够的硬币。';
-            const id = getTargetId(targetUser);
-            if (!id) return '未指定目标。';
+            if (!target) return '未指定目标。';
             const newSession = new Session(app, session);
-            newSession.userId = id;
-            newSession.sender.userId = id;
+            newSession.userId = target;
+            newSession.author.userId = target;
             delete newSession.$user;
-            const user = await newSession.$observeUser(['coin']);
+            const user = await newSession.observeUser(['coin']);
             session.$user.coin -= n;
             user.coin += n;
             await newSession.$user._update();
