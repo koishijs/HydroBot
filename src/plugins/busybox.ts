@@ -203,56 +203,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             });
         });
 
-    ctx.command('contextify <command:text>', '在特定上下文中触发指令', { authority: 4, noRedirect: true })
-        .alias('ctxf')
-        .userFields(['authority'])
-        .option('user', '-u [id]  使用私聊上下文', { authority: 5 })
-        .option('group', '-g [id]  使用群聊上下文', { authority: 5 })
-        .option('member', '-m [id]  使用当前群/讨论组成员上下文')
-        .usage([
-            '私聊的子类型包括 other（默认），friend，group。',
-            '群聊的子类型包括 normal（默认），notice，anonymous。',
-        ].join('\n'))
-        .action(async ({ session, options }, message) => {
-            if (!message) return '请输入要触发的指令。';
-            if (options.member) {
-                if (session.subtype === 'private') {
-                    return '无法在私聊上下文使用 --member 选项。';
-                }
-                options.group = session.groupId;
-                options.user = options.member;
-            }
-            if (!options.user && !options.group) return '请提供新的上下文。';
-            const newSession = new Session(ctx.app, session);
-            newSession.send = session.send.bind(session);
-            newSession.sendQueued = session.sendQueued.bind(session);
-            delete newSession.groupId;
-            if (options.group) {
-                newSession.groupId = options.group;
-                newSession.subtype = 'group';
-                delete newSession.$channel;
-                await newSession.observeChannel(Channel.fields);
-            } else {
-                newSession.subtype = 'private';
-            }
-            if (options.user) {
-                const id = options.user;
-                if (!id) return '未指定目标。';
-                newSession.userId = id;
-                newSession.author.userId = id;
-                delete newSession.$user;
-                const user = await newSession.observeUser(User.fields);
-                if (session.$user.authority <= user.authority) return '权限不足。';
-            }
-            if (options.group) {
-                const info = await session.$bot.getGroupMember(newSession.groupId, newSession.userId).catch(() => ({}));
-                Object.assign(newSession.author, info);
-            } else if (options.user) {
-                const info = await (session.$bot as CQBot).getStrangerInfo(newSession.userId).catch(() => ({}));
-                Object.assign(newSession.author, info);
-            }
-            return newSession.execute(message);
-        });
+    ctx.command('contextify <command:text>', '在特定上下文中触发指令', { authority: 4, noRedirect: true });
 
     ctx.command('_.deactivate', '在群内禁用', { noRedirect: true })
         .userFields(['authority'])
@@ -270,15 +221,6 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .action(({ session }) => {
             session.$channel.flag &= ~Channel.Flag.ignore;
             return 'Activated';
-        });
-
-    ctx.command('_.setWelcomeMsg <msg:text>', '设置欢迎信息', { noRedirect: true })
-        .userFields(['authority'])
-        .check(checkGroupAdmin)
-        .channelFields(['welcomeMsg'])
-        .action(({ session }, welcomeMsg) => {
-            session.$channel.welcomeMsg = welcomeMsg;
-            return 'Updated.';
         });
 
     ctx.command('_.switch <command>', '启用/停用命令', { noRedirect: true })
