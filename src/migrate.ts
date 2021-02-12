@@ -107,21 +107,21 @@ async function main() {
     let cnt = 0;
     await dst.collection('message').drop().catch(noop);
     const total = await src.collection('message').find().count();
-    for (let i = 0; i <= total / 100000; i++) {
+    logger.info('Total %d', total);
+    // eslint-disable-next-line no-await-in-loop
+    const cursor = src.collection('message').find();
+    while (cursor.hasNext()) {
         // eslint-disable-next-line no-await-in-loop
-        await src.collection('message').find().sort({ _id: 1 }).skip(i * 100000)
-            .limit(100000)
-            // eslint-disable-next-line no-loop-func
-            .forEach((doc) => {
-                cnt++;
-                return dst.collection('message').insertOne({
-                    ...doc,
-                    group: `onebot:${doc.group}`,
-                    sender: umap[doc.sender],
-                });
-            });
-        logger.info(cnt);
+        const doc = await cursor.next();
+        cnt++;
+        // eslint-disable-next-line no-await-in-loop
+        await dst.collection('message').insertOne({
+            ...doc,
+            group: `onebot:${doc.group}`,
+            sender: umap[doc.sender],
+        });
     }
+    logger.info(cnt);
     logger.success('Message Done');
 
     // Other
