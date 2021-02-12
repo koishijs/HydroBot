@@ -6,6 +6,7 @@ import {
 } from 'koishi-core';
 import { Session } from 'koishi-core/dist/session';
 import { Logger, CQCode, Time } from 'koishi-utils';
+import { apply as KoishiPluginCommon } from 'koishi-plugin-common';
 import { ObjectID } from 'mongodb';
 import moment from 'moment';
 import { CQBot } from 'koishi-adapter-onebot';
@@ -86,9 +87,9 @@ const checkGroupAdmin = ({ session }) => (
 export const apply = (ctx: Context, config: Config = {}) => {
     const logger = new Logger('busybox', true);
     Logger.levels.message = 3;
-
     Time.setTimezoneOffset(config.timezoneOffset ?? -480); // UTC +8
     config.recordMessage = config.recordMessage ?? true;
+    ctx.plugin(KoishiPluginCommon, {});
 
     ctx.command('help', { authority: 1, hidden: true });
     ctx.command('tex', { authority: 1 });

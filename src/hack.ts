@@ -6,14 +6,14 @@ const tasks: [string, number | string, ...string[][]][] = [
         'koishi-core/session.js', "exports.Session=require('./index').Session",
     ],
     [
-        'koishi-core/dist/index', 1,
+        'koishi-core/dist/index', 2,
         [
-            'append', 'throw error;',
+            'append', 'throw error2;',
             `if (typeof error === 'string'){
                 session.$user.usage[argv.command.name]--;
-                return session.send(error);
+                return session.send(error2);
             }
-            session.send(error.message);`,
+            session.send(error2.message);`,
         ],
     ],
     [
