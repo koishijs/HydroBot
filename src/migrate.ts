@@ -51,6 +51,7 @@ async function main() {
         _id: new ObjectID(),
         pid: doc._id.toString(),
         type: 'onebot',
+        assignee: doc.assignee.toString(),
     }));
     logger.success('Channel Done');
 
