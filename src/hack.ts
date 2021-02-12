@@ -25,6 +25,18 @@ const tasks: [string, number | string, ...string[][]][] = [
         if (index === arr.length - 1)
             message = message.replace(/[\\.,?!()\\[\\]~]*$/, '');`, ''],
     ],
+    [
+        'puppeteer-core/lib/cjs/puppeteer/node/Puppeteer', 1,
+        ['remove', `switch (this._productName) {
+                case 'firefox':
+                    this._preferredRevision = revisions_js_1.PUPPETEER_REVISIONS.firefox;
+                    break;
+                case 'chrome':
+                default:
+                    this._preferredRevision = revisions_js_1.PUPPETEER_REVISIONS.chromium;
+            }
+            this._changedProduct = false;`],
+    ],
 ];
 
 async function hack() {
