@@ -38,6 +38,7 @@ async function main() {
         return dst.collection('user').insertOne({
             ...doc,
             _id: umap[doc._id],
+            id: umap[doc._id],
             onebot: doc._id.toString(),
         });
     });
