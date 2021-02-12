@@ -82,9 +82,9 @@ export = class {
                     const udoc = await this.app.database.getUser(type, id);
                     if (udoc) found = [type, id];
                 }
-                const map = Object.assign({}, ...users.map((i) => i.split(':').map((i) => ({ [i[0]]: i[1] }))));
+                const map = Object.assign({}, ...users.map((i) => i.split(':')).map((i) => ({ [i[0]]: i[1] })));
                 if (found) {
-                    this.app.database.setUser(found.type, found.id, { ...map, authority: 5, sudoer: true });
+                    this.app.database.setUser(found[0], found[1], { ...map, authority: 5, sudoer: true });
                 }
                 this.logger.info(`Opped ${line}`);
             }

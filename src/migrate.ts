@@ -102,15 +102,16 @@ async function main() {
     }));
     logger.success('Osu Done');
 
+    if (argv.noCopy) return;
     // Message
     logger.info('Message');
     let cnt = 0;
     await dst.collection('message').drop().catch(noop);
     const total = await src.collection('message').find().count();
     logger.info('Total %d', total);
-    // eslint-disable-next-line no-await-in-loop
     const cursor = src.collection('message').find();
-    while (cursor.hasNext()) {
+    // eslint-disable-next-line no-await-in-loop
+    while (await cursor.hasNext()) {
         // eslint-disable-next-line no-await-in-loop
         const doc = await cursor.next();
         cnt++;
