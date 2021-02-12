@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import child from 'child_process';
 import superagent from 'superagent';
 import axios from 'axios';
 import sharp from 'sharp';
@@ -52,27 +51,5 @@ export const apply = (ctx: Context) => {
                     `${take(result.data.split(','), 10).join(',')}`,
                 ].join('\n'));
             }
-        });
-
-    ctx.command('tools/calc <expression:text>', '计算表达式', { minInterval: 10000 })
-        .example('calc 1+1')
-        .example('calc Solve[x^2+1==0,{x}]')
-        .example('calc FactorInteger[233333]')
-        .action(async ({ session }, expr) => {
-            expr = expr.decode();
-            console.log(`Calculating ${expr}`);
-            let svg: string;
-            try {
-                const { stdout, stderr } = child.spawnSync('wolframscript', ['-cloud', '-c', `ExportString[${expr}, "svg"]`, '-timeout', '10']);
-                svg = (stdout || '').toString() + (stderr || '').toString();
-            } catch (e) {
-                console.error(e);
-                return session.send(e.toString());
-            }
-            if (!svg.startsWith('<?xml')) return session.send(svg);
-            const viewBox = svg.match(/ viewBox="0 (-?\d*(.\d+)?) -?\d*(.\d+)? -?\d*(.\d+)?" /);
-            // eslint-disable-next-line max-len
-            if (viewBox) svg = svg.replace('version="1.1">\n', `\n<rect x="0" y="${viewBox[1]}" width="100%" height="100%" fill="white"></rect>\n`);
-            return session.send(`[CQ:image,file=base64://${(await sharp(svg).png().toBuffer()).toString('base64')}]`);
         });
 };

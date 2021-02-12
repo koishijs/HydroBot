@@ -28,7 +28,7 @@ export async function apply(ctx: Context) {
     });
 
     ctx.app.on('connect', () => {
-        const c = ctx.app.database.db.collection('message');
+        const c = ctx.app.database.collection('message');
 
         extend(async (status) => {
             const bots = status.bots.map((bot) => bot.selfId);

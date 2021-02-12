@@ -29,6 +29,11 @@ declare module 'koishi-core/dist/app' {
         getImageServerStatus(): Promise<ImageServerStatus>
     }
 }
+declare module 'koishi-core/dist/database' {
+    interface Tables {
+        image: ImageDoc
+    }
+}
 declare module 'koishi-plugin-teach/dist/utils' {
     // eslint-disable-next-line no-shadow
     namespace Dialogue {
@@ -41,11 +46,6 @@ declare module 'koishi-plugin-teach/dist/utils' {
         }
     }
 }
-declare module 'koishi-plugin-mongo' {
-    interface Collections {
-        image: ImageDoc
-    }
-}
 
 const imageRE = /\[CQ:image,file=([^,]+),url=([^\]]+)\]/;
 const REimage = /\[CQ:image,file=image:\/\/([^,]+)\]/;
@@ -54,8 +54,9 @@ export const apply = (ctx: Context, config: Dialogue.Config) => {
     const logger = ctx.logger('teach');
 
     ctx.plugin(KoishiPluginTeach, config);
+    ctx.command('teach', { checkArgCount: false });
 
-    ctx.app.on('before-command', async ({ session, command }) => {
+    ctx.on('before-command', async ({ session, command }) => {
         const noRedirect = command.getConfig('noRedirect', session);
         if (noRedirect && session._redirected) {
             const creator = await ctx.app.database.getUser('id', session._dialogue.writer, ['authority']);
@@ -64,8 +65,8 @@ export const apply = (ctx: Context, config: Dialogue.Config) => {
         }
     });
 
-    ctx.app.on('connect', () => {
-        const coll = ctx.app.database.db.collection('image');
+    ctx.on('connect', () => {
+        const coll = ctx.app.database.collection('image');
 
         const downloadFile = async (file: string, url: string) => {
             if (await coll.findOne({ _id: file })) return;

@@ -5,7 +5,8 @@ interface Bottle {
     _id?: ObjectID,
     content: string,
     groupId?: string,
-    userId: string,
+    userId: number,
+    pick: number,
 }
 declare module 'koishi-core/dist/database' {
     interface Tables {
@@ -17,13 +18,15 @@ export const apply = (ctx: Context) => {
     ctx.on('connect', async () => {
         const coll = ctx.database.collection('bottle');
 
-        ctx.select('groupId').command('bottle.throw <content:text>', '丢漂流瓶', { noRedirect: true })
+        ctx.command('bottle.throw <content:text>', '丢漂流瓶', { noRedirect: true })
             .alias('丢漂流瓶')
+            .userFields(['id'])
             .action(async ({ session }, content) => {
                 const res = await coll.insertOne({
-                    groupId: session.groupId,
-                    userId: session.userId,
+                    groupId: `${session.platform}:${session.groupId}`,
+                    userId: session.$user.id,
                     content: content.trim(),
+                    pick: 0,
                 });
                 return `已丢出。(${res.insertedId})`;
             });
@@ -37,7 +40,8 @@ export const apply = (ctx: Context) => {
                 const [res] = await coll.find({}).skip(target).limit(1).toArray();
                 const shouldDestory = Math.random() > 0.5;
                 if (shouldDestory) await coll.deleteOne({ _id: res._id });
-                return `来源：群${res.groupId}
+                else await coll.updateOne({ _id: res._id }, { $inc: { pick: 1 } });
+                return `被捡起 ${res.pick + 1} 次
 时间：${new Date(res._id.generationTime * 1000).toLocaleString()}
 内容：${res.content}`;
             });

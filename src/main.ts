@@ -74,10 +74,19 @@ export = class {
         fs.ensureDirSync(path.resolve(__dirname, '..', '.cache'));
         this.app.plugin(KoishiPluginMongo, this.config.db);
         this.app.on('connect', async () => {
-            for (const user of this.config.admin) {
-                const [type, id] = user.split(':');
-                this.app.database.setUser(type, id, { authority: 5, sudoer: true });
-                this.logger.info(`Opped ${type}:${id}`);
+            for (const line of this.config.admin) {
+                const users = line.split('&');
+                let found;
+                for (const user of users) {
+                    const [type, id] = user.split(':');
+                    const udoc = await this.app.database.getUser(type, id);
+                    if (udoc) found = [type, id];
+                }
+                const map = Object.assign({}, ...users.map((i) => i.split(':').map((i) => ({ [i[0]]: i[1] }))));
+                if (found) {
+                    this.app.database.setUser(found.type, found.id, { ...map, authority: 5, sudoer: true });
+                }
+                this.logger.info(`Opped ${line}`);
             }
         });
         this.app.middleware(async (session, next) => {

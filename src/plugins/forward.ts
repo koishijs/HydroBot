@@ -13,7 +13,7 @@ export function apply(app: App) {
                     { from: currentSession, in: true }, { to: currentSession, out: true },
                 ],
             }).toArray();
-            const username = session.author.name || session.author.nick;
+            const username = session.author.nickname || session.author.username;
             const message = `${username}: ${session.rawMessage}`;
             for (const target of targets) {
                 // eslint-disable-next-line prefer-const

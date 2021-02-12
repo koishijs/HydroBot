@@ -55,7 +55,7 @@ export const apply = (app: App) => {
                 if (!res) throw new Error('无法获取内容。');
                 await coll.insertOne({
                     _id: url,
-                    target: [session.groupId],
+                    target: [`${session.platform}:${session.groupId}`],
                 });
                 feeder.add({ url, refresh: 60000 });
                 return `Watching ${url}`;
@@ -66,14 +66,14 @@ export const apply = (app: App) => {
             .action(async ({ session }, url) => {
                 await coll.updateOne(
                     { _id: url },
-                    { $pull: { target: session.groupId } },
+                    { $pull: { target: `${session.platform}:${session.groupId}` } },
                 );
                 return `Cancelled ${url}`;
             });
 
         app.select('groupId').command('rss.list', 'List')
             .action(async ({ session }) => {
-                const docs = await coll.find({ target: { $elemMatch: { $eq: session.groupId } } }).project({ _id: 1 }).toArray();
+                const docs = await coll.find({ target: `${session.platform}:${session.groupId}` }).project({ _id: 1 }).toArray();
                 return docs.map((doc) => doc._id).join('\n');
             });
     });

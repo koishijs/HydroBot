@@ -46,7 +46,7 @@ export async function apply(ctx: Context) {
                         }
                     }
                     await session.send([
-                        `将 ${target.nick || target.name} (${target.userId}) 移出群`,
+                        `将 ${target.nickname || target.username} (${target.userId}) 移出群`,
                         `（${moment(target.joinTime * 1000 || 0).fromNow()}加入，上次发言 ${moment(target.lastSentTime * 1000 || 0).fromNow()}）`,
                     ].join('\n'));
                     if (!options.dry) {

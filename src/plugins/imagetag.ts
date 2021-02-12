@@ -1,7 +1,7 @@
 /* eslint-disable import/no-dynamic-require */
 import { resolve } from 'path';
 import { createHash } from 'crypto';
-import { Context, Session } from 'koishi-core';
+import { Context } from 'koishi-core';
 import { CQCode, Logger } from 'koishi-utils';
 import yaml from 'js-yaml';
 import axios from 'axios';

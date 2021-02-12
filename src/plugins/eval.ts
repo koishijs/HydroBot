@@ -25,12 +25,10 @@ export function apply(ctx: Context, config: Config) {
             return '';
         });
 
-    ctx.command('#', 'utils', { hidden: true });
-
-    ctx.command('#.silent <command:text>')
+    ctx.command('@', 'utils', { hidden: true });
+    ctx.command('@.silent <command:text>', { hidden: true })
         .action(({ session }, command) => session.executeSilent(command));
-
-    ctx.command('#.sleep <duration> <command:text>')
+    ctx.command('@.sleep <duration> <command:text>', { hidden: true })
         .action(async ({ session }, _duration, command) => {
             let duration = Math.min(10000, +_duration);
             if (Number.isNaN(duration) || !duration) duration = 0;

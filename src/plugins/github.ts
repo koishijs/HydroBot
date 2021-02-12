@@ -5,29 +5,35 @@ import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import { App, Session } from 'koishi-core';
 import { Logger } from 'koishi-utils';
-import { Collection } from 'mongodb';
 
 proxy(superagent);
 const logger = new Logger('github');
-
 class InvalidTokenError extends Error { }
-
 interface Token {
     access_token: string,
     refresh_token: string,
 }
-
-declare module 'koishi-core/dist/database' {
-    interface User {
-        GithubToken: Token
-    }
+interface Subscription {
+    _id: string,
+    target: string[],
 }
-
+interface EventHandler {
+    hook?: (body: any) => Promise<[string?, Record<string, any>?]>
+    interact?: (message: string, session: Session, event: any, getToken: () => Promise<string>) => Promise<[string?, Record<string, any>?] | boolean>
+}
 interface BeautifyRule {
     regex: RegExp,
     process: (result: string[], content: string) => string,
 }
-
+declare module 'koishi-core/dist/database' {
+    interface User {
+        GithubToken: Token
+    }
+    interface Tables {
+        github_watch: Subscription,
+        github_data: any
+    }
+}
 const rules: BeautifyRule[] = [
     {
         // lgtm
@@ -63,17 +69,6 @@ function beautifyContent(content: string) {
     }
     return content.replace(/(\r?\n *)+/gmi, '\n');
 }
-
-interface Subscription {
-    _id: string,
-    target: number[],
-}
-
-interface EventHandler {
-    hook?: (body: any) => Promise<[string?, Record<string, any>?]>
-    interact?: (message: string, session: Session, event: any, getToken: () => Promise<string>) => Promise<[string?, Record<string, any>?] | boolean>
-}
-
 function sha256(str: string): string {
     return crypto.createHash('sha256')
         .update(str)
@@ -98,8 +93,8 @@ export const apply = (app: App, config: any) => {
     }
 
     app.on('connect', () => {
-        const coll: Collection<Subscription> = app.database.db.collection('github_watch');
-        const collData: Collection<any> = app.database.db.collection('github_data');
+        const coll = app.database.db.collection('github_watch');
+        const collData = app.database.db.collection('github_data');
 
         const events: Record<string, EventHandler> = {
             push: {
@@ -339,12 +334,12 @@ export const apply = (app: App, config: any) => {
                             const data = await coll.findOne({ _id: reponame.toLowerCase() });
                             if (data) {
                                 for (const id of data.target) {
+                                    const [platform, gid] = id.split(':');
                                     // eslint-disable-next-line no-await-in-loop
-                                    const gdoc = await app.database.getGroup(id, ['assignee']);
-                                    if (gdoc.assignee) {
-                                        if (app.bots[gdoc.assignee]) relativeIds.push(app.bots[gdoc.assignee].sendGroupMsg(id, message));
-                                        else logger.warn('Cannot send message to group %d with assignee %d', id, gdoc.assignee);
-                                    }
+                                    const gdoc = await app.database.getGroup(platform, gid, ['assignee']);
+                                    if (gdoc.assignee && app.bots[`${platform}:${gdoc.assignee}`]) {
+                                        relativeIds.push(app.bots[gdoc.assignee].sendGroupMsg(id, message));
+                                    } else logger.warn('Cannot send message to %s:%d with assignee %d', platform, id, gdoc.assignee);
                                 }
                             }
                             relativeIds = await Promise.all(relativeIds);
@@ -362,8 +357,7 @@ export const apply = (app: App, config: any) => {
         });
 
         app.router.get('/github/authorize', async (ctx) => {
-            const targetId = parseInt(ctx.query.state, 10);
-            if (Number.isNaN(targetId)) throw new Error('Invalid targetId');
+            const [platform, id] = ctx.query.state.split(':');
             const code = ctx.query.code;
             const result = await superagent.post('https://github.com/login/oauth/access_token')
                 .proxy(config.proxy)
@@ -375,7 +369,7 @@ export const apply = (app: App, config: any) => {
                     state: ctx.query.state,
                 });
             if (result.body.access_token) {
-                await app.database.setUser(targetId, { GithubToken: result.body });
+                await app.database.setUser(platform, id, { GithubToken: result.body });
                 ctx.body = 'Done';
             } else {
                 ctx.body = 'Error';
@@ -387,8 +381,8 @@ export const apply = (app: App, config: any) => {
             const parsedMsg = session.$parsed.replace(/\[CQ:at,qq=\d+\]/, '').trim();
             if (!replyTo || !parsedMsg) return next();
             const [relativeEvent, user] = await Promise.all([
-                collData.findOne({ relativeIds: { $elemMatch: { $eq: replyTo } } }),
-                app.database.getUser(session.userId, ['GithubToken']),
+                collData.findOne({ relativeIds: replyTo }),
+                app.database.getUser(session.platform, session.userId, ['GithubToken']),
             ]);
             if (!relativeEvent || !events[relativeEvent.type].interact) return;
             logger.info(replyTo, parsedMsg);
@@ -413,7 +407,7 @@ export const apply = (app: App, config: any) => {
                                 refresh_token: user.GithubToken.refresh_token,
                             });
                         if (!r.body.access_token) throw new InvalidTokenError();
-                        await app.database.setUser(session.userId, { GithubToken: r.body });
+                        await app.database.setUser(session.platform, session.userId, { GithubToken: r.body });
                         return r.body.access_token;
                     }
                     return user.GithubToken.access_token;
@@ -429,7 +423,7 @@ export const apply = (app: App, config: any) => {
                         const login = await session.prompt(60000);
                         if (!login) return session.send('输入超时');
                         return session.send(`请点击下面的链接继续操作：
-https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${session.userId}&redirect_url=${config.redirect_uri}&scope=admin%3Arepo_hook%2Crepo&login=${login}`); // eslint-disable-line max-len
+https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${session.platform}:${session.userId}&redirect_url=${config.redirect_uri}&scope=admin%3Arepo_hook%2Crepo&login=${login}`); // eslint-disable-line max-len
                     }
                     throw e;
                 }
@@ -448,19 +442,19 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
                 if (current) {
                     await coll.updateOne(
                         { _id: repo },
-                        { $addToSet: { target: session.groupId } },
+                        { $addToSet: { target: `${session.platform}:${session.groupId}` } },
                         { upsert: true },
                     );
                     return `Watching ${repo}`;
                 }
-                await coll.insertOne({ _id: repo, target: [session.groupId] });
+                await coll.insertOne({ _id: repo, target: [`${session.platform}:${session.groupId}`] });
                 return `Watching ${repo}
 (请创建 webhook 投递至 https://github.undefined.moe/webhook ，格式 application/json )`;
             });
 
         app.select('groupId').command('github.list', 'List repos')
             .action(async ({ session }) => {
-                const repos = await coll.find({ target: session.groupId }).project({ _id: 1 }).toArray();
+                const repos = await coll.find({ target: `${session.platform}:${session.groupId}` }).project({ _id: 1 }).toArray();
                 return repos.map((doc) => doc._id).join('\n');
             });
 
@@ -468,7 +462,7 @@ https://github.com/login/oauth/authorize?client_id=${config.client_id}&state=${s
             .action(async ({ session }, repo) => {
                 await coll.updateOne(
                     { _id: repo.toLowerCase() },
-                    { $pull: { target: session.groupId } },
+                    { $pull: { target: `${session.platform}:${session.groupId}` } },
                 );
                 return `Cancelled ${repo}.`;
             });

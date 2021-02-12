@@ -64,7 +64,7 @@ async function formatMessage(session: Session) {
                 if (!userMap[id] || timestamp - userMap[id][1] >= Time.hour) {
                     const promise = session.$bot
                         .getGroupMember(session.groupId, id)
-                        .then((d) => d.name, () => id);
+                        .then((d) => d.nickname || d.username, () => id);
                     userMap[id] = [promise, timestamp];
                 }
                 output += `@${await userMap[id][0]}`;
@@ -413,17 +413,17 @@ export const apply = (ctx: Context, config: Config = {}) => {
                     { $sort: { count: -1 } },
                     { $limit: 10 },
                 ]).toArray() as unknown as any;
-                const udict: Record<number, Pick<GroupMemberInfo, 'name' | 'nick'>> = {};
+                const udict: Record<number, Pick<GroupMemberInfo, 'nickname' | 'username'>> = {};
                 for (const r of result) {
                     try {
                         udict[r._id] = await session.$bot.getGroupMember(session.groupId, r._id);
                     } catch (e) {
-                        udict[r._id] = { name: r._id, nick: '' };
+                        udict[r._id] = { username: r._id, nickname: '' };
                     }
                 }
                 return `\
 群成员发言排行${options.total ? '（共计）' : `（${duration}）`}
-${result.map((r) => `${udict[r._id].name || udict[r._id].nick} ${r.count}条`).join('\n')}`;
+${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count}条`).join('\n')}`;
             });
 
         if (config.recordMessage) {
