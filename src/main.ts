@@ -89,12 +89,6 @@ export = class {
                 this.logger.info(`Opped ${line}`);
             }
         });
-        this.app.middleware(async (session, next) => {
-            if (session.subtype === 'group') {
-                await this.app.database.setChannel(session.platform, session.groupId, { assignee: session.selfId });
-            }
-            return next();
-        }, true);
         await this.load();
         await this.app.start();
     }
