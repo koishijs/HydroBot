@@ -338,7 +338,7 @@ export const apply = (app: App, config: any) => {
                                     // eslint-disable-next-line no-await-in-loop
                                     const gdoc = await app.database.getChannel(platform, gid, ['assignee']);
                                     if (gdoc.assignee && app.bots[`${platform}:${gdoc.assignee}`]) {
-                                        relativeIds.push(app.bots[gdoc.assignee].sendGroupMsg(id, message));
+                                        relativeIds.push(app.bots[`${platform}:${gdoc.assignee}`].sendMessage(id, message));
                                     } else logger.warn('Cannot send message to %s:%d with assignee %d', platform, id, gdoc.assignee);
                                 }
                             }
