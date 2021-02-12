@@ -106,15 +106,22 @@ async function main() {
     logger.info('Message');
     let cnt = 0;
     await dst.collection('message').drop().catch(noop);
-    await src.collection('message').find().forEach((doc) => {
-        cnt++;
-        if (!(cnt % 100000)) logger.info(cnt);
-        return dst.collection('message').insertOne({
-            ...doc,
-            group: `onebot:${doc.group}`,
-            sender: umap[doc.sender],
-        });
-    });
+    const total = await src.collection('message').find().count();
+    for (let i = 0; i <= total / 100000; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        await src.collection('message').find().sort({ _id: 1 }).skip(i * 100000)
+            .limit(100000)
+            // eslint-disable-next-line no-loop-func
+            .forEach((doc) => {
+                cnt++;
+                return dst.collection('message').insertOne({
+                    ...doc,
+                    group: `onebot:${doc.group}`,
+                    sender: umap[doc.sender],
+                });
+            });
+        logger.info(cnt);
+    }
     logger.success('Message Done');
 
     // Other
