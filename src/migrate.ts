@@ -28,14 +28,16 @@ async function main() {
     // User
     logger.info('User');
     let currId = 100;
-    const umap = {};
+    const umap = argv.bind ? JSON.parse(argv.bind as string) : {};
     await dst.collection('user').drop().catch(noop);
     await src.collection('user').find().forEach((doc) => {
-        currId++;
-        umap[doc._id] = currId;
+        if (!umap[doc._id]) {
+            currId++;
+            umap[doc._id] = currId;
+        }
         return dst.collection('user').insertOne({
             ...doc,
-            _id: currId,
+            _id: umap[doc._id],
             onebot: doc._id.toString(),
         });
     });
@@ -102,12 +104,17 @@ async function main() {
 
     // Message
     logger.info('Message');
+    let cnt = 0;
     await dst.collection('message').drop().catch(noop);
-    await src.collection('message').find().forEach((doc) => dst.collection('message').insertOne({
-        ...doc,
-        group: `onebot:${doc.group}`,
-        sender: umap[doc.sender],
-    }));
+    await src.collection('message').find().forEach((doc) => {
+        cnt++;
+        if (!(cnt % 100000)) logger.info(cnt);
+        return dst.collection('message').insertOne({
+            ...doc,
+            group: `onebot:${doc.group}`,
+            sender: umap[doc.sender],
+        });
+    });
     logger.success('Message Done');
 
     // Other
