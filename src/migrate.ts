@@ -73,6 +73,7 @@ async function main() {
         ...doc,
         writer: umap[doc.writer],
         groups: doc.groups.map((group: number) => `onebot:${group}`),
+        answer: doc.answer.replace(/%/g, '$'),
     }));
     logger.success('Dialogue Done');
 
