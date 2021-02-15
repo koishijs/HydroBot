@@ -16,7 +16,7 @@ export async function text2png(page: Page, content: string) {
             height: 10,
             width: 1024,
         });
-        s = await page.screenshot({ fullPage: true });
+        s = await page.screenshot({ fullPage: true }) as Buffer;
     } catch (err) {
         e = err;
     }

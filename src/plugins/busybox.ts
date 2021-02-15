@@ -194,7 +194,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .option('forced', '-f 无视 silent 标签进行广播')
         .action(async ({ options, session }, message) => {
             if (!message) return '请输入要发送的文本。';
-            let groups = await ctx.database.getChannelList(['id', 'flag'], session.platform, [session.selfId]);
+            let groups = await ctx.database.getAssignedChannels(['id', 'flag']);
             if (!options.forced) {
                 groups = groups.filter((g) => !(g.flag & Channel.Flag.silent));
             }

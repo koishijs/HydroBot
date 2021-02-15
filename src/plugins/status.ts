@@ -37,6 +37,6 @@ export async function apply(ctx: Context) {
             status.totalReceiveCount = await c.find({ ...time, sender: { $nin: bots } }).count();
             status.usedmem = Math.floor((totalmem() - freemem()) / 1024 / 1024);
             status.totalmem = Math.floor(totalmem() / 1024 / 1024);
-        }, true);
+        });
     });
 }
