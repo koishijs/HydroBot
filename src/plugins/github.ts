@@ -92,6 +92,14 @@ export const apply = (app: App, config: any) => {
             .set('User-Agent', 'HydroBot');
     }
 
+    function Put(url: string) {
+        return superagent
+            .put(url)
+            .proxy(config.proxy)
+            .set('Accept', 'application/vnd.github.v3+json')
+            .set('User-Agent', 'HydroBot');
+    }
+
     app.on('connect', () => {
         const coll = app.database.db.collection('github_watch');
         const collData = app.database.db.collection('github_data');
@@ -175,21 +183,14 @@ export const apply = (app: App, config: any) => {
                     const token = await getToken();
                     if (message.includes('!!merge')) {
                         const commitMsg = message.split('!!merge')[1];
-                        await superagent
-                            .put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/merge`)
-                            .proxy(config.proxy)
-                            .set('Accept', 'application/vnd.github.v3+json')
+                        await Put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/merge`)
                             .set('Authorization', `token ${token}`)
-                            .set('User-Agent', 'HydroBot')
                             .send({ commit_title: commitMsg });
                         return [];
                     }
                     if (message.includes('!!approve')) {
-                        await superagent.put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/reviews`)
-                            .proxy(config.proxy)
-                            .set('Accept', 'application/vnd.github.v3+json')
+                        await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/reviews`)
                             .set('Authorization', `token ${token}`)
-                            .set('User-Agent', 'HydroBot')
                             .send({ event: 'APPROVE' });
                         return [];
                     }
@@ -247,19 +248,12 @@ export const apply = (app: App, config: any) => {
                     const token = await getToken();
                     if (message.includes('!!merge')) {
                         const commitMsg = message.split('!!merge')[1];
-                        await superagent
-                            .put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/merge`)
-                            .proxy(config.proxy)
-                            .set('Accept', 'application/vnd.github.v3+json')
+                        await Put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/merge`)
                             .set('Authorization', `token ${token}`)
-                            .set('User-Agent', 'HydroBot')
                             .send({ commit_title: commitMsg });
                     } else if (message.includes('!!approve')) {
-                        await superagent.put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/reviews`)
-                            .proxy(config.proxy)
-                            .set('Accept', 'application/vnd.github.v3+json')
+                        await Post(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/reviews`)
                             .set('Authorization', `token ${token}`)
-                            .set('User-Agent', 'HydroBot')
                             .send({ event: 'APPROVE' });
                     } else {
                         await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
