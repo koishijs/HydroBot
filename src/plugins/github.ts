@@ -184,6 +184,15 @@ export const apply = (app: App, config: any) => {
                             .send({ commit_title: commitMsg });
                         return [];
                     }
+                    if (message.includes('!!approve')) {
+                        await superagent.put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/reviews`)
+                            .proxy(config.proxy)
+                            .set('Accept', 'application/vnd.github.v3+json')
+                            .set('Authorization', `token ${token}`)
+                            .set('User-Agent', 'HydroBot')
+                            .send({ event: 'APPROVE' });
+                        return [];
+                    }
                     await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
                         .set('Authorization', `token ${token}`)
                         .send({ body: message });
@@ -245,6 +254,13 @@ export const apply = (app: App, config: any) => {
                             .set('Authorization', `token ${token}`)
                             .set('User-Agent', 'HydroBot')
                             .send({ commit_title: commitMsg });
+                    } else if (message.includes('!!approve')) {
+                        await superagent.put(`https://api.github.com/repos/${event.reponame}/pulls/${event.issueId}/reviews`)
+                            .proxy(config.proxy)
+                            .set('Accept', 'application/vnd.github.v3+json')
+                            .set('Authorization', `token ${token}`)
+                            .set('User-Agent', 'HydroBot')
+                            .send({ event: 'APPROVE' });
                     } else {
                         await Post(`https://api.github.com/repos/${event.reponame}/issues/${event.issueId}/comments`)
                             .set('Authorization', `token ${token}`)
