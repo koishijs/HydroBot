@@ -15,7 +15,7 @@ interface Message {
     _id: ObjectID,
     time: Date,
     message: string,
-    sender: string,
+    sender: number,
     group: string,
     id: string,
 }
@@ -295,6 +295,10 @@ export const apply = (ctx: Context, config: Config = {}) => {
         if ((session.$channel.disallowedCommands || []).includes(command.name)) return '';
     });
 
+    ctx.on('before-attach-user', (session, fields) => {
+        fields.add('id');
+    });
+
     ctx.on('before-attach-channel', (session, fields) => {
         fields.add('disallowedCommands');
     });
@@ -323,7 +327,8 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .check(checkGroupAdmin)
             .option('count', '-c <count> 数量', { fallback: 1 })
             .action(async ({ session, options }) => {
-                const msgs = await c.find({ group: session.groupId, sender: session.selfId }).sort({ time: -1 }).limit(options.count).toArray();
+                const self = await session.$app.database.getUser(session.platform, session.selfId);
+                const msgs = await c.find({ group: session.groupId, sender: self.id }).sort({ time: -1 }).limit(options.count).toArray();
                 logger.info('deleting message: %o', msgs);
                 for (const msg of msgs) await session.$bot.deleteMessage(session.groupId, msg.id);
             });
@@ -333,11 +338,12 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .action(async ({ session, options }, duration = '1day') => {
                 const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
                 const group = `${session.platform}:${session.groupId}`;
+                const self = await session.$app.database.getUser(session.platform, session.selfId);
                 const time = options.total ? {} : { time: { $gt: moment().add(-n, a as any).toDate() } };
-                const totalSendCount = await c.find({ ...time, sender: session.selfId }).count();
-                const groupSendCount = await c.find({ ...time, group, sender: session.selfId }).count();
-                const totalReceiveCount = await c.find({ ...time, sender: { $ne: session.selfId } }).count();
-                const groupReceiveCount = await c.find({ ...time, group, sender: { $ne: session.selfId } }).count();
+                const totalSendCount = await c.find({ ...time, sender: self.id }).count();
+                const groupSendCount = await c.find({ ...time, group, sender: self.id }).count();
+                const totalReceiveCount = await c.find({ ...time, sender: { $ne: self.id } }).count();
+                const groupReceiveCount = await c.find({ ...time, group, sender: { $ne: self.id } }).count();
                 return `统计信息${options.total ? '（总计）' : `（${duration}）`}
 发送消息${totalSendCount}条，本群${groupSendCount}条。
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
@@ -357,12 +363,14 @@ export const apply = (ctx: Context, config: Config = {}) => {
                     { $sort: { count: -1 } },
                     { $limit: 10 },
                 ]).toArray() as unknown as any;
+                const udocs = await session.$app.database.getUser(session.platform, result.map((r) => r._id), [session.platform, 'name']);
                 const udict: Record<number, Pick<GroupMemberInfo, 'nickname' | 'username'>> = {};
-                for (const r of result) {
+                for (let i = 0; i < result.length; i++) {
+                    const r = result[i];
                     try {
-                        udict[r._id] = await session.$bot.getGroupMember(session.groupId, r._id);
+                        udict[r._id] = await session.$bot.getGroupMember(session.groupId, udocs[i][session.platform]);
                     } catch (e) {
-                        udict[r._id] = { username: r._id, nickname: '' };
+                        udict[r._id] = { username: udocs[i].name || r._id, nickname: '' };
                     }
                 }
                 return `\
@@ -377,18 +385,20 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
                 c.insertOne({
                     group,
                     message: session.content,
-                    sender: session.userId,
+                    // @ts-ignore
+                    sender: session.$user.id,
                     time: new Date(),
                     id: session.messageId,
                 });
             });
 
-            ctx.on('send', (session) => {
+            ctx.on('send', async (session) => {
                 if (!session.groupId) return;
                 const group = `${session.platform}:${session.groupId}`;
+                const udoc = await session.$app.database.getUser(session.platform, session.$bot.selfId, ['id']);
                 c.insertOne({
                     time: new Date(),
-                    sender: session.$bot.selfId,
+                    sender: udoc.id,
                     group,
                     message: session.content,
                     id: session.messageId,
