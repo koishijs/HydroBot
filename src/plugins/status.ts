@@ -31,10 +31,14 @@ export async function apply(ctx: Context) {
         const c = ctx.app.database.collection('message');
 
         extend(async (status) => {
-            const bots = status.bots.map((bot) => bot.selfId);
+            const bots = status.bots.map((bot) => [bot.platform, bot.selfId]);
+            const udocs = await Promise.all(
+                bots.map((bot) => ctx.app.database.getUser(bot[0] as any, bot[1])),
+            );
+            const ids = udocs.map((i) => i.id);
             const time = { time: { $gt: moment().add(-1, 'day').toDate() } };
-            status.totalSendCount = await c.find({ ...time, sender: { $in: bots } }).count();
-            status.totalReceiveCount = await c.find({ ...time, sender: { $nin: bots } }).count();
+            status.totalSendCount = await c.find({ ...time, sender: { $in: ids } }).count();
+            status.totalReceiveCount = await c.find({ ...time, sender: { $nin: ids } }).count();
             status.usedmem = Math.floor((totalmem() - freemem()) / 1024 / 1024);
             status.totalmem = Math.floor(totalmem() / 1024 / 1024);
         });
