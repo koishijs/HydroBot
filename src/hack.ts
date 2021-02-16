@@ -3,9 +3,6 @@ import { sep } from 'path';
 
 const tasks: [string, number | string, ...string[][]][] = [
     [
-        'koishi-core/session.js', "exports.Session=require('./index').Session",
-    ],
-    [
         'koishi-core/dist/index', 2,
         [
             'append', 'throw error2;',

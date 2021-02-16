@@ -1,5 +1,4 @@
-import { Context } from 'koishi-core';
-import { Session } from 'koishi-core/dist/session';
+import { Context, Session } from 'koishi-core';
 
 export const apply = (ctx: Context) => {
     ctx.command('proxy <command:text>', 'Proxy a command', { hidden: true, authority: 4 })

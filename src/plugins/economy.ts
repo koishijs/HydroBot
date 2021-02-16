@@ -1,5 +1,4 @@
-import { App, User } from 'koishi-core';
-import { Session } from 'koishi-core/dist/session';
+import { App, User, Session } from 'koishi-core';
 import { Items, ItemMeta } from '../lib/item';
 
 export interface Slot<T extends string> {

@@ -2,9 +2,8 @@
 import child from 'child_process';
 import { inspect } from 'util';
 import {
-    Channel, User, Context, GroupMemberInfo,
+    Channel, User, Context, GroupMemberInfo, Session,
 } from 'koishi-core';
-import { Session } from 'koishi-core/dist/session';
 import { Logger, CQCode, Time } from 'koishi-utils';
 import { apply as KoishiPluginCommon } from 'koishi-plugin-common';
 import { ObjectID } from 'mongodb';

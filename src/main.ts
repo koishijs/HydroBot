@@ -11,7 +11,6 @@ import fs from 'fs-extra';
 import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
 import 'koishi-adapter-onebot';
 import 'koishi-adapter-telegram';
-import { Session as _Session } from 'koishi-core/dist/session';
 
 process.on('unhandledRejection', (_, p) => {
     console.log('Unhandled Rejection:', p);
@@ -25,7 +24,7 @@ declare global {
         encode: () => string,
     }
 }
-declare module 'koishi-core' {
+declare module 'koishi-core/dist/session' {
     interface Session {
         _silent: boolean,
         executeSilent(content: string, next?: NextFunction): Promise<string>;
@@ -39,7 +38,7 @@ String.prototype.decode = function decode() {
 String.prototype.encode = function encode() {
     return this.replace(/&/gm, '&amp;').replace(/\[/gm, '&#91;').replace(/\]/gm, '&#93;');
 };
-_Session.prototype.executeSilent = function executeSilent(this: Session, arg0: any, arg1?: any) {
+Session.prototype.executeSilent = function executeSilent(this: Session, arg0: any, arg1?: any) {
     this._silent = true;
     this.send = noop;
     this.sendQueued = noop;
