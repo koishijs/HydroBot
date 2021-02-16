@@ -19,8 +19,8 @@ export async function apply(ctx: Context) {
         format: [
             '{{ bots }}',
             '==========',
-            '活跃用户数量：{{ activeUsers }}',
-            '活跃群数量：{{ activeGroups }}',
+            '用户数量：{{ activeUsers }}',
+            '群数量：{{ activeGroups }}',
             'CPU 使用率：{{ (cpu.total * 100).toFixed() }}%',
             '内存使用量：{{ usedmem }}M / {{ totalmem }}M',
             '今日收发消息量 {{ totalReceiveCount }}/{{ totalSendCount }}',
@@ -31,12 +31,12 @@ export async function apply(ctx: Context) {
         const c = ctx.app.database.collection('message');
 
         extend(async (status) => {
-            const bots = status.bots.map((bot) => [bot.platform, bot.selfId]);
             const udocs = await Promise.all(
-                bots.map((bot) => ctx.app.database.getUser(bot[0] as any, bot[1])),
+                status.bots.map((bot) => ctx.app.database.getUser(bot.platform, bot.selfId.toString())),
             );
             const ids = udocs.map((i) => i.id);
             const time = { time: { $gt: moment().add(-1, 'day').toDate() } };
+            status.activeUsers = await ctx.app.database.user.find({}).count();
             status.totalSendCount = await c.find({ ...time, sender: { $in: ids } }).count();
             status.totalReceiveCount = await c.find({ ...time, sender: { $nin: ids } }).count();
             status.usedmem = Math.floor((totalmem() - freemem()) / 1024 / 1024);
