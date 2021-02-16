@@ -332,11 +332,12 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .option('total', '-t Total')
             .action(async ({ session, options }, duration = '1day') => {
                 const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
+                const group = `${session.platform}:${session.groupId}`;
                 const time = options.total ? {} : { time: { $gt: moment().add(-n, a as any).toDate() } };
                 const totalSendCount = await c.find({ ...time, sender: session.selfId }).count();
-                const groupSendCount = await c.find({ ...time, group: session.groupId, sender: session.selfId }).count();
+                const groupSendCount = await c.find({ ...time, group, sender: session.selfId }).count();
                 const totalReceiveCount = await c.find({ ...time, sender: { $ne: session.selfId } }).count();
-                const groupReceiveCount = await c.find({ ...time, group: session.groupId, sender: { $ne: session.selfId } }).count();
+                const groupReceiveCount = await c.find({ ...time, group, sender: { $ne: session.selfId } }).count();
                 return `统计信息${options.total ? '（总计）' : `（${duration}）`}
 发送消息${totalSendCount}条，本群${groupSendCount}条。
 收到消息${totalReceiveCount}条，本群${groupReceiveCount}条。`;
@@ -346,9 +347,10 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .option('total', 'Total')
             .action(async ({ session, options }, duration = '1day') => {
                 const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
+                const group = `${session.platform}:${session.groupId}`;
                 const $match = options.total
-                    ? { group: session.groupId }
-                    : { time: { $gt: moment().add(-n, a as any).toDate() }, group: session.groupId };
+                    ? { group }
+                    : { time: { $gt: moment().add(-n, a as any).toDate() }, group };
                 const result = await c.aggregate([
                     { $match },
                     { $group: { _id: '$sender', count: { $sum: 1 } } },
@@ -371,8 +373,9 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
         if (config.recordMessage) {
             ctx.middleware((session, next) => {
                 if (!session.groupId) return next();
+                const group = `${session.platform}:${session.groupId}`;
                 c.insertOne({
-                    group: session.groupId,
+                    group,
                     message: session.content,
                     sender: session.userId,
                     time: new Date(),
@@ -382,10 +385,11 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
 
             ctx.on('send', (session) => {
                 if (!session.groupId) return;
+                const group = `${session.platform}:${session.groupId}`;
                 c.insertOne({
                     time: new Date(),
                     sender: session.$bot.selfId,
-                    group: session.groupId,
+                    group,
                     message: session.content,
                     id: session.messageId,
                 });
