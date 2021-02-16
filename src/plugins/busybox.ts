@@ -363,14 +363,14 @@ export const apply = (ctx: Context, config: Config = {}) => {
                     { $sort: { count: -1 } },
                     { $limit: 10 },
                 ]).toArray() as unknown as any;
-                const udocs = await session.$app.database.getUser(session.platform, result.map((r) => r._id), [session.platform, 'name']);
+                const udocs = await session.$app.database.getUser('id', result.map((r) => r._id), [session.platform, 'name']);
                 const udict: Record<number, Pick<GroupMemberInfo, 'nickname' | 'username'>> = {};
                 for (let i = 0; i < result.length; i++) {
                     const r = result[i];
                     try {
                         udict[r._id] = await session.$bot.getGroupMember(session.groupId, udocs[i][session.platform]);
                     } catch (e) {
-                        udict[r._id] = { username: udocs[i].name || r._id, nickname: '' };
+                        udict[r._id] = { username: udocs[i]?.name || r._id, nickname: '' };
                     }
                 }
                 return `\

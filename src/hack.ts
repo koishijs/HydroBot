@@ -3,10 +3,10 @@ import { sep } from 'path';
 
 const tasks: [string, number | string, ...string[][]][] = [
     [
-        'koishi-core/dist/index', 2,
+        'koishi-core', 2,
         [
             'append', 'throw error2;',
-            `if (typeof error === 'string'){
+            `if (typeof error2 === 'string'){
                 session.$user.usage[argv.command.name]--;
                 return session.send(error2);
             }
@@ -14,25 +14,13 @@ const tasks: [string, number | string, ...string[][]][] = [
         ],
     ],
     [
-        'koishi-plugin-teach/dist/index', 3,
+        'koishi-plugin-teach', 3,
         ['append', 'state.dialogue = dialogue;', '\nsession._dialogue = dialogue;'],
         ['replace', ".toLowerCase().replace(/\\s+/g, '')", ''],
         ['replace', `        if (index === 0)
             message = message.replace(/^[()\\[\\]]*/, '');
         if (index === arr.length - 1)
             message = message.replace(/[\\.,?!()\\[\\]~]*$/, '');`, ''],
-    ],
-    [
-        'puppeteer-core/lib/cjs/puppeteer/node/Puppeteer', 1,
-        ['remove', `switch (this._productName) {
-                case 'firefox':
-                    this._preferredRevision = revisions_js_1.PUPPETEER_REVISIONS.firefox;
-                    break;
-                case 'chrome':
-                default:
-                    this._preferredRevision = revisions_js_1.PUPPETEER_REVISIONS.chromium;
-            }
-            this._changedProduct = false;`],
     ],
 ];
 
