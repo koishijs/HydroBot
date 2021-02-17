@@ -51,7 +51,7 @@ export async function apply(ctx: Context) {
                     ].join('\n'));
                     if (!options.dry) {
                         await Promise.all([
-                            (session.$bot as CQBot).setGroupKick(group.groupId, target.userId),
+                            (session.$bot as CQBot).$setGroupKick(group.groupId, target.userId),
                             coll.insertOne({ groupId: session.groupId, userId: target.userId }),
                         ]);
                     }

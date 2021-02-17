@@ -44,7 +44,7 @@ async function getGroupName(session: Session) {
     const timestamp = Date.now();
     const id = session.channelId;
     if (!groupMap[id] || timestamp - groupMap[id][1] >= Time.hour) {
-        const promise = (session.$bot as CQBot).getGroup(id).then((d) => d.name, () => id);
+        const promise = (session.$bot as CQBot).getGroup(id).then((d) => d.groupName, () => id);
         groupMap[id] = [promise, timestamp];
     }
     let output = await groupMap[id][0];
@@ -172,7 +172,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .userFields(['authority'])
         .check(checkGroupAdmin)
         .action(async ({ session }) => {
-            await (session.$bot as CQBot).setGroupLeave(session.groupId);
+            await (session.$bot as CQBot).$setGroupLeave(session.groupId);
         });
 
     ctx.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5, noRedirect: true })
@@ -242,7 +242,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .userFields(['authority'])
         .check(checkGroupAdmin)
         .action(({ session }, user, secs = '600000') =>
-            (session.$bot as CQBot).setGroupBan(session.groupId, user, parseInt(secs, 10)));
+            (session.$bot as CQBot).$setGroupBan(session.groupId, user, parseInt(secs, 10)));
 
     ctx.on('message', async (session) => {
         const groupName = await getGroupName(session);
