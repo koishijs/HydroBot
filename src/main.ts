@@ -18,8 +18,8 @@ process.on('unhandledRejection', (_, p) => {
 Logger.showDiff = false;
 Logger.showTime = 'MM-DD hh:mm:ss';
 let buf = '';
-// @ts-expect-error
-Logger.stream = {
+Logger.prototype.stream = {
+    // @ts-ignore
     write: (content: string) => {
         if (content.includes('\n')) {
             const [before, after] = content.split('\n');
