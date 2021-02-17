@@ -25,7 +25,7 @@ const stream = {
 // @ts-ignore
 Logger.prototype.createMethod = ((createMethod) => function c(...args) {
     this.stream = stream;
-    return createMethod(...args);
+    return createMethod.call(this, ...args);
     // @ts-ignore
 })(Logger.prototype.createMethod);
 
