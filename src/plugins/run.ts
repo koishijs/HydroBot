@@ -179,7 +179,6 @@ export const apply = (app: App) => {
             if (response.length > 256 || response.split('\n').length > 10) {
                 const page = await app.browser.newPage();
                 const img = await text2png(page, response);
-                page.close();
                 return `[CQ:image,file=base64://${img}]`;
             }
             return response;

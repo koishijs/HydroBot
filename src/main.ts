@@ -15,7 +15,8 @@ import 'koishi-adapter-telegram';
 process.on('unhandledRejection', (_, p) => {
     console.log('Unhandled Rejection:', p);
 });
-
+Logger.showDiff = false;
+Logger.showTime = 'MM-DD hh:mm:ss';
 Command.defaultConfig.checkArgCount = true;
 
 declare global {

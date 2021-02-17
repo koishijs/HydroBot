@@ -84,7 +84,7 @@ const checkGroupAdmin = ({ session }) => (
 );
 
 export const apply = (ctx: Context, config: Config = {}) => {
-    const logger = new Logger('busybox', true);
+    const logger = new Logger('busybox');
     Logger.levels.message = 3;
     Time.setTimezoneOffset(config.timezoneOffset ?? -480); // UTC +8
     config.recordMessage = config.recordMessage ?? true;
