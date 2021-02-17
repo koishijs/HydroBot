@@ -7,7 +7,7 @@ export function apply(app: App) {
         await c.createIndex({ to: 1 });
 
         app.on('message', async (session) => {
-            const currentSession = `${session.$bot.selfId}/${session.groupId}`;
+            const currentSession = `${session.selfId}/${session.groupId}`;
             const targets = await c.find({
                 $or: [
                     { from: currentSession, in: true }, { to: currentSession, out: true },
@@ -27,7 +27,7 @@ export function apply(app: App) {
             .option('in', '-i, --in')
             .option('out', '-o, --out')
             .action(async ({ session, options }, to) => {
-                const from = `${session.$bot.selfId}/${session.groupId}`;
+                const from = `${session.selfId}/${session.groupId}`;
                 const i = await c.findOne({ from, to });
                 if (i) {
                     await c.updateOne(

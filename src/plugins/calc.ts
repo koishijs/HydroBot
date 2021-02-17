@@ -23,4 +23,6 @@ export function apply(ctx: Context) {
             page.close();
             return `[CQ:image,file=base64://${buffer.toString('base64')}]`;
         });
+
+    ctx.command('tools/calc.zebra <image:image>', 'Horse to Zebra', { minInterval: 2000 });
 }

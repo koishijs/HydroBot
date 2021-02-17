@@ -395,7 +395,7 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
             ctx.on('send', async (session) => {
                 if (!session.groupId) return;
                 const group = `${session.platform}:${session.groupId}`;
-                const udoc = await session.$app.database.getUser(session.platform, session.$bot.selfId, ['id']);
+                const udoc = await session.$app.database.getUser(session.platform, session.selfId, ['id']);
                 c.insertOne({
                     time: new Date(),
                     sender: udoc.id,
