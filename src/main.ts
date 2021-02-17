@@ -1,3 +1,4 @@
+/* eslint-disable import/first */
 /* eslint-disable import/no-duplicates */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable global-require */
@@ -8,17 +9,9 @@ import {
 } from 'koishi-core';
 import { Logger, noop } from 'koishi-utils';
 import fs from 'fs-extra';
-import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
-import 'koishi-adapter-onebot';
-import 'koishi-adapter-telegram';
 
-process.on('unhandledRejection', (_, p) => {
-    console.log('Unhandled Rejection:', p);
-});
-Logger.showDiff = false;
-Logger.showTime = 'MM-DD hh:mm:ss';
 let buf = '';
-Logger.prototype.stream = {
+const stream = {
     // @ts-ignore
     write: (content: string) => {
         if (content.includes('\n')) {
@@ -29,6 +22,22 @@ Logger.prototype.stream = {
         } else buf += content;
     },
 };
+// @ts-ignore
+Logger.prototype.createMethod = ((createMethod) => function c(...args) {
+    this.stream = stream;
+    return createMethod(...args);
+    // @ts-ignore
+})(Logger.prototype.createMethod);
+
+import { apply as KoishiPluginMongo } from 'koishi-plugin-mongo';
+import 'koishi-adapter-onebot';
+import 'koishi-adapter-telegram';
+
+process.on('unhandledRejection', (_, p) => {
+    console.log('Unhandled Rejection:', p);
+});
+Logger.showDiff = false;
+Logger.showTime = 'MM-DD hh:mm:ss';
 Command.defaultConfig.checkArgCount = true;
 
 declare global {
