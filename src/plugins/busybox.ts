@@ -55,6 +55,7 @@ async function formatMessage(session: Session) {
     let output = '';
     for (const code of codes) {
         if (typeof code === 'string') output += code;
+        else if (code.type === 'text') output += code.data.content;
         else if (code.type === 'at') {
             if (code.data.qq === 'all') output += '@全体成员';
             else {
