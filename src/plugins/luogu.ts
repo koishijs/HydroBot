@@ -1,20 +1,35 @@
 import superagent from 'superagent';
-import { App } from 'koishi-core';
+import { Context, Logger } from 'koishi-core';
 
-export const apply = (app: App) => {
-    app.command('oi', 'OI related');
-    app.command('oi/luogu', 'Luogu');
+const logger = new Logger('luogu');
 
-    app.command('oi/luogu.problem <pid>', '获取Luogu题目')
+export const apply = (ctx: Context) => {
+    ctx.command('oi', 'OI related');
+    ctx.command('oi/luogu', 'Luogu');
+
+    ctx.command('oi/luogu.problem <pid>', '获取Luogu题目')
         .action(async (_, id) => {
-            const res = await superagent.get(`https://www.luogu.com.cn/api/problem/detail/${id}`)
-                .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko');
-            const p = res.body;
-            if (p.status === 200) return `${p.data.StringPID} ${p.data.Name}\n${p.data.Description}`;
-            return p.data;
+            const page = await ctx.app.browser.newPage();
+            try {
+                await page.goto(`https://www.luogu.com.cn/problem/${id}`, {
+                    waitUntil: 'networkidle0',
+                });
+            } catch (error) {
+                page.close();
+                return '请求超时。';
+            }
+            const element = await page.$('.problem-card');
+            return element.screenshot().then(async (buffer: Buffer) => {
+                page.close();
+                return `[CQ:image,file=base64://${buffer.toString('base64')}]`;
+            }, (error) => {
+                page.close();
+                logger.debug(error);
+                return '截图失败。';
+            });
         });
 
-    app.command('oi/luogu.user <uid>', '查询用户')
+    ctx.command('oi/luogu.user <uid>', '查询用户')
         .action(async (_, id) => {
             const res = await superagent.get(`https://www.luogu.com.cn/user/${id}?_contentOnly=1`)
                 .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko');

@@ -25,6 +25,7 @@ export function apply(app: App, config: Config) {
     app.command('page <url:text>', 'Get page', { authority: 3, minInterval: 3000 })
         .alias('screenshot', 'shot')
         .option('full', '-f Full page')
+        .option('element', '-e, --element <selector:string> Element Selector')
         .option('viewport', '<viewport> 指定Viewport', { fallback: '1600x900' })
         .action(async ({ session, options }, message = '') => {
             let url = message.trim();
@@ -66,9 +67,10 @@ export function apply(app: App, config: Config) {
                 return '无法打开页面。';
             }
 
-            return page.screenshot({
+            const element = options.element ? await page.$(options.element) : page;
+            return element.screenshot({
                 fullPage: options.full,
-            }).then(async (buffer) => {
+            }).then(async (buffer: Buffer) => {
                 page.close();
                 if (buffer.byteLength > config.maxLength) {
                     await new Promise<PNG>((resolve, reject) => {
