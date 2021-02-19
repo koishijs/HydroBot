@@ -1,8 +1,7 @@
 /* eslint-disable import/no-dynamic-require */
 import { resolve } from 'path';
 import { createHash } from 'crypto';
-import { Context } from 'koishi-core';
-import { CQCode, Logger } from 'koishi-utils';
+import { Context, Logger, segment } from 'koishi-core';
 import yaml from 'js-yaml';
 import axios from 'axios';
 import { readFile } from 'fs-extra';
@@ -69,7 +68,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                     }
                     let id;
                     let url = image;
-                    const file = CQCode.parse(image);
+                    const file = segment.from(image);
                     if (file) {
                         if (file.type !== 'image') throw new Error('没有发现图片。');
                         url = file.data.url;

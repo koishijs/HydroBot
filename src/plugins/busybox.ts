@@ -2,9 +2,8 @@
 import child from 'child_process';
 import { inspect } from 'util';
 import {
-    Channel, User, Context, GroupMemberInfo, Session,
+    Channel, User, Context, GroupMemberInfo, Session, Logger, Time, segment,
 } from 'koishi-core';
-import { Logger, CQCode, Time } from 'koishi-utils';
 import { apply as KoishiPluginCommon } from 'koishi-plugin-common';
 import { ObjectID } from 'mongodb';
 import moment from 'moment';
@@ -52,7 +51,7 @@ async function getGroupName(session: Session) {
     return output;
 }
 async function formatMessage(session: Session) {
-    const codes = CQCode.parseAll(session.content);
+    const codes = segment.parse(session.content);
     let output = '';
     for (const code of codes) {
         if (typeof code === 'string') output += code;

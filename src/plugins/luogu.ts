@@ -19,7 +19,7 @@ export const apply = (ctx: Context) => {
                 return '请求超时。';
             }
             const element = await page.$('.problem-card');
-            return element.screenshot().then(async (buffer: Buffer) => {
+            return element.screenshot({}).then(async (buffer) => {
                 page.close();
                 return `[CQ:image,file=base64://${buffer.toString('base64')}]`;
             }, (error) => {

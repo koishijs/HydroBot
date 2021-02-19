@@ -1,5 +1,4 @@
-import { App } from 'koishi-core';
-import { CQCode } from 'koishi-utils';
+import { App, segment } from 'koishi-core';
 import superagent from 'superagent';
 
 export function apply(app: App) {
@@ -12,7 +11,7 @@ export function apply(app: App) {
                 image = await session.prompt(30000) as string;
             }
             if (!image) return '没有检测到图片。';
-            const img = CQCode.parse(image);
+            const img = segment.from(image);
             const res = await superagent.get(`https://ai.qq.com/cgi-bin/appdemo_imagetranslate?image_url=${img.data.url}`);
             if (res.body.ret !== 0) return res.body.msg;
             return res.body.data.image_records.map((node) => node.source_text).join('');
