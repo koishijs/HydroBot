@@ -24,7 +24,7 @@ export const apply = (ctx: Context) => {
             .action(async ({ session }, content) => {
                 const res = await coll.insertOne({
                     groupId: `${session.platform}:${session.groupId}`,
-                    userId: session.$user.id,
+                    userId: session.user.id,
                     content: content.trim(),
                     pick: 0,
                 });

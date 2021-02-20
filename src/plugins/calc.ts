@@ -14,7 +14,7 @@ export function apply(ctx: Context) {
                 raw: options.raw ? '1' : null, input: expr.decode(), type: options.full ? 'Image' : 'Result',
             });
             if (!svg.startsWith('<?xml')) return svg;
-            const page = await session.$app.browser.newPage();
+            const page = await session.app.browser.newPage();
             await page.setContent(svg);
             const ele = await page.$('svg');
             const buffer = await page.screenshot({

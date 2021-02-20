@@ -18,7 +18,7 @@ export function apply(ctx: Context, config: Config) {
         .channelFields(Channel.fields)
         .check(({ session }) => {
             if (!session._sudo) return;
-            const cmd = session.$argv.args[0].replace('eval ', '');
+            const cmd = session.argv.args[0].replace('eval ', '');
             // @ts-expect-error
             if (session.$argv.options.i) session.execute(`_.eval -i ${cmd}`);
             session.execute(`_.eval ${cmd}`);

@@ -64,8 +64,8 @@ export const apply = (app: App, config: Config) => {
             .userFields(['coin', 'id'])
             .action(async ({ session }) => {
                 const [res, count] = await Promise.all([
-                    stockColl.find({ userId: session.$user.id }).sort('expire', 1).limit(10).toArray(),
-                    stockColl.find({ userId: session.$user.id }).count(),
+                    stockColl.find({ userId: session.user.id }).sort('expire', 1).limit(10).toArray(),
+                    stockColl.find({ userId: session.user.id }).count(),
                 ]);
                 let stockList = '';
                 let sum = 0;
@@ -73,12 +73,12 @@ export const apply = (app: App, config: Config) => {
                     sum += number;
                     stockList += `你有 ${number} 棵以 ${buyPrice} 个硬币每棵买入的大头菜，它们会在 ${moment(expire).fromNow()} 烂掉。\n`;
                 }
-                const [price, bought] = await priceToday(session.$user.id);
+                const [price, bought] = await priceToday(session.user.id);
                 const canBuy = config.maxBuyPerDay - bought;
-                if (!session.$user.coin) session.$user.coin = 0;
-                if (count === 0) stockList = `你现在手上还没有大头菜${(session.$user.coin >= price && canBuy) ? '，要来买点吗？' : '。'}`;
+                if (!session.user.coin) session.user.coin = 0;
+                if (count === 0) stockList = `你现在手上还没有大头菜${(session.user.coin >= price && canBuy) ? '，要来买点吗？' : '。'}`;
                 else if (count > res.length) stockList += `隐藏了 ${count - res.length} 个条目。`;
-                return `你现在共有 ${sum} 棵大头菜和 ${session.$user.coin} 个硬币。
+                return `你现在共有 ${sum} 棵大头菜和 ${session.user.coin} 个硬币。
 今天卖给 ${session.$username} 的大头菜价格是每棵 ${price} 硬币。您今天还可购入${canBuy}个大头菜。
 ${stockList}`;
             });
@@ -87,9 +87,9 @@ ${stockList}`;
             .shortcut('购买大头菜', { prefix: false, fuzzy: true })
             .userFields(['coin', 'id'])
             .action(async ({ session }, arg) => {
-                const [price, bought] = await priceToday(session.$user.id);
-                if (!session.$user.coin) session.$user.coin = 0;
-                const maxNumber = Math.floor(session.$user.coin / price / (1 + config.serviceFee));
+                const [price, bought] = await priceToday(session.user.id);
+                if (!session.user.coin) session.user.coin = 0;
+                const maxNumber = Math.floor(session.user.coin / price / (1 + config.serviceFee));
                 const number = Math.min(config.maxBuyPerDay - bought, +(arg ?? maxNumber));
                 if (!Number.isInteger(number) || number <= 0 || number > maxNumber) {
                     return `购买数量需要是 1~${maxNumber} 之间的正整数。`;
@@ -98,15 +98,15 @@ ${stockList}`;
                 expire.add(config.expireDays, 'days');
                 await stockColl.insertOne({
                     _id: new ObjectID(),
-                    userId: session.$user.id,
+                    userId: session.user.id,
                     number,
                     buyPrice: price,
                     expire: expire.toDate(),
                 });
                 const cost = Math.ceil((1 + config.serviceFee) * price * number);
-                session.$user.coin -= cost;
+                session.user.coin -= cost;
                 await priceColl.updateOne(
-                    { _id: session.$user.id },
+                    { _id: session.user.id },
                     { $set: { bought: number + bought } },
                 );
                 return `你花了 ${cost} 个硬币（含 ${cost - price * number} 个硬币的手续费）以 ${price} 每棵的价格购买了 ${number} 棵大头菜。
@@ -119,7 +119,7 @@ ${stockList}`;
             .action(async ({ session }, arg) => {
                 const sellNumber = +(arg ?? Infinity);
                 if (sellNumber !== Infinity && (!Number.isInteger(sellNumber) || sellNumber <= 0)) return '卖出的数量需要是一个正整数';
-                const res = await stockColl.find({ userId: session.$user.id }).sort('expire', 1).toArray();
+                const res = await stockColl.find({ userId: session.user.id }).sort('expire', 1).toArray();
                 let sum = 0;
                 let update = null;
                 const deleteIds = [];
@@ -134,10 +134,10 @@ ${stockList}`;
                     }
                 }
                 if (sum === 0 || (sellNumber !== Infinity && sum !== sellNumber)) return '你没有足够多的大头菜来卖出！';
-                const [price] = await priceToday(session.$user.id);
-                if (!session.$user.coin) session.$user.coin = 0;
+                const [price] = await priceToday(session.user.id);
+                if (!session.user.coin) session.user.coin = 0;
                 const gain = Math.floor((1 - config.serviceFee) * sum * price);
-                session.$user.coin += gain;
+                session.user.coin += gain;
                 if (deleteIds.length) await stockColl.deleteMany({ _id: { $in: deleteIds } });
                 if (update) await stockColl.updateOne({ _id: update._id }, { $set: { number: update.newNumber } });
                 return `你已成功卖出 ${sum} 棵大头菜，获得了 ${gain} 个硬币（已扣除 ${sum * price - gain} 个硬币的手续费）！`;

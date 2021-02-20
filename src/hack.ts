@@ -7,7 +7,7 @@ const tasks: [string, number | string, ...string[][]][] = [
         [
             'append', 'throw error2;',
             `if (typeof error2 === 'string'){
-                session.$user.usage[argv.command.name]--;
+                session.user.usage[argv.command.name]--;
                 return session.send(error2);
             }
             session.send(error2.message);`,

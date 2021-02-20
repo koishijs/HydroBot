@@ -14,12 +14,12 @@ export function apply(app: App) {
                 ],
             }).toArray();
             const username = session.author.nickname || session.author.username;
-            const message = `${username}: ${session.rawMessage}`;
+            const message = `${username}: ${session.content}`;
             for (const target of targets) {
                 // eslint-disable-next-line prefer-const
                 let [assignee, chatId] = (target.from === currentSession ? target.to : target.from).split('/');
                 if (!Number.isNaN(parseInt(chatId, 10))) chatId = parseInt(chatId, 10);
-                session.$app.bots[assignee].sendMessage(chatId, message);
+                session.app.bots[assignee].sendMessage(chatId, message);
             }
         });
 

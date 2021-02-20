@@ -43,7 +43,7 @@ async function getGroupName(session: Session) {
     const timestamp = Date.now();
     const id = session.channelId;
     if (!groupMap[id] || timestamp - groupMap[id][1] >= Time.hour) {
-        const promise = (session.$bot as CQBot).getGroup(id).then((d) => d.groupName, () => id);
+        const promise = (session.bot as CQBot).getGroup(id).then((d) => d.groupName, () => id);
         groupMap[id] = [promise, timestamp];
     }
     let output = await groupMap[id][0];
@@ -62,7 +62,7 @@ async function formatMessage(session: Session) {
                 const id = code.data.qq;
                 const timestamp = Date.now();
                 if (!userMap[id] || timestamp - userMap[id][1] >= Time.hour) {
-                    const promise = session.$bot
+                    const promise = session.bot
                         .getGroupMember(session.groupId, id)
                         .then((d) => d.nickname || d.username, () => id);
                     userMap[id] = [promise, timestamp];
@@ -78,7 +78,7 @@ async function formatMessage(session: Session) {
     return output;
 }
 const checkGroupAdmin = ({ session }) => (
-    (session.$user.authority >= 4 || session.author.roles.includes('admin') || session.author.roles.includes('owner'))
+    (session.user.authority >= 4 || session.author.roles.includes('admin') || session.author.roles.includes('owner'))
         ? null
         : '仅管理员可执行该操作。'
 );
@@ -97,7 +97,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
     ctx.select('groupId').command('_.assign', 'assign', { authority: 4 })
         .channelFields(['assignee'])
         .action(async ({ session }) => {
-            session.$channel.assignee = session.selfId;
+            session.channel.assignee = session.selfId;
         });
 
     ctx.command('_.echo <msg:text>', 'echo', { noRedirect: true, authority: 3 })
@@ -172,7 +172,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .userFields(['authority'])
         .check(checkGroupAdmin)
         .action(async ({ session }) => {
-            await (session.$bot as CQBot).$setGroupLeave(session.groupId);
+            await (session.bot as CQBot).$setGroupLeave(session.groupId);
         });
 
     ctx.command('_.setPriv <userId> <authority>', '设置用户权限', { authority: 5, noRedirect: true })
@@ -183,8 +183,8 @@ export const apply = (ctx: Context, config: Config = {}) => {
             } else {
                 await ctx.database.setUser(session.platform, userId, { flag: 0 });
             }
-            await session.$app.database.setUser(
-                session.platform, userId, { authority: parseInt(authority, 10) },
+            await session.app.database.setUser(
+                session.platform, userId, { authority: +authority },
             );
             return `Set ${session.platform}:${userId} to ${authority}`;
         });
@@ -198,7 +198,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
                 groups = groups.filter((g) => !(g.flag & Channel.Flag.silent));
             }
             groups.forEach((group) => {
-                session.$bot.sendMessage(group.id, message);
+                session.bot.sendMessage(group.id, message);
             });
         });
 
@@ -209,7 +209,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .check(checkGroupAdmin)
         .channelFields(['flag'])
         .action(({ session }) => {
-            session.$channel.flag |= Channel.Flag.ignore;
+            session.channel.flag |= Channel.Flag.ignore;
             return 'Deactivated';
         });
 
@@ -218,7 +218,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .check(checkGroupAdmin)
         .channelFields(['flag'])
         .action(({ session }) => {
-            session.$channel.flag &= ~Channel.Flag.ignore;
+            session.channel.flag &= ~Channel.Flag.ignore;
             return 'Activated';
         });
 
@@ -227,14 +227,14 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .channelFields(['disallowedCommands'])
         .check(checkGroupAdmin)
         .action(({ session }, command) => {
-            session.$channel.disallowedCommands = session.$channel.disallowedCommands || [];
-            if (session.$channel.disallowedCommands.includes(command)) {
-                const set = new Set(session.$channel.disallowedCommands);
+            session.channel.disallowedCommands = session.channel.disallowedCommands || [];
+            if (session.channel.disallowedCommands.includes(command)) {
+                const set = new Set(session.channel.disallowedCommands);
                 set.delete(command);
-                session.$channel.disallowedCommands = Array.from(set);
+                session.channel.disallowedCommands = Array.from(set);
                 return `${command} 命令为启用状态。`;
             }
-            session.$channel.disallowedCommands.push(command);
+            session.channel.disallowedCommands.push(command);
             return `${command} 命令为禁用状态。`;
         });
 
@@ -242,7 +242,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
         .userFields(['authority'])
         .check(checkGroupAdmin)
         .action(({ session }, user, secs = '600000') =>
-            (session.$bot as CQBot).$setGroupBan(session.groupId, user, parseInt(secs, 10)));
+            (session.bot as CQBot).$setGroupBan(session.groupId, user, parseInt(secs, 10)));
 
     ctx.on('message', async (session) => {
         const groupName = await getGroupName(session);
@@ -276,7 +276,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
     });
 
     ctx.on('group-member-added', async (session) => {
-        const data = await session.$app.database.getChannel(session.platform, session.groupId);
+        const data = await session.app.database.getChannel(session.platform, session.groupId);
         logger.info('Event.Group_Increase', session, data);
         if (data.welcomeMsg) {
             await session.send(data.welcomeMsg.replace(/%@/gmi, `[CQ:at,qq=${session.userId}`));
@@ -290,9 +290,9 @@ export const apply = (ctx: Context, config: Config = {}) => {
     });
 
     ctx.on('before-command', ({ session, command }) => {
-        if (!session.$channel) return;
+        if (!session.channel) return;
         // @ts-ignore
-        if ((session.$channel.disallowedCommands || []).includes(command.name)) return '';
+        if ((session.channel.disallowedCommands || []).includes(command.name)) return '';
     });
 
     ctx.on('before-attach-user', (session, fields) => {
@@ -303,15 +303,15 @@ export const apply = (ctx: Context, config: Config = {}) => {
         fields.add('disallowedCommands');
     });
 
-    ctx.app.on('friend-request', (session: any) => session.$bot.setFriendAddRequest(session.flag, true));
+    ctx.app.on('friend-request', (session: any) => session.bot.setFriendAddRequest(session.flag, true));
     ctx.app.on('group-request', async (session: any) => {
         const udoc = await ctx.database.getUser(session.platform, session.userId);
         if ((config.public || []).includes(`${session.platform}:${session.selfId}`) || udoc?.authority === 5) {
             logger.info('Approve Invite Request', session, udoc);
-            session.$bot.setGroupAddRequest(session.flag, session.subtype, true);
+            session.bot.setGroupAddRequest(session.flag, session.subtype, true);
         } else {
             logger.info('Denied Invite Request', session, udoc);
-            session.$bot.setGroupAddRequest(session.flag, session.subtype, '此账号不对外开放，请使用其他账号。');
+            session.bot.setGroupAddRequest(session.flag, session.subtype, '此账号不对外开放，请使用其他账号。');
         }
     });
 
@@ -327,10 +327,10 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .check(checkGroupAdmin)
             .option('count', '-c <count> 数量', { fallback: 1 })
             .action(async ({ session, options }) => {
-                const self = await session.$app.database.getUser(session.platform, session.selfId);
+                const self = await session.app.database.getUser(session.platform, session.selfId);
                 const msgs = await c.find({ group: session.groupId, sender: self.id }).sort({ time: -1 }).limit(options.count).toArray();
                 logger.info('deleting message: %o', msgs);
-                for (const msg of msgs) await session.$bot.deleteMessage(session.groupId, msg.id);
+                for (const msg of msgs) await session.bot.deleteMessage(session.groupId, msg.id);
             });
 
         ctx.command('_.stat [duration]', 'stat')
@@ -338,7 +338,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .action(async ({ session, options }, duration = '1day') => {
                 const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
                 const group = `${session.platform}:${session.groupId}`;
-                const self = await session.$app.database.getUser(session.platform, session.selfId);
+                const self = await session.app.database.getUser(session.platform, session.selfId);
                 const time = options.total ? {} : { time: { $gt: moment().add(-n, a as any).toDate() } };
                 const totalSendCount = await c.find({ ...time, sender: self.id }).count();
                 const groupSendCount = await c.find({ ...time, group, sender: self.id }).count();
@@ -363,12 +363,12 @@ export const apply = (ctx: Context, config: Config = {}) => {
                     { $sort: { count: -1 } },
                     { $limit: 10 },
                 ]).toArray() as unknown as any;
-                const udocs = await session.$app.database.getUser('id', result.map((r) => r._id), [session.platform, 'name']);
+                const udocs = await session.app.database.getUser('id', result.map((r) => r._id), [session.platform, 'name']);
                 const udict: Record<number, Pick<GroupMemberInfo, 'nickname' | 'username'>> = {};
                 for (let i = 0; i < result.length; i++) {
                     const r = result[i];
                     try {
-                        udict[r._id] = await session.$bot.getGroupMember(session.groupId, udocs[i][session.platform]);
+                        udict[r._id] = await session.bot.getGroupMember(session.groupId, udocs[i][session.platform]);
                     } catch (e) {
                         udict[r._id] = { username: udocs[i]?.name || r._id, nickname: '' };
                     }
@@ -386,7 +386,7 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
                     group,
                     message: session.content,
                     // @ts-ignore
-                    sender: session.$user.id,
+                    sender: session.user.id,
                     time: new Date(),
                     id: session.messageId,
                 });
@@ -395,7 +395,7 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
             ctx.on('send', async (session) => {
                 if (!session.groupId) return;
                 const group = `${session.platform}:${session.groupId}`;
-                const udoc = await session.$app.database.getUser(session.platform, session.selfId, ['id']);
+                const udoc = await session.app.database.getUser(session.platform, session.selfId, ['id']);
                 c.insertOne({
                     time: new Date(),
                     sender: udoc.id,

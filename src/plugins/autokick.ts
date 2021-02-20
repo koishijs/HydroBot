@@ -20,7 +20,7 @@ export async function apply(ctx: Context) {
     ctx.select('platform', 'onebot').command('autokick <count>', '', { hidden: true, authority: 4 })
         .channelFields(['kick'])
         .action(async ({ session }, count) => {
-            session.$channel.kick = +count;
+            session.channel.kick = +count;
             return `set to ${count}`;
         });
 
@@ -31,11 +31,11 @@ export async function apply(ctx: Context) {
             .channelFields(['kick'])
             .option('dry', 'dry run', { authority: 2 })
             .action(async ({ session, options }) => {
-                const group = await session.$bot.getGroup(session.groupId);
-                let users = await (session.$bot as CQBot).$getGroupMemberList(group.groupId);
+                const group = await session.bot.getGroup(session.groupId);
+                let users = await (session.bot as CQBot).$getGroupMemberList(group.groupId);
                 const kicked = (await coll.find({ groupId: session.groupId }).toArray()).map((i) => i.userId);
                 users = filter(users, (user) => !kicked.includes(user.userId));
-                if (session.$channel.kick && session.$channel.kick < users.length) {
+                if (session.channel.kick && session.channel.kick < users.length) {
                     let target: GroupMemberInfo;
                     users = sortBy(users.map((user) => ({ ...user, sort: Math.max(user.lastSentTime, user.joinTime) })), 'sort');
                     for (const user of users) {
@@ -51,7 +51,7 @@ export async function apply(ctx: Context) {
                     ].join('\n'));
                     if (!options.dry) {
                         await Promise.all([
-                            (session.$bot as CQBot).$setGroupKick(group.groupId, target.userId),
+                            (session.bot as CQBot).$setGroupKick(group.groupId, target.userId),
                             coll.insertOne({ groupId: session.groupId, userId: target.userId }),
                         ]);
                     }

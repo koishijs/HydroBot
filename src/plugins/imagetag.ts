@@ -10,7 +10,7 @@ import sharp from 'sharp';
 const logger = new Logger('imagetag');
 const imageRE = /(\[CQ:image,file=[^,]+,url=[^\]]+\])/;
 const checkGroupAdmin = ({ session }) => (
-    (session.$user.authority >= 4 || session.author.roles.includes('admin') || session.author.roles.includes('owner'))
+    (session.user.authority >= 4 || session.author.roles.includes('admin') || session.author.roles.includes('owner'))
         ? null
         : '仅管理员可执行该操作。'
 );
@@ -48,9 +48,9 @@ export const apply = async (ctx: Context, config: any = {}) => {
         const capture = imageRE.exec(session.content);
         if (capture) {
             // @ts-ignore
-            if (session.$channel.enableAutoTag === 2) session.executeSilent(`tag ${capture[1]}`);
+            if (session.channel.enableAutoTag === 2) session.executeSilent(`tag ${capture[1]}`);
             // @ts-ignore
-            else if (session.$channel.enableAutoTag === 1) session.execute(`tag ${capture[1]}`);
+            else if (session.channel.enableAutoTag === 1) session.execute(`tag ${capture[1]}`);
         }
         return next();
     });
@@ -64,7 +64,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                 try {
                     if (!image) {
                         await session.send('请发送图片。');
-                        image = await session.prompt(30000) as string;
+                        image = await session.prompt(30000);
                     }
                     let id;
                     let url = image;
@@ -123,7 +123,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
             .check(checkGroupAdmin)
             .channelFields(['enableAutoTag'])
             .action(({ session }) => {
-                session.$channel.enableAutoTag = 0;
+                session.channel.enableAutoTag = 0;
                 return 'Disabled';
             });
 
@@ -133,7 +133,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
             .check(checkGroupAdmin)
             .channelFields(['enableAutoTag'])
             .action(({ session, options }) => {
-                session.$channel.enableAutoTag = options.silent ? 2 : 1;
+                session.channel.enableAutoTag = options.silent ? 2 : 1;
                 return 'enabled';
             });
     });

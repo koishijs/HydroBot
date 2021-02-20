@@ -15,11 +15,11 @@ export function apply(ctx: Context) {
     ctx.command('sudo <command:text>', { hidden: true, noRedirect: true })
         .userFields(['sudoer', 'authority'])
         .action(async ({ session }, command) => {
-            if (!session.$user.sudoer) throw new Error('You are not in the sudoers file.');
-            const old = session.$user.authority;
-            session.$user.authority = 5;
+            if (!session.user.sudoer) throw new Error('You are not in the sudoers file.');
+            const old = session.user.authority;
+            session.user.authority = 5;
             session._sudo = true;
             await session.execute(command);
-            session.$user.authority = old;
+            session.user.authority = old;
         });
 }
