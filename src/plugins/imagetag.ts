@@ -91,7 +91,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                     if (typeof probs === 'string') {
                         let errmsg = probs.split('HTTP')[0];
                         if (probs.includes('output with shape') || probs.includes('size of tensor')) {
-                            errmsg = '不支持的图片格式（请发送png格式图片）';
+                            errmsg = '不支持的图片格式（请尝试截图发送）';
                             await coll.insertOne({ _id: id, md5, txt: errmsg });
                         }
                         throw new Error(errmsg);
@@ -105,7 +105,7 @@ export const apply = async (ctx: Context, config: any = {}) => {
                     logger.info(txt);
                     if (config.url && config.tags) {
                         for (const tag of tags) {
-                            if (config.tags.includes(tag)) {
+                            if (config.tags.includes(tag) || tags.length > 7) {
                                 axios.get(`${config.url}&source=${encodeURIComponent(url)}&format=json`);
                                 break;
                             }
