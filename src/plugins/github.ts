@@ -109,7 +109,28 @@ export const apply = (app: App, config: any) => {
                 async hook(body) {
                     const ref = body.ref.split('/')[2];
                     const sender = body.head_commit ? body.head_commit.author.username : body.sender.login;
-                    let resp = `Recent commit to ${body.repository.full_name}:${ref} by ${sender}`;
+                    let added = 0;
+                    let removed = 0;
+                    let modified = 0;
+                    let resp = `Recent commit to ${body.repository.full_name}${ref === 'master' ? '' : `:${ref}`} by ${sender}`;
+                    if (config.sourcegraph) {
+                        const result = await superagent.post('https://sourcegraph.example.com/.api/graphql')
+                            .set('Authorization', `token ${config.sourcegraph}`)
+                            .send(`query{
+repository(name:"github.com/${body.repository.full_name}"){
+  comparison(base:"${body.before}",head:"${body.after}"){
+    fileDiffs{nodes{stat{added changed deleted}}}
+  }
+}
+}`);
+                        const changes = result.body.data.repository.comparison.fileDiffs.nodes;
+                        for (const change of changes) {
+                            added += change.added;
+                            removed += change.removed;
+                            modified += change.modified;
+                        }
+                    }
+                    if (added || removed || modified) resp += `${added}+ ${removed}- ${modified}M`;
                     for (const commit of body.commits) {
                         const det = [];
                         if (commit.added.length) det.push(`${commit.added.length}+`);
