@@ -129,13 +129,13 @@ repository(name:"github.com/${body.repository.full_name}"){
                         else {
                             const changes = result.body.data.repository.comparison.fileDiffs.nodes;
                             for (const change of changes) {
-                                added += change.stat.added;
-                                removed += change.stat.removed;
-                                modified += change.stat.modified;
+                                added += change.stat.added || 0;
+                                removed += change.stat.removed || 0;
+                                modified += change.stat.modified || 0;
                             }
                         }
                     }
-                    if (added || removed || modified) resp += `${added}+ ${removed}- ${modified}M`;
+                    if (added || removed || modified) resp += `\n${added}+ ${removed}- ${modified}M`;
                     for (const commit of body.commits) {
                         const det = [];
                         if (commit.added.length) det.push(`${commit.added.length}+`);
