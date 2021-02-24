@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { Context } from 'koishi-core';
-import { apply as KoishiPluginTeach, Dialogue } from 'koishi-plugin-teach';
+import { apply as KoishiPluginTeach } from 'koishi-plugin-teach';
+import type { Dialogue } from 'koishi-plugin-teach/dist/utils';
 import axios from 'axios';
 import { Binary } from 'mongodb';
 
