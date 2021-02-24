@@ -114,26 +114,30 @@ export const apply = (app: App, config: any) => {
                     let modified = 0;
                     let resp = `Recent commit to ${body.repository.full_name}${ref === 'master' ? '' : `:${ref}`} by ${sender}`;
                     if (config.sourcegraph) {
-                        const result = await superagent.post('https://sourcegraph.com/.api/graphql')
-                            .set('Authorization', `token ${config.sourcegraph}`)
-                            .send({
-                                query: `query{
+                        try {
+                            const result = await superagent.post('https://sourcegraph.com/.api/graphql')
+                                .set('Authorization', `token ${config.sourcegraph}`)
+                                .send({
+                                    query: `query{
 repository(name:"github.com/${body.repository.full_name}"){
   comparison(base:"${body.before}",head:"${body.after}"){
     fileDiffs{nodes{stat{added changed deleted}}}
   }
 }
 }`,
-                            });
-                        if (!result.body.data) logger.info(result.body);
-                        else if (!result.body.data.repo) logger.info('Repo not found: %s', body.repository.full_name);
-                        else {
-                            const changes = result.body.data.repository.comparison.fileDiffs.nodes;
-                            for (const change of changes) {
-                                added += change.stat.added || 0;
-                                removed += change.stat.removed || 0;
-                                modified += change.stat.modified || 0;
+                                });
+                            if (!result.body.data) logger.info(result.body);
+                            else if (!result.body.data.repository) logger.info('Repo not found: %s', body.repository.full_name);
+                            else {
+                                const changes = result.body.data.repository.comparison.fileDiffs.nodes;
+                                for (const change of changes) {
+                                    added += change.stat.added || 0;
+                                    removed += change.stat.removed || 0;
+                                    modified += change.stat.modified || 0;
+                                }
                             }
+                        } catch (e) {
+                            logger.error(e);
                         }
                     }
                     if (added || removed || modified) resp += `\n${added}+ ${removed}- ${modified}M`;
