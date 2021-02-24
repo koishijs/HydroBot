@@ -1,6 +1,6 @@
 import { Context } from 'koishi-core';
 
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Channel {
         jjwz: [number, string][]
     }

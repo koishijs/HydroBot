@@ -12,29 +12,23 @@ interface ImageDoc {
     _id: string,
     data: Binary
 }
-declare module 'koishi-core/dist/command' {
+declare module 'koishi-core' {
     namespace Command {
         interface Config {
             noRedirect?: boolean,
         }
     }
-}
-declare module 'koishi-core/dist/session' {
     interface Session {
         _dialogue?: Dialogue
     }
-}
-declare module 'koishi-core/dist/app' {
     interface App {
         getImageServerStatus(): Promise<ImageServerStatus>
     }
-}
-declare module 'koishi-core/dist/database' {
     interface Tables {
         image: ImageDoc
     }
 }
-declare module 'koishi-plugin-teach/dist/utils' {
+declare module 'koishi-plugin-teach' {
     // eslint-disable-next-line no-shadow
     namespace Dialogue {
         interface Config {

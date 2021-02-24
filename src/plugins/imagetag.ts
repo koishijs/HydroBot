@@ -20,7 +20,7 @@ interface ImageTagCache {
     md5: string,
     txt: string,
 }
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Channel {
         enableAutoTag?: number,
     }

@@ -25,7 +25,7 @@ interface BeautifyRule {
     regex: RegExp,
     process: (result: string[], content: string) => string,
 }
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface User {
         GithubToken: Token
     }
@@ -114,15 +114,17 @@ export const apply = (app: App, config: any) => {
                     let modified = 0;
                     let resp = `Recent commit to ${body.repository.full_name}${ref === 'master' ? '' : `:${ref}`} by ${sender}`;
                     if (config.sourcegraph) {
-                        const result = await superagent.post('https://sourcegraph.example.com/.api/graphql')
+                        const result = await superagent.post('https://sourcegraph.com/.api/graphql')
                             .set('Authorization', `token ${config.sourcegraph}`)
-                            .send(`query{
+                            .send({
+                                query: `query{
 repository(name:"github.com/${body.repository.full_name}"){
   comparison(base:"${body.before}",head:"${body.after}"){
     fileDiffs{nodes{stat{added changed deleted}}}
   }
 }
-}`);
+}`,
+                            });
                         const changes = result.body.data.repository.comparison.fileDiffs.nodes;
                         for (const change of changes) {
                             added += change.added;

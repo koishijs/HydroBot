@@ -15,7 +15,7 @@ declare module 'koishi-plugin-status' {
 
 export async function apply(ctx: Context) {
     ctx.plugin(KoishiPluginStatus, {
-        formatBot: '{{ label || selfId }}：{{ code ? `无法连接` : `工作中（${rate}/min）` }}',
+        formatBot: '{{ selfId }}：{{ code ? `无法连接` : `工作中（${rate}/min）` }}',
         format: [
             '{{ bots }}',
             '==========',

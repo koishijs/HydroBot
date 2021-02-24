@@ -46,7 +46,7 @@ declare global {
         encode: () => string,
     }
 }
-declare module 'koishi-core/dist/session' {
+declare module 'koishi-core' {
     interface Session {
         _silent: boolean,
         executeSilent(content: string, next?: NextFunction): Promise<string>;

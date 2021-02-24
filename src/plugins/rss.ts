@@ -9,7 +9,7 @@ interface RssSubscription {
     _id: string,
     target: string[],
 }
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Tables {
         'rss': RssSubscription
     }

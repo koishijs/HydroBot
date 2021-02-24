@@ -8,7 +8,7 @@ interface Bottle {
     userId: number,
     pick: number,
 }
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Tables {
         bottle: Bottle,
     }

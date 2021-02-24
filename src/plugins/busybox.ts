@@ -23,7 +23,7 @@ interface Config {
     timezoneOffset?: number,
     public?: string[],
 }
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Channel {
         disallowedCommands: string[],
         welcomeMsg: string,

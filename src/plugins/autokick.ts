@@ -4,7 +4,7 @@ import { Context, Channel } from 'koishi-core';
 import { filter, sortBy } from 'lodash';
 import moment from 'moment';
 
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Channel {
         kick: number
     }

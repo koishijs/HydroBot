@@ -19,7 +19,7 @@ interface Stock {
     buyPrice: number,
     expire: Date,
 }
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface Tables {
         'kabu.price': Price,
         'kabu.stock': Stock,

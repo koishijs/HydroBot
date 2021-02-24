@@ -7,7 +7,7 @@ export interface Slot<T extends string> {
     meta: ItemMeta[T],
 }
 
-declare module 'koishi-core/dist/database' {
+declare module 'koishi-core' {
     interface User {
         coin: number,
         backpack: Slot<any>[],
