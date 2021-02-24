@@ -97,7 +97,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
     ctx.select('groupId').command('_.assign', 'assign', { authority: 4 })
         .channelFields(['assignee'])
         .action(async ({ session }) => {
-            session.channel.assignee = session.selfId;
+            session.channel.assignee = session.selfId.toString();
         });
 
     ctx.command('_.echo <msg:text>', 'echo', { noRedirect: true, authority: 3 })
@@ -272,7 +272,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
 
     ctx.on('group-member/ban', (session) => {
         // TODO handle auto-leave?
-        if (session.userId === session.selfId) console.log(session);
+        if (session.userId.toString() === session.selfId.toString()) console.log(session);
     });
 
     ctx.on('group-member-added', async (session) => {
@@ -327,7 +327,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .check(checkGroupAdmin)
             .option('count', '-c <count> 数量', { fallback: 1 })
             .action(async ({ session, options }) => {
-                const self = await session.app.database.getUser(session.platform, session.selfId);
+                const self = await session.app.database.getUser(session.platform, session.selfId.toString());
                 const msgs = await c.find({ group: session.groupId, sender: self.id }).sort({ time: -1 }).limit(options.count).toArray();
                 logger.info('deleting message: %o', msgs);
                 for (const msg of msgs) await session.bot.deleteMessage(session.groupId, msg.id);
@@ -338,7 +338,7 @@ export const apply = (ctx: Context, config: Config = {}) => {
             .action(async ({ session, options }, duration = '1day') => {
                 const [, n = '1', a] = /(\d+)?(\w+)/.exec(duration);
                 const group = `${session.platform}:${session.groupId}`;
-                const self = await session.app.database.getUser(session.platform, session.selfId);
+                const self = await session.app.database.getUser(session.platform, session.selfId.toString());
                 const time = options.total ? {} : { time: { $gt: moment().add(-n, a as any).toDate() } };
                 const totalSendCount = await c.find({ ...time, sender: self.id }).count();
                 const groupSendCount = await c.find({ ...time, group, sender: self.id }).count();
@@ -395,7 +395,7 @@ ${result.map((r) => `${udict[r._id].nickname || udict[r._id].username} ${r.count
             ctx.on('send', async (session) => {
                 if (!session.groupId) return;
                 const group = `${session.platform}:${session.groupId}`;
-                const udoc = await session.app.database.getUser(session.platform, session.selfId, ['id']);
+                const udoc = await session.app.database.getUser(session.platform, session.selfId.toString(), ['id']);
                 c.insertOne({
                     time: new Date(),
                     sender: udoc.id,
