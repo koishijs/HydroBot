@@ -125,7 +125,8 @@ repository(name:"github.com/${body.repository.full_name}"){
 }
 }`,
                             });
-                        if (!result.body.data) logger.log(result.body);
+                        if (!result.body.data) logger.info(result.body);
+                        else if (!result.body.data.repo) logger.info('Repo not found: %s', body.repository.full_name);
                         else {
                             const changes = result.body.data.repository.comparison.fileDiffs.nodes;
                             for (const change of changes) {
