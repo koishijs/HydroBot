@@ -125,11 +125,14 @@ repository(name:"github.com/${body.repository.full_name}"){
 }
 }`,
                             });
-                        const changes = result.body.data.repository.comparison.fileDiffs.nodes;
-                        for (const change of changes) {
-                            added += change.stat.added;
-                            removed += change.stat.removed;
-                            modified += change.stat.modified;
+                        if (!result.body.data) logger.log(result.body);
+                        else {
+                            const changes = result.body.data.repository.comparison.fileDiffs.nodes;
+                            for (const change of changes) {
+                                added += change.stat.added;
+                                removed += change.stat.removed;
+                                modified += change.stat.modified;
+                            }
                         }
                     }
                     if (added || removed || modified) resp += `${added}+ ${removed}- ${modified}M`;
